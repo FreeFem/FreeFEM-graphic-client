@@ -9,6 +9,8 @@ endif()
 find_package(Threads REQUIRED)
 find_package(Vulkan REQUIRED)
 
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -D_DEBUG")
+
 # Adding glfw to compilation
 add_subdirectory(extern/glfw)
 include_directories(extern/glfw/include)
@@ -24,7 +26,7 @@ include_directories(extern/asio/asio/include)
 include_directories(extern/json/include)
 
 # Telling Cmake to compile a executable
-add_executable(FreeFEM_graphic_client src/main.cpp src/window.cpp)
+add_executable(FreeFEM_graphic_client src/main.cpp src/window.cpp src/context.cpp)
 
 # Using C++11 standard
 set_target_properties(FreeFEM_graphic_client PROPERTIES CXX_STANDARD 11)

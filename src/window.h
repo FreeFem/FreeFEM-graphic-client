@@ -8,7 +8,8 @@ struct sWindow {
         uint32_t height;
     } Dimensions;
 
-    VkInstance Instance;
+    VkSurfaceKHR Surface;
+    VkQueue PresentationQueue;
 };
 
 /**

@@ -1,38 +1,21 @@
-#include <GLFW/glfw3.h>
-#include <nlohmann/json.hpp>
-#include <asio.hpp>
-#include <volk.h>
+#include <cstdlib>
+#include <cstring>
+#include "window.h"
 
-int main(void)
+int main()
 {
-    GLFWwindow* window;
+    if (glfwInit() == GLFW_FALSE)
+        return 1;
+    volkInitialize();
+    sWindow window;
+    memset(&window, 0, sizeof(sWindow));
+    createWindow(1280, 769, "Title", &window);
 
-    /* Initialize the library */
-    if (!glfwInit())
-        return -1;
-
-    /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
-    if (!window)
-    {
-        glfwTerminate();
-        return -1;
-    }
-
-    /* Make the window's context current */
-    glfwMakeContextCurrent(window);
-
-    /* Loop until the user closes the window */
-    while (!glfwWindowShouldClose(window))
-    {
-
-        /* Swap front and back buffers */
-        glfwSwapBuffers(window);
-
-        /* Poll for and process events */
+    while (!glfwWindowShouldClose(window.Window)) {
         glfwPollEvents();
     }
 
+    destroyWindow(window);
     glfwTerminate();
     return 0;
 }

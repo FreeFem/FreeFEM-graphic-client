@@ -6,6 +6,9 @@ if(EXISTS "${LOC_PATH}")
     message(FATAL_ERROR "You cannot build in a source directory (or any directory with a CMakeLists.txt file). Please make a build subdirectory. Feel free to remove CMakeCache.txt and CMakeFiles.")
 endif()
 
+find_package(Threads REQUIRED)
+find_package(Vulkan REQUIRED)
+
 # Adding glfw to compilation
 add_subdirectory(extern/glfw)
 include_directories(extern/glfw/include)
@@ -21,7 +24,7 @@ include_directories(extern/asio/asio/include)
 include_directories(extern/json/include)
 
 # Telling Cmake to compile a executable
-add_executable(FreeFEM_graphic_client src/main.cpp)
+add_executable(FreeFEM_graphic_client src/main.cpp src/window.cpp)
 
 # Using C++11 standard
 set_target_properties(FreeFEM_graphic_client PROPERTIES CXX_STANDARD 11)
@@ -29,3 +32,5 @@ set_target_properties(FreeFEM_graphic_client PROPERTIES CXX_STANDARD 11)
 # Linking libraries with target
 target_link_libraries(FreeFEM_graphic_client glfw)
 target_link_libraries(FreeFEM_graphic_client volk)
+target_link_libraries(FreeFEM_graphic_client ${THREADS_PREFER_PTHREAD_FLAG})
+target_link_libraries(FreeFEM_graphic_client ${Vulkan_LIBRARY})

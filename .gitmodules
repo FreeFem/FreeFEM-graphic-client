@@ -1,0 +1,12 @@
+[submodule "extern/asio"]
+	path = extern/asio
+	url = ../../chriskohlhoff/asio.git
+[submodule "extern/glfw"]
+	path = extern/glfw
+	url = ../../glfw/glfw.git
+[submodule "extern/json"]
+	path = extern/json
+	url = ../../nlohmann/json.git
+[submodule "extern/volk"]
+	path = extern/volk
+	url = ../../zeux/volk.git

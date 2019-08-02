@@ -26,13 +26,13 @@ include_directories(extern/asio/asio/include)
 include_directories(extern/json/include)
 
 # Telling Cmake to compile a executable
-add_executable(FreeFEM_graphic_client src/main.cpp src/window.cpp src/context.cpp)
+add_executable(FreeFEM_graphic_client src/main.cpp src/instance.cpp src/surface.cpp  src/physicalDevice.cpp src/utils.cpp src/device.cpp src/swapchain.cpp src/commandPool.cpp)
 
 # Using C++11 standard
 set_target_properties(FreeFEM_graphic_client PROPERTIES CXX_STANDARD 11)
 
 # Linking libraries with target
 target_link_libraries(FreeFEM_graphic_client glfw)
-target_link_libraries(FreeFEM_graphic_client volk)
+target_link_libraries(FreeFEM_graphic_client xcb)
 target_link_libraries(FreeFEM_graphic_client ${THREADS_PREFER_PTHREAD_FLAG})
 target_link_libraries(FreeFEM_graphic_client ${Vulkan_LIBRARY})

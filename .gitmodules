@@ -7,6 +7,3 @@
 [submodule "extern/json"]
 	path = extern/json
 	url = ../../nlohmann/json.git
-[submodule "extern/volk"]
-	path = extern/volk
-	url = ../../zeux/volk.git

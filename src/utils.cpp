@@ -36,11 +36,11 @@ const char *VkResultToStr(const VkResult result)
 	#undef MAKE_CASE
 }
 
-bool glfwGetWindow(const char *title, int width, int height, GLFWwindow **outWindow)
+bool glfwGetWindow(const char *title, int width, int height, GLFWwindow *&outWindow)
 {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-    *outWindow = glfwCreateWindow(width, height, title, 0, 0);
+    outWindow = glfwCreateWindow(width, height, title, 0, 0);
     if (outWindow)
         return true;
     return false;
@@ -63,28 +63,28 @@ int findMemoryTypeWithProperties(const VkPhysicalDeviceMemoryProperties memoryPr
     return -1;
 }
 
-VkResult createFence(const VkDevice device, VkFence *outFence)
+VkResult createFence(const VkDevice device, VkFence &outFence)
 {
     VkFenceCreateInfo fenceCreateInfo = {};
     fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     fenceCreateInfo.pNext = 0;
     fenceCreateInfo.flags = 0;
 
-    return vkCreateFence(device, &fenceCreateInfo, 0, outFence);
+    return vkCreateFence(device, &fenceCreateInfo, 0, &outFence);
 }
 
-VkResult createSemaphore(const VkDevice device, VkSemaphore *outSemaphore)
+VkResult createSemaphore(const VkDevice device, VkSemaphore &outSemaphore)
 {
     VkSemaphoreCreateInfo semaphoreCreateInfo = {};
     semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
     semaphoreCreateInfo.pNext = 0;
     semaphoreCreateInfo.flags = 0;
 
-    return vkCreateSemaphore(device, &semaphoreCreateInfo, 0, outSemaphore);
+    return vkCreateSemaphore(device, &semaphoreCreateInfo, 0, &outSemaphore);
 }
 
 bool createFramebuffer(const VkDevice device, const VkRenderPass renderPass, const std::vector<VkImageView>& viewAttachementVector,
-                        const int width, const int height, VkFramebuffer *outFramebuffer)
+                        const int width, const int height, VkFramebuffer &outFramebuffer)
 {
     VkResult result;
 
@@ -99,14 +99,14 @@ bool createFramebuffer(const VkDevice device, const VkRenderPass renderPass, con
     createInfo.height = height;
     createInfo.layers = 1;
 
-    result = vkCreateFramebuffer(device, &createInfo, 0, outFramebuffer);
+    result = vkCreateFramebuffer(device, &createInfo, 0, &outFramebuffer);
 
     if (result != VK_SUCCESS)
         return false;
     return false;
 }
 
-bool loadAndCreateShaderModule(const VkDevice device, const char *filename, VkShaderModule *outShaderModule)
+bool loadAndCreateShaderModule(const VkDevice device, const char *filename, VkShaderModule &outShaderModule)
 {
     VkResult result;
 
@@ -131,8 +131,10 @@ bool loadAndCreateShaderModule(const VkDevice device, const char *filename, VkSh
     createInfo.codeSize = fileSize;
     createInfo.pCode = reinterpret_cast<uint32_t *>(fileContents.data());
 
-    result = vkCreateShaderModule(device, &createInfo, 0, outShaderModule);
-    if (result)
-        return true;
-    return false;
+    result = vkCreateShaderModule(device, &createInfo, 0, &outShaderModule);
+    if (result != VK_SUCCESS) {
+        dprintf(2, "Failed to create shader module. [%s]\n", VkResultToStr(result));
+        return false;
+    }
+    return true;
 }

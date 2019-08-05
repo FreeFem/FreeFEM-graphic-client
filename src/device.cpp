@@ -4,7 +4,7 @@
 #include "utils.h"
 #include "instance.h"
 
-bool createDeviceAndQueue(const VkPhysicalDevice phyDev, const VkSurfaceKHR surface, const std::vector<const char *>& enabledLayers, VkDevice *outDevice, VkQueue *outQueue, uint32_t *outQueueFamilyIndex)
+bool createDeviceAndQueue(const VkPhysicalDevice phyDev, const VkSurfaceKHR surface, const std::vector<const char *>& enabledLayers, VkDevice& outDevice, VkQueue& outQueue, uint32_t& outQueueFamilyIndex)
 {
     VkResult result;
 
@@ -68,12 +68,12 @@ bool createDeviceAndQueue(const VkPhysicalDevice phyDev, const VkSurfaceKHR surf
     createInfo.enabledLayerCount = static_cast<uint32_t>(enabledLayers.size());
     createInfo.ppEnabledLayerNames = enabledLayers.data();
 
-    result = vkCreateDevice(phyDev, &createInfo, 0, outDevice);
+    result = vkCreateDevice(phyDev, &createInfo, 0, &outDevice);
     if (result != VK_SUCCESS) {
         dprintf(2, "Failed to create device. [%s]\n", VkResultToStr(result));
         return false;
     }
-    vkGetDeviceQueue(*outDevice, indices.presentFamily, 0, outQueue);
-    *outQueueFamilyIndex = indices.presentFamily;
+    vkGetDeviceQueue(outDevice, indices.presentFamily, 0, &outQueue);
+    outQueueFamilyIndex = indices.presentFamily;
     return true;
 }

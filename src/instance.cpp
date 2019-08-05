@@ -13,7 +13,7 @@ std::vector<const char *> GetRequiredExtensions()
     return finalExtensions;
 }
 
-bool createInstance(VkInstance *outInstance, std::vector<const char *> enabledExtensions, std::vector<const char *> enabledLayers)
+bool createInstance(VkInstance& outInstance, std::vector<const char *> enabledExtensions, std::vector<const char *> enabledLayers)
 {
     VkApplicationInfo appInfo = {};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -44,7 +44,7 @@ bool createInstance(VkInstance *outInstance, std::vector<const char *> enabledEx
     instanceCreateInfo.enabledLayerCount = 0;
     instanceCreateInfo.pNext = 0;
 #endif
-    VkResult result = vkCreateInstance(&instanceCreateInfo, 0, outInstance);
+    VkResult result = vkCreateInstance(&instanceCreateInfo, 0, &outInstance);
     if (result != VK_SUCCESS) {
         dprintf(2, "Failed to create instance. [%s]\n", VkResultToStr(result));
         return false;

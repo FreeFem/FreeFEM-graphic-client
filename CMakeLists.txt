@@ -25,8 +25,10 @@ include_directories(extern/asio/asio/include)
 # Adding json to include
 include_directories(extern/json/include)
 
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
 # Telling Cmake to compile a executable
-add_executable(FreeFEM_graphic_client src/main.cpp src/instance.cpp src/surface.cpp  src/physicalDevice.cpp src/utils.cpp src/device.cpp src/swapchain.cpp src/commandPool.cpp)
+add_executable(FreeFEM_graphic_client src/main.cpp src/instance.cpp src/surface.cpp  src/physicalDevice.cpp src/utils.cpp src/device.cpp src/swapchain.cpp src/commandPool.cpp src/allocImage.cpp src/allocBuffer.cpp src/renderpass.cpp src/pipeline.cpp)
 
 # Using C++11 standard
 set_target_properties(FreeFEM_graphic_client PROPERTIES CXX_STANDARD 11)
@@ -36,3 +38,4 @@ target_link_libraries(FreeFEM_graphic_client glfw)
 target_link_libraries(FreeFEM_graphic_client xcb)
 target_link_libraries(FreeFEM_graphic_client ${THREADS_PREFER_PTHREAD_FLAG})
 target_link_libraries(FreeFEM_graphic_client ${Vulkan_LIBRARY})
+target_link_libraries(FreeFEM_graphic_client m)

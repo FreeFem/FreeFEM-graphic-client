@@ -7,9 +7,9 @@ bool createSwapchain(const VkPhysicalDevice phyDev,
                      const VkSurfaceKHR surface,
                      GLFWwindow *window,
                      VkSwapchainKHR oldSwapchain,
-                     VkSwapchainKHR *outSwapchain,
+                     VkSwapchainKHR& outSwapchain,
                      const int ownedSwapchainImages,
-                     VkFormat *outSurfaceFormat,
+                     VkFormat& outSurfaceFormat,
                      const VkImageUsageFlags imageUsageFlags
                     )
 {
@@ -107,12 +107,12 @@ bool createSwapchain(const VkPhysicalDevice phyDev,
     createInfo.oldSwapchain = oldSwapchain;
     createInfo.clipped = VK_TRUE;
 
-    result = vkCreateSwapchainKHR(device, &createInfo, 0, outSwapchain);
+    result = vkCreateSwapchainKHR(device, &createInfo, 0, &outSwapchain);
     if (result != VK_SUCCESS) {
         dprintf(2, "Failed to create swapchain. [%s]\n", VkResultToStr(result));
         return false;
     }
-    *outSurfaceFormat = surfaceFormat;
+    outSurfaceFormat = surfaceFormat;
 
     if (oldSwapchain != VK_NULL_HANDLE) {
         vkDestroySwapchainKHR(device, oldSwapchain, 0);

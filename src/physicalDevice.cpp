@@ -42,7 +42,7 @@ bool isDeviceSuitable(VkPhysicalDevice phyDev, const VkSurfaceKHR surface)
     return indices.has_graphicFamily && indices.has_presentFamily;
 }
 
-bool chooseVkPhysicalDevice(const VkInstance instance, VkPhysicalDevice *outPhysicalDevice, const VkSurfaceKHR surface)
+bool chooseVkPhysicalDevice(const VkInstance instance, VkPhysicalDevice &outPhysicalDevice, const VkSurfaceKHR surface)
 {
     VkResult result;
     uint32_t physicalDevicesCount = 0;
@@ -71,7 +71,7 @@ bool chooseVkPhysicalDevice(const VkInstance instance, VkPhysicalDevice *outPhys
         showPhysicalDeviceInfos(phyDevProp, deviceIndex);
 
         if (isDeviceSuitable(phyDev, surface)) {
-            *outPhysicalDevice = phyDev;
+            outPhysicalDevice = phyDev;
             return true;
         }
         if (phyDev == VK_NULL_HANDLE) {

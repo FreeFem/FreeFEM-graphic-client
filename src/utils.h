@@ -17,19 +17,19 @@ struct familyIndex {
 
 const char *VkResultToStr(const VkResult result);
 
-bool glfwGetWindow(const char *title, int width, int height, GLFWwindow **outWindow);
+bool glfwGetWindow(const char *title, int width, int height, GLFWwindow *&outWindow);
 
 int findMemoryTypeWithProperties(const VkPhysicalDeviceMemoryProperties memoryProperties,
                                  const uint32_t memoryTypeBits,
                                  const VkMemoryPropertyFlags requiredMemoryProperties);
 
-VkResult createFence(const VkDevice device, VkFence *outFence);
+VkResult createFence(const VkDevice device, VkFence &outFence);
 
-VkResult createSemaphore(const VkDevice device, VkSemaphore *outSemaphore);
+VkResult createSemaphore(const VkDevice device, VkSemaphore &outSemaphore);
 
 bool createFramebuffer(const VkDevice device, const VkRenderPass renderPass, const std::vector<VkImageView>& viewAttachementVector,
-                        const int width, const int height, VkFramebuffer *outFramebuffer);
+                        const int width, const int height, VkFramebuffer &outFramebuffer);
 
-bool loadAndCreateShaderModule(const VkDevice device, const char *filename, VkShaderModule *outShaderModule);
+bool loadAndCreateShaderModule(const VkDevice device, const char *filename, VkShaderModule &outShaderModule);
 
 #endif // UTILS_H

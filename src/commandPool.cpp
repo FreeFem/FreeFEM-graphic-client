@@ -4,7 +4,7 @@
 bool createCommandPool(const VkDevice device,
                        const uint32_t queueFamilyIndex,
                        const VkCommandPoolCreateFlagBits createFlagBits,
-                       VkCommandPool *outCommandPool
+                       VkCommandPool& outCommandPool
                       )
 {
     VkResult result;
@@ -15,7 +15,7 @@ bool createCommandPool(const VkDevice device,
     createInfo.flags = createFlagBits;
     createInfo.queueFamilyIndex = queueFamilyIndex;
 
-    result = vkCreateCommandPool(device, &createInfo, 0, outCommandPool);
+    result = vkCreateCommandPool(device, &createInfo, 0, &outCommandPool);
     if (result != VK_SUCCESS) {
         dprintf(2, "Failed to create command pool. [%s]\n", VkResultToStr(result));
         return false;
@@ -26,7 +26,7 @@ bool createCommandPool(const VkDevice device,
 bool allocateCommandBuffer(const VkDevice device,
                            const VkCommandPool commandPool,
                            const VkCommandBufferLevel commandBufferLevel,
-                           VkCommandBuffer *outCommandBuffer
+                           VkCommandBuffer& outCommandBuffer
                           )
 {
     VkResult result;
@@ -38,7 +38,7 @@ bool allocateCommandBuffer(const VkDevice device,
     allocInfo.level = commandBufferLevel;
     allocInfo.commandBufferCount = 1;
 
-    result = vkAllocateCommandBuffers(device, &allocInfo, outCommandBuffer);
+    result = vkAllocateCommandBuffers(device, &allocInfo, &outCommandBuffer);
     if (result != VK_SUCCESS) {
         dprintf(2, "Failed to create command buffer. [%s]\n", VkResultToStr(result));
         return false;

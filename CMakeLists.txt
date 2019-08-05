@@ -15,10 +15,6 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -D_DEBUG")
 add_subdirectory(extern/glfw)
 include_directories(extern/glfw/include)
 
-# Adding volk to compilation
-add_subdirectory(extern/volk)
-include_directories(extern/volk)
-
 # Adding asio to include
 include_directories(extern/asio/asio/include)
 

@@ -13,6 +13,7 @@
 #include "utils.h"
 #include "instance.h"
 #include "test_data.h"
+#include "doublebuffer.h"
 
 bool fillInitCmdBuffer(const VkCommandBuffer commandBuffer, const VkImage depthImage)
 {
@@ -128,20 +129,20 @@ bool fillRenderingCmdBuffer(const VkCommandBuffer commandBuffer,
 
 
 bool render(const VkDevice device, const VkQueue queue, const VkSwapchainKHR swapchain,
-            const VkCommandBuffer presentCmdBuffer, const std::vector<VkFramebuffer> &frameBuffers,
-            const VkRenderPass renderPass, const VkPipeline pipeline, const VkBuffer vertexBuffer,
-            const uint32_t vertexInputBinding, const int width, const int height)
+            const std::vector<VkFramebuffer> &frameBuffers, const VkRenderPass renderPass,
+            const VkPipeline pipeline, const VkBuffer vertexBuffer, const uint32_t vertexInputBinding,
+            perFrameData& currentFrameData, const int width, const int height)
 {
     VkResult result;
-    VkSemaphore imageAcquiredSemaphore, renderingCompletedSemaphore;
 
-    result = createSemaphore(device, imageAcquiredSemaphore);
-    if (result != VK_SUCCESS) return false;
-    result = createSemaphore(device, renderingCompletedSemaphore);
-    if (result != VK_SUCCESS) return false;
-
+    if (currentFrameData.fenceInitialized) {
+        vkWaitForFences(device, 1, &currentFrameData.presentFence, VK_TRUE, UINT64_MAX);
+        vkResetFences(device, 1, &currentFrameData.presentFence);
+    }
     uint32_t imageIndex = UINT32_MAX;
-    result = vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, imageAcquiredSemaphore, VK_NULL_HANDLE, &imageIndex);
+    result = vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, currentFrameData.imageAcquiredSemaphore, VK_NULL_HANDLE, &imageIndex);
+
+    currentFrameData.fenceInitialized = true;
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR) {
         dprintf(2, "we don't support out-of-date swapchain yet.\n");
@@ -151,27 +152,27 @@ bool render(const VkDevice device, const VkQueue queue, const VkSwapchainKHR swa
     else if (result != VK_SUCCESS)
         return false;
 
-    if (!fillRenderingCmdBuffer(presentCmdBuffer, frameBuffers[imageIndex], renderPass, pipeline, vertexBuffer, vertexInputBinding, width, height))
+    if (!fillRenderingCmdBuffer(currentFrameData.presentCmdBuffer, frameBuffers[imageIndex], renderPass, pipeline, vertexBuffer, vertexInputBinding, width, height))
         return false;
 
     VkPipelineStageFlags pipelineStageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
     VkSubmitInfo submitInfo = {};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = &imageAcquiredSemaphore;
+    submitInfo.pWaitSemaphores = &currentFrameData.imageAcquiredSemaphore;
     submitInfo.pWaitDstStageMask = &pipelineStageFlags;
     submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &presentCmdBuffer;
+    submitInfo.pCommandBuffers = &currentFrameData.presentCmdBuffer;
     submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = &renderingCompletedSemaphore;
+    submitInfo.pSignalSemaphores = &currentFrameData.renderingCompletedSemaphore;
 
-    result = vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE);
+    result = vkQueueSubmit(queue, 1, &submitInfo, currentFrameData.presentFence);
     if (result != VK_SUCCESS) return false;
 
     VkPresentInfoKHR presentInfo = {};
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
     presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = &renderingCompletedSemaphore;
+    presentInfo.pWaitSemaphores = &currentFrameData.renderingCompletedSemaphore;
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = &swapchain;
     presentInfo.pImageIndices = &imageIndex;
@@ -186,16 +187,8 @@ bool render(const VkDevice device, const VkQueue queue, const VkSwapchainKHR swa
         dprintf(1, "Swapchain is suboptimal.\n");
     else if (result != VK_SUCCESS)
         return false;
-
-    vkQueueWaitIdle(queue);
-
-    vkDestroySemaphore(device, imageAcquiredSemaphore, 0);
-    vkDestroySemaphore(device, renderingCompletedSemaphore, 0);
     return true;
-
 }
-
-#include <fstream>
 
 int main(int ac, char *av[])
 {
@@ -215,7 +208,9 @@ int main(int ac, char *av[])
     uint32_t queueFamily;
 
     createInstance(instance, GetRequiredExtensions(), debugLayers);
+#ifdef _DEBUG
     setupDebugMessenger(instance, &debugMessenger);
+#endif
 
     glfwGetWindow("FreeFEM++", 1280, 769, window);
 
@@ -241,9 +236,6 @@ int main(int ac, char *av[])
 
     VkCommandBuffer cmdBufferInit;
     allocateCommandBuffer(device, commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, cmdBufferInit);
-
-    VkCommandBuffer cmdBufferPresent;
-    allocateCommandBuffer(device, commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, cmdBufferPresent);
 
     VkPhysicalDeviceMemoryProperties memoryProps;
     vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memoryProps);
@@ -311,6 +303,20 @@ int main(int ac, char *av[])
         return EXIT_FAILURE;
     }
 
+    perFrameData perFrameDataArray[2];
+
+    for (int i = 0; i < 2; i += 1) {
+        allocateCommandBuffer(device, commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, perFrameDataArray[i].presentCmdBuffer);
+
+        createFence(device, perFrameDataArray[i].presentFence);
+
+        createSemaphore(device, perFrameDataArray[i].imageAcquiredSemaphore);
+
+        createSemaphore(device, perFrameDataArray[i].renderingCompletedSemaphore);
+
+        perFrameDataArray[i].fenceInitialized = false;
+    }
+
     fillInitCmdBuffer(cmdBufferInit, depthImage);
 
     VkSubmitInfo submitInfo = {};
@@ -322,10 +328,13 @@ int main(int ac, char *av[])
 
     vkQueueWaitIdle(queue);
 
+
+    int frameData = 0;
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
-        if (!render(device, queue, swapchain, cmdBufferPresent, framebufferVector, renderPass, graphicPipeline, vertexBuffer, VERTEX_INPUT_BINDING, 1280, 769))
+        if (!render(device, queue, swapchain, framebufferVector, renderPass, graphicPipeline, vertexBuffer, VERTEX_INPUT_BINDING, perFrameDataArray[frameData], 1280, 769))
             break;
+        frameData = !frameData;
     }
 
     return EXIT_SUCCESS;

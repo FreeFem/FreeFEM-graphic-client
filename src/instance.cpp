@@ -1,3 +1,4 @@
+#include <cstring>
 #include "utils.h"
 #include "layers.h"
 
@@ -11,6 +12,30 @@ std::vector<const char *> GetRequiredExtensions()
     finalExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 #endif
     return finalExtensions;
+}
+
+bool checkValidationLayerSupport(std::vector<const char *> enabledLayers)
+{
+    uint32_t layerCount;
+    vkEnumerateInstanceLayerProperties(&layerCount, 0);
+
+    std::vector<VkLayerProperties> availableLayers(layerCount);
+    vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+
+    printf("Activated Layers :\n");
+    for (const char *layerName : enabledLayers) {
+        bool layerFound = false;
+        for (const auto& layerProps : availableLayers) {
+            if (strcmp(layerName, layerProps.layerName) == 0) {
+                printf("* %s\n", layerProps.layerName);
+                layerFound = true;
+                break;
+            }
+        }
+        if (!layerFound)
+            return false;
+    }
+    return true;
 }
 
 bool createInstance(VkInstance& outInstance, std::vector<const char *> enabledExtensions, std::vector<const char *> enabledLayers)
@@ -35,6 +60,8 @@ bool createInstance(VkInstance& outInstance, std::vector<const char *> enabledEx
 
     VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
 #if _DEBUG
+    if (!checkValidationLayerSupport(enabledLayers))
+        dprintf(2, "Layer not found.\n");
     instanceCreateInfo.enabledLayerCount = static_cast<uint32_t>(enabledLayers.size());
     instanceCreateInfo.ppEnabledLayerNames = enabledLayers.data();
 

@@ -3,6 +3,7 @@
 
 #include <vulkan/vulkan.h>
 #include <cstdio>
+#include "utils.h"
 
 
 static const std::vector<const char *> debugLayers =
@@ -42,12 +43,13 @@ static void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMesse
 }
 
 static bool setupDebugMessenger(const VkInstance instance, VkDebugUtilsMessengerEXT *outDebugMessenger) {
-
+    VkResult result;
     VkDebugUtilsMessengerCreateInfoEXT createInfo;
     populateDebugMessengerCreateInfo(createInfo);
 
-    if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, outDebugMessenger) != VK_SUCCESS) {
-        dprintf(2, "Failed to create Debugger messenger.\n");
+    result = CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, outDebugMessenger);
+    if (result != VK_SUCCESS) {
+        dprintf(2, "Failed to create Debugger messenger. [%s]\n", VkResultToStr(result));
         return false;
     }
     return true;

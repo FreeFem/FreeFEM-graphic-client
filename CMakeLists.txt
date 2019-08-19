@@ -46,7 +46,7 @@ include_directories(extern/json/include)
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 # Telling Cmake to compile a executable
-add_executable(FreeFEM_graphic_client src/main.cpp src/instance.cpp src/surface.cpp  src/physicalDevice.cpp src/utils.cpp src/device.cpp src/swapchain.cpp src/commandPool.cpp src/allocImage.cpp src/allocBuffer.cpp src/renderpass.cpp src/pipeline.cpp)
+add_executable(FreeFEM_graphic_client src/main.cpp src/vkContext.cpp)
 
 # Using C++11 standard
 set_target_properties(FreeFEM_graphic_client PROPERTIES CXX_STANDARD 11)

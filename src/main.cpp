@@ -190,152 +190,18 @@ bool render(const VkDevice device, const VkQueue queue, const VkSwapchainKHR swa
     return true;
 }
 
-int main(int ac, char *av[])
+#include "vkContext.hpp"
+
+int main()
 {
-    if (glfwInit() != GLFW_TRUE) {
-        dprintf(2, "%s: Failed to init GLFW.\n", av[0]);
+    vkContext c;
+    vkContextInitInfo init = {1280, 769, "NAME"};
+
+    if (c.init(init) != ReturnError::NONE)
         return EXIT_FAILURE;
-    }
 
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
-    GLFWwindow *window;
-    VkInstance instance;
-    VkDebugUtilsMessengerEXT debugMessenger;
-    VkPhysicalDevice physicalDevice;
-    VkDevice device;
-    VkQueue queue;
-    uint32_t queueFamily;
-
-    createInstance(instance, GetRequiredExtensions(), debugLayers);
-#ifdef _DEBUG
-    setupDebugMessenger(instance, &debugMessenger);
-#endif
-
-    glfwGetWindow("FreeFEM++", 1280, 769, window);
-
-    VkSurfaceKHR surface;
-    createSurfaceKHR(window, instance, surface);
-
-    chooseVkPhysicalDevice(instance, physicalDevice, surface);
-
-    createDeviceAndQueue(physicalDevice, surface, debugLayers, device, queue, queueFamily);
-
-    VkSwapchainKHR swapchain;
-    VkFormat surfaceFormat;
-    if (!createSwapchain(physicalDevice, device, surface, window, VK_NULL_HANDLE, swapchain, 1, surfaceFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT)) {
-        return EXIT_FAILURE;
-    }
-
-	std::vector<VkImage> swapchainImagesVector;
-	std::vector<VkImageView> swapchainImageViewsVector;
-    getSwapchainImagesAndViews(device, swapchain, &surfaceFormat, swapchainImagesVector, swapchainImageViewsVector);
-
-    VkCommandPool commandPool;
-    createCommandPool(device, queueFamily, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT, commandPool);
-
-    VkCommandBuffer cmdBufferInit;
-    allocateCommandBuffer(device, commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, cmdBufferInit);
-
-    VkPhysicalDeviceMemoryProperties memoryProps;
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memoryProps);
-
-    const VkFormat depthBufferFormat = VK_FORMAT_D16_UNORM;
-
-    VkImage depthImage;
-    VkImageView depthImageView;
-    VkDeviceMemory depthMemory;
-    createAndAllocateImage(device,
-                           memoryProps,
-                           VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-                           0,
-                           depthBufferFormat,
-                           1280, 769,
-                           depthImage,
-                           depthMemory,
-                           &depthImageView,
-                           VK_IMAGE_ASPECT_DEPTH_BIT);
-
-    VkRenderPass renderPass;
-    createRenderPass(device, surfaceFormat, depthBufferFormat, renderPass);
-
-    std::vector<VkFramebuffer> framebufferVector;
-    framebufferVector.reserve(swapchainImageViewsVector.size());
-
-    for (const auto view : swapchainImageViewsVector) {
-        VkFramebuffer fb;
-        createFramebuffer(device, renderPass, {view, depthImageView}, 1280, 769, fb);
-        framebufferVector.push_back(fb);
-    }
-
-    const size_t vertexBufferSize = sizeof(TriangleDemoVertex) * NUM_DEMO_VERTICES;
-    VkBuffer vertexBuffer;
-    VkDeviceMemory vertexBufferMem;
-    createAndAllocateBuffer(device, memoryProps,
-                            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-                            vertexBufferSize,
-                            vertexBuffer,
-                            vertexBufferMem);
-    {
-        void *mappedBuffer;
-        vkMapMemory(device, vertexBufferMem, 0, VK_WHOLE_SIZE, 0, &mappedBuffer);
-
-        memcpy(mappedBuffer, vertices, vertexBufferSize);
-        vkUnmapMemory(device, vertexBufferMem);
-    }
-
-    VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
-    pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutCreateInfo.pNext = 0;
-    pipelineLayoutCreateInfo.flags = 0;
-    pipelineLayoutCreateInfo.setLayoutCount = 0;
-    pipelineLayoutCreateInfo.pSetLayouts = 0;
-    pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
-    pipelineLayoutCreateInfo.pPushConstantRanges = 0;
-
-    VkPipelineLayout pipelineLayout;
-    vkCreatePipelineLayout(device, &pipelineLayoutCreateInfo, 0, &pipelineLayout);
-
-    VkPipeline graphicPipeline;
-    if (!createPipeline(device, renderPass, pipelineLayout, VERTEX_SHADER_FILENAME, FRAGMENT_SHADER_FILENAME, VERTEX_INPUT_BINDING, graphicPipeline)) {
-        dprintf(2, "Pipeline call failed.\n");
-        return EXIT_FAILURE;
-    }
-
-    perFrameData perFrameDataArray[2];
-
-    for (int i = 0; i < 2; i += 1) {
-        allocateCommandBuffer(device, commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, perFrameDataArray[i].presentCmdBuffer);
-
-        createFence(device, perFrameDataArray[i].presentFence);
-
-        createSemaphore(device, perFrameDataArray[i].imageAcquiredSemaphore);
-
-        createSemaphore(device, perFrameDataArray[i].renderingCompletedSemaphore);
-
-        perFrameDataArray[i].fenceInitialized = false;
-    }
-
-    fillInitCmdBuffer(cmdBufferInit, depthImage);
-
-    VkSubmitInfo submitInfo = {};
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &cmdBufferInit;
-
-    vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE);
-
-    vkQueueWaitIdle(queue);
-
-
-    int frameData = 0;
-    while (!glfwWindowShouldClose(window)) {
+    while (!glfwWindowShouldClose(c.window)) {
         glfwPollEvents();
-        if (!render(device, queue, swapchain, framebufferVector, renderPass, graphicPipeline, vertexBuffer, VERTEX_INPUT_BINDING, perFrameDataArray[frameData], 1280, 769))
-            break;
-        frameData = !frameData;
     }
-
     return EXIT_SUCCESS;
 }

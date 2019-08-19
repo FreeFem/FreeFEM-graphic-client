@@ -11,11 +11,17 @@ static const std::vector<const char *> debugLayers =
     "VK_LAYER_LUNARG_standard_validation"
 };
 
-static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
+static VKAPI_ATTR VkBool32 VKAPI_CALL debugReportCallbackEXT(VkDebugReportFlagsEXT flags,
+    VkDebugReportObjectTypeEXT objectType,
+    uint64_t object,
+    size_t location,
+    int32_t messageCode,
+    const char *pLayerPrefix,
+    const char *pMessage,
+    void *pUserData)
 {
-    dprintf(2, "Validation layers: %s.\n", pCallbackData->pMessage);
-
-    return VK_FALSE;
+    dprintf(2, "Validation Layers CallBack.\n");
+	return VK_FALSE;
 }
 
 static void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo) {

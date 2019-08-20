@@ -5,6 +5,7 @@
 #include <vector>
 #include "../util/utils.h"
 #include "CommandBuffer.h"
+#include "Swapchain.h"
 #include "../core/NativeWindow.h"
 
 struct GraphManagerInitInfo {
@@ -27,7 +28,8 @@ struct GPUDeviceCapabilities {
 
 class GraphManager {
     public:
-        GraphManager() { }
+
+        GraphManager() {}
 
         ~GraphManager();
 
@@ -37,6 +39,7 @@ class GraphManager {
 
         VkInstance m_instance = VK_NULL_HANDLE;
         VkDebugReportCallbackEXT m_debugCallback = VK_NULL_HANDLE;
+        VkDebugUtilsMessengerEXT m_DebugMessenger = VK_NULL_HANDLE;
 
         VkPhysicalDevice m_physicalDevice;
         std::vector<const char *> m_extensions = {}; // To-Do : store them is a "prettier" way (Bit shift)
@@ -54,6 +57,7 @@ class GraphManager {
         PFN_vkCmdDebugMarkerBeginEXT m_pfnCmdDebugMarkerBeginEXT = nullptr;
         PFN_vkCmdDebugMarkerEndEXT m_pfnCmdDebugMarkerEndEXT = nullptr;
         PFN_vkGetShaderInfoAMD m_pfnGetShaderInfoAMD = nullptr;
+        PFN_vkCreateDebugUtilsMessengerEXT m_pfnCreateDebugUtilsMessengerEXT = nullptr;
 
         struct PerFrame {
             int empty_for_now = 0;
@@ -63,6 +67,7 @@ class GraphManager {
 
         VkSurfaceKHR m_surface;
         VkSwapchainKHR m_swapchain;
+        VkFormat m_surfaceFormat;
         uint8_t m_acquiredImageIdx = UINT8_MAX;
 
         PerFrame m_frames[2];
@@ -70,6 +75,8 @@ class GraphManager {
         VkPhysicalDeviceMemoryProperties m_memoryProperties;
 
         CommandBufferCreator m_commandBufferCreator;
+
+        SwapchainCreator m_SwapchainCreator;
 
         FORCE_USE_RESULT Error initInstance();
         FORCE_USE_RESULT Error initSurface();

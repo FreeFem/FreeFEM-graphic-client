@@ -18,17 +18,14 @@ bool createSwapchain(const VkPhysicalDevice phyDev,
     uint32_t surfaceFormatCount;
     result = vkGetPhysicalDeviceSurfaceFormatsKHR(phyDev, surface, &surfaceFormatCount, 0);
     if (result != VK_SUCCESS) {
-        dprintf(2, "Failed to get number of surface formats. [%s]\n", VkResultToStr(result));
         return false;
     } else if (surfaceFormatCount == 0) {
-        dprintf(2, "Didn't find any surface format.\n");
         return false;
     }
 
     std::vector<VkSurfaceFormatKHR> surfaceFormats(surfaceFormatCount);
     result = vkGetPhysicalDeviceSurfaceFormatsKHR(phyDev, surface, &surfaceFormatCount, surfaceFormats.data());
     if (result != VK_SUCCESS) {
-        dprintf(2, "Failed to get surface formats list. [%s]\n", VkResultToStr(result));
         return false;
     }
     VkFormat surfaceFormat;
@@ -42,24 +39,20 @@ bool createSwapchain(const VkPhysicalDevice phyDev,
     VkSurfaceCapabilitiesKHR surfaceCapabilities;
     result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(phyDev, surface, &surfaceCapabilities);
     if (result != VK_SUCCESS) {
-        dprintf(2, "Failed to get surface capabilities. [%s]\n", VkResultToStr(result));
         return false;
     }
 
     uint32_t presentModeCount = 0;
     result = vkGetPhysicalDeviceSurfacePresentModesKHR(phyDev, surface, &presentModeCount, 0);
     if (result != VK_SUCCESS) {
-        dprintf(2, "Failed to get number of present modes. [%s]\n", VkResultToStr(result));
         return false;
     } else if (presentModeCount == 0) {
-        dprintf(2, "Didn't find any present mode.\n");
         return false;
     }
 
     std::vector<VkPresentModeKHR> presentModes(presentModeCount);
     result = vkGetPhysicalDeviceSurfacePresentModesKHR(phyDev, surface, &presentModeCount, presentModes.data());
     if (result != VK_SUCCESS) {
-        dprintf(2, "Failed to get present modes list. [%s]\n", VkResultToStr(result));
         return false;
     }
 
@@ -109,7 +102,6 @@ bool createSwapchain(const VkPhysicalDevice phyDev,
 
     result = vkCreateSwapchainKHR(device, &createInfo, 0, &outSwapchain);
     if (result != VK_SUCCESS) {
-        dprintf(2, "Failed to create swapchain. [%s]\n", VkResultToStr(result));
         return false;
     }
     outSurfaceFormat = surfaceFormat;
@@ -132,16 +124,13 @@ bool getSwapchainImagesAndViews(const VkDevice device,
     uint32_t swapchainImageCount = 0;
     result = vkGetSwapchainImagesKHR(device, swapchain, &swapchainImageCount, 0);
     if (result != VK_SUCCESS) {
-        dprintf(2, "Failed to get number of swapchain images. [%s]\n", VkResultToStr(result));
         return false;
     } else if (swapchainImageCount == 0) {
-        dprintf(2, "Didn't find any swapchain image.\n");
         return false;
     }
     std::vector<VkImage> swapchainImages(swapchainImageCount);
     result = vkGetSwapchainImagesKHR(device, swapchain, &swapchainImageCount, swapchainImages.data());
     if (result != VK_SUCCESS) {
-        dprintf(2, "Failed to get swapchain image list. [%s]\n", VkResultToStr(result));
         return false;
     }
 
@@ -167,7 +156,6 @@ bool getSwapchainImagesAndViews(const VkDevice device,
 
         result = vkCreateImageView(device, &createInfo, 0, &swapchainImageViews[i]);
         if (result != VK_SUCCESS) {
-            dprintf(2, "Failed to create image view. [%s]\n", VkResultToStr(result));
             return false;
         }
     }

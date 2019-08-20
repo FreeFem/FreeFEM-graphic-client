@@ -6,6 +6,7 @@
 #include "NativeWindow.h"
 #include "../vk/GraphManager.h"
 #include "../util/utils.h"
+#include "../util/NonCopyable.h"
 
 class vkContext;
 
@@ -16,8 +17,10 @@ struct AppInitInfo {
 
 class App {
     public:
+        App() { }
 
         FORCE_USE_RESULT Error init(const AppInitInfo& initInfo);
+
         void destroy();
 
         Error mainLoop();

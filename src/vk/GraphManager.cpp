@@ -18,6 +18,16 @@ Error GraphManager::init(const GraphManagerInitInfo& initInfo)
         return Error::FUNCTION_FAILED;
     if (initDevice() != Error::NONE)
         return Error::FUNCTION_FAILED;
+    vkGetDeviceQueue(m_device, m_queueIdx, 0, &m_queue);
+
+    if (m_SwapchainCreator.init(m_physicalDevice, m_device, m_window->getNativeWindow(), m_surface))
+        return Error::FUNCTION_FAILED;
+    if (m_SwapchainCreator.GetSurfaceFormat(m_surfaceFormat))
+        return Error::FUNCTION_FAILED;
+    if (m_SwapchainCreator.newSwapchain(VK_NULL_HANDLE, m_swapchain))
+       return Error::FUNCTION_FAILED;
+    if (m_commandBufferCreator.init(m_device, m_queueIdx))
+        return Error::FUNCTION_FAILED;
     return Error::NONE;
 }
 
@@ -64,10 +74,13 @@ Error GraphManager::initInstance()
     createInfo.pApplicationInfo = &appInfo;
 
 #ifdef _DEBUG
+    VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
     checkValidationLayerSupport(debugLayers);
 
     createInfo.enabledLayerCount = (uint32_t)debugLayers.size();
     createInfo.ppEnabledLayerNames = debugLayers.data();
+    populateDebugMessengerCreateInfo(debugCreateInfo);
+    createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo;
 #else
     createInfo.enabledLayerCount = 0;
     createInfo.ppEnabledLayerNames = 0;
@@ -147,7 +160,9 @@ Error GraphManager::initDevice()
     vkGetPhysicalDeviceQueueFamilyProperties(m_physicalDevice, &count, queueInfos.data());
 
     uint32_t desiredFamilyIdx = UINT32_MAX;
-    const VkQueueFlags DESIRED_QUEUE_FLAGS = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_TRANSFER_BIT;
+    const VkQueueFlags DESIRED_QUEUE_FLAGS = VK_QUEUE_GRAPHICS_BIT;
+
+    vkGetPhysicalDeviceFeatures(m_physicalDevice, &m_devFeatures);
 
     // Pick the queue family
     for (uint_fast32_t i = 0; i < count; i += 1) {
@@ -180,17 +195,20 @@ Error GraphManager::initDevice()
     deviceCreateInfo.pEnabledFeatures = &m_devFeatures;
 
     // Extensions
-    std::vector<const char *> extensions = {{VK_KHR_SWAPCHAIN_EXTENSION_NAME}};
+    std::vector<const char *> extensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
 #ifdef _DEBUG
-        extensions.push_back(VK_EXT_DEBUG_MARKER_EXTENSION_NAME);
+    extensions.push_back(VK_EXT_DEBUG_MARKER_EXTENSION_NAME);
 
     if (m_capabilities.m_gpuVendor == 0x1002 || m_capabilities.m_gpuVendor == 0x1022)
         extensions.push_back(VK_AMD_SHADER_INFO_EXTENSION_NAME);
+
+    deviceCreateInfo.enabledLayerCount = (uint32_t)debugLayers.size();
+    deviceCreateInfo.ppEnabledLayerNames = debugLayers.data();
 #endif
 
-    deviceCreateInfo.enabledLayerCount = (uint32_t)extensions.size();
-    deviceCreateInfo.ppEnabledLayerNames = extensions.data();
+    deviceCreateInfo.enabledExtensionCount = (uint32_t)extensions.size();
+    deviceCreateInfo.ppEnabledExtensionNames = extensions.data();
 
     vkCreateDevice(m_physicalDevice, &deviceCreateInfo, 0, &m_device);
 
@@ -201,13 +219,19 @@ Error GraphManager::initDevice()
         dprintf(2, "VK_EXT_debug_marker is present but vkDebugMarkerSetObjectNameEXT is not there\n");
     m_pfnCmdDebugMarkerBeginEXT = reinterpret_cast<PFN_vkCmdDebugMarkerBeginEXT>
                 (vkGetDeviceProcAddr(m_device, "vkCmdDebugMarkerBeginEXT"));
-    if (m_pfnCmdDebugMarkerBeginEXT)
+    if (m_pfnCmdDebugMarkerBeginEXT == 0)
         dprintf(2, "VK_EXT_debug_marker is present but vkCmdDebugMarkerBeginEXT is not there\n");
     m_pfnCmdDebugMarkerEndEXT = reinterpret_cast<PFN_vkCmdDebugMarkerEndEXT>
                 (vkGetDeviceProcAddr(m_device, "vkCmdDebugMarkerEndEXT"));
-    if (m_pfnCmdDebugMarkerEndEXT)
+    if (m_pfnCmdDebugMarkerEndEXT == 0)
         dprintf(2, "VK_EXT_debug_marker is present but vkCmdDebugMarkerEndEXT is not there\n");
-
+    m_pfnCreateDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>
+                (vkGetInstanceProcAddr(m_instance, "vkCreateDebugUtilsMessengerEXT"));
+    if (m_pfnCreateDebugUtilsMessengerEXT) {
+        VkDebugUtilsMessengerCreateInfoEXT dcreateInfo = {};
+        populateDebugMessengerCreateInfo(dcreateInfo);
+        m_pfnCreateDebugUtilsMessengerEXT(m_instance, &dcreateInfo, 0, &m_DebugMessenger);
+    }
     if (m_capabilities.m_gpuVendor == 0x1002 || m_capabilities.m_gpuVendor == 0x1022) {
         m_pfnGetShaderInfoAMD = reinterpret_cast<PFN_vkGetShaderInfoAMD>
                     (vkGetDeviceProcAddr(m_device, "vkGetShaderInfoAMD"));

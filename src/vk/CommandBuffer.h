@@ -7,9 +7,6 @@
 
 class CommandBufferCreator : public NonCopyable {
     public:
-        CommandBufferCreator() = default;
-
-        ~CommandBufferCreator() = default;
 
         FORCE_USE_RESULT Error init(VkDevice& device, uint32_t queueFamily);
 

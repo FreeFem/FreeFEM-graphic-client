@@ -149,7 +149,7 @@ ReturnError vkContext::initInstance()
         vkCreateDebugReportCallbackEXT(m_instance, &createInfo, 0, &m_debugCallback);
     }
 
-    // Create physical device
+    // Create physical device (Dump way of picking the device in the list, will rework that piece of code later)
     uint32_t count = 0;
     CHECK_VK_FNC(vkEnumeratePhysicalDevices(m_instance, &count, 0));
     if (count < 1)

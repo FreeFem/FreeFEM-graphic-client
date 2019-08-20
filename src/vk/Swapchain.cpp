@@ -32,7 +32,7 @@ Error SwapchainCreator::GetSurfaceFormat(VkFormat& surfaceFormat)
     return Error::NONE;
 }
 
-Error SwapchainCreator::newSwapchain(VkSwapchainKHR oldSwapchain, VkSwapchainKHR& outSwapchain)
+Error SwapchainCreator::newSwapchain(VkSwapchainKHR oldSwapchain, Swapchain& outSwapchain)
 {
     uint32_t surfaceFormatCount;
 
@@ -105,9 +105,43 @@ Error SwapchainCreator::newSwapchain(VkSwapchainKHR oldSwapchain, VkSwapchainKHR
     createInfo.oldSwapchain = oldSwapchain;
     createInfo.clipped = VK_TRUE;
 
-    if (vkCreateSwapchainKHR(m_device, &createInfo, 0, &outSwapchain) != VK_SUCCESS)
+    if (vkCreateSwapchainKHR(m_device, &createInfo, 0, &outSwapchain.m_handle) != VK_SUCCESS)
         return Error::FUNCTION_FAILED;
     if (oldSwapchain != VK_NULL_HANDLE)
         vkDestroySwapchainKHR(m_device, oldSwapchain, 0);
+    uint32_t imageCount = 0;
+    if (vkGetSwapchainImagesKHR(m_device, outSwapchain.m_handle, &imageCount, 0) != VK_SUCCESS)
+        return Error::FUNCTION_FAILED;
+    if (imageCount < 1)
+        return Error::FUNCTION_FAILED;
+    std::vector<VkImage> swapchainImages(imageCount);
+    if (vkGetSwapchainImagesKHR(m_device, outSwapchain.m_handle, &imageCount, swapchainImages.data()) != VK_SUCCESS)
+        return Error::FUNCTION_FAILED;
+
+    std::vector<VkImageView> swapchainImageViews(imageCount);
+
+    for (uint32_t i = 0; i < imageCount; i += 1) {
+        VkImageViewCreateInfo createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        createInfo.pNext = 0;
+        createInfo.flags = 0;
+        GetSurfaceFormat(createInfo.format);
+        createInfo.components.r = VK_COMPONENT_SWIZZLE_R;
+        createInfo.components.g = VK_COMPONENT_SWIZZLE_G;
+        createInfo.components.b = VK_COMPONENT_SWIZZLE_B;
+        createInfo.components.a = VK_COMPONENT_SWIZZLE_A;
+        createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        createInfo.subresourceRange.baseMipLevel = 0;
+        createInfo.subresourceRange.levelCount = 1;
+        createInfo.subresourceRange.baseArrayLayer = 0;
+        createInfo.subresourceRange.layerCount = 1;
+        createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        createInfo.image = swapchainImages[i];
+
+        if (vkCreateImageView(m_device, &createInfo, 0, &swapchainImageViews[i]) != VK_SUCCESS)
+            return Error::FUNCTION_FAILED;
+    }
+    outSwapchain.m_images = std::move(swapchainImages);
+    outSwapchain.m_imagesView = std::move(swapchainImageViews);
     return Error::NONE;
 }

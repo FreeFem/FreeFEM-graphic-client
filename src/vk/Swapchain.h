@@ -6,12 +6,18 @@
 #include "../util/NonCopyable.h"
 #include "../util/utils.h"
 
+struct Swapchain {
+    VkSwapchainKHR m_handle;
+    std::vector<VkImage> m_images;
+    std::vector<VkImageView> m_imagesView;
+};
+
 class SwapchainCreator : public NonCopyable {
     public:
 
         FORCE_USE_RESULT Error init(VkPhysicalDevice physicalDevice, VkDevice device, GLFWwindow *window, VkSurfaceKHR surface);
 
-        FORCE_USE_RESULT Error newSwapchain(VkSwapchainKHR oldSwapchain, VkSwapchainKHR& outSwapchain);
+        FORCE_USE_RESULT Error newSwapchain(VkSwapchainKHR oldSwapchain, Swapchain& outSwapchain);
 
         Error GetSurfaceFormat(VkFormat& surfaceFormat);
 

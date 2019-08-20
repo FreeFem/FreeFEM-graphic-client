@@ -60,13 +60,17 @@ class GraphManager {
         PFN_vkCreateDebugUtilsMessengerEXT m_pfnCreateDebugUtilsMessengerEXT = nullptr;
 
         struct PerFrame {
-            int empty_for_now = 0;
+            VkFence presentFence;
+            VkCommandBuffer presentCmdBuffer;
+            VkSemaphore imageAcquiredSemaphore;
+            VkSemaphore renderingCompletedSemaphore;
+            bool fenceInitialized;
         };
 
         NativeWindow *m_window = NULL;
 
         VkSurfaceKHR m_surface;
-        VkSwapchainKHR m_swapchain;
+        Swapchain m_swapchain;
         VkFormat m_surfaceFormat;
         uint8_t m_acquiredImageIdx = UINT8_MAX;
 

@@ -13,7 +13,60 @@ namespace gr
 
     Error Context::initInternal(const Manager& grm)
     {
+
+        VkCommandPoolCreateInfo createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        createInfo.pNext = 0;
+        createInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+        createInfo.queueFamilyIndex = grm.getGraphicsQueueFamily();
+
+        if (vkCreateCommandPool(grm.getDevice(), &createInfo, 0, &m_commandPool) != VK_SUCCESS)
+            return Error::FUNCTION_FAILED;
         if (initSwapchain(grm))
+            return Error::FUNCTION_FAILED;
+        if (initRenderpass(grm))
+            return Error::FUNCTION_FAILED;
+        if (m_depthImage.init(grm.getDevice(), grm.getPhysicalDeviceMemProps(),
+            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 0, depthBufferFormat,
+            grm.getNativeWindow().getWidth(), grm.getNativeWindow().getHeight(),
+            VK_IMAGE_ASPECT_DEPTH_BIT))
+            return Error::FUNCTION_FAILED;
+        if (initFramebuffer(grm))
+            return Error::FUNCTION_FAILED;
+        return Error::NONE;
+    }
+
+    Error Context::reload(const Manager& grm)
+    {
+        vkDeviceWaitIdle(grm.getDevice());
+
+        for (size_t i = 0; i < m_framebuffers.size(); i += 1)
+            vkDestroyFramebuffer(grm.getDevice(), m_framebuffers[i], 0);
+        vkFreeCommandBuffers(grm.getDevice(), m_commandPool, 1, &m_cmdBuffer);
+        vkFreeCommandBuffers(grm.getDevice(), m_commandPool, 2, m_presentCmdBuffer);
+
+        // Destroy PipelineLayout/Pipeline
+        vkDestroyRenderPass(grm.getDevice(), m_renderpass, 0);
+
+        for (size_t i = 0; i < m_swapImages.size(); i += 1) {
+            vkDestroyImage(grm.getDevice(), m_swapImages[i], 0);
+        }
+        m_swapImages.clear();
+
+        for (size_t i = 0; i < m_swapImageViews.size(); i += 1) {
+            vkDestroyImageView(grm.getDevice(), m_swapImageViews[i], 0);
+        }
+        m_swapImageViews.clear();
+        if (initSwapchain(grm))
+            return Error::FUNCTION_FAILED;
+        if (initRenderpass(grm))
+            return Error::FUNCTION_FAILED;
+        if (m_depthImage.init(grm.getDevice(), grm.getPhysicalDeviceMemProps(),
+            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 0, depthBufferFormat,
+            grm.getNativeWindow().getWidth(), grm.getNativeWindow().getHeight(),
+            VK_IMAGE_ASPECT_DEPTH_BIT))
+            return Error::FUNCTION_FAILED;
+        if (initFramebuffer(grm))
             return Error::FUNCTION_FAILED;
         return Error::NONE;
     }
@@ -133,6 +186,87 @@ namespace gr
         }
         m_swapImages = std::move(swapchainImages);
         m_swapImageViews = std::move(swapchainImageViews);
+        return Error::NONE;
+    }
+
+    Error Context::initRenderpass(const Manager& grm)
+    {
+        VkAttachmentDescription attachmentDescription[2] = {{}, {}};
+        attachmentDescription[0].flags = 0;
+        attachmentDescription[0].format = m_surfaceFormat;
+        attachmentDescription[0].samples = VK_SAMPLE_COUNT_1_BIT;
+        attachmentDescription[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachmentDescription[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachmentDescription[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachmentDescription[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachmentDescription[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachmentDescription[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+        attachmentDescription[1].flags = 0;
+        attachmentDescription[1].format = depthBufferFormat;
+        attachmentDescription[1].samples = VK_SAMPLE_COUNT_1_BIT;
+        attachmentDescription[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachmentDescription[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachmentDescription[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachmentDescription[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachmentDescription[1].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        attachmentDescription[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference colorAttachmentReference = {};
+        colorAttachmentReference.attachment = 0;
+        colorAttachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference depthAttachmentRefence = {};
+        depthAttachmentRefence.attachment = 1;
+        depthAttachmentRefence.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpassDescription = {};
+        subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpassDescription.flags = 0;
+        subpassDescription.inputAttachmentCount = 0;
+        subpassDescription.pInputAttachments = 0;
+        subpassDescription.colorAttachmentCount = 1;
+        subpassDescription.pColorAttachments = &colorAttachmentReference;
+        subpassDescription.pResolveAttachments = 0;
+        subpassDescription.pDepthStencilAttachment = &depthAttachmentRefence;
+        subpassDescription.preserveAttachmentCount = 0;
+        subpassDescription.pPreserveAttachments = 0;
+
+        VkRenderPassCreateInfo createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        createInfo.pNext = 0;
+        createInfo.attachmentCount = 2;
+        createInfo.pAttachments = attachmentDescription;
+        createInfo.subpassCount = 1;
+        createInfo.pSubpasses = &subpassDescription;
+        createInfo.dependencyCount = 0;
+        createInfo.pDependencies = 0;
+
+        if (vkCreateRenderPass(grm.getDevice(), &createInfo, 0, &m_renderpass) != VK_SUCCESS)
+            return Error::FUNCTION_FAILED;
+        return Error::NONE;
+    }
+
+    Error Context::initFramebuffer(const Manager& grm)
+    {
+        for (const auto view : m_swapImageViews) {
+            VkFramebuffer fb;
+
+            VkImageView attachment[2] = {view, m_depthImage.getImageView()};
+            VkFramebufferCreateInfo createInfo = {};
+            createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            createInfo.pNext = 0;
+            createInfo.flags = 0;
+            createInfo.renderPass = m_renderpass;
+            createInfo.attachmentCount = 2;
+            createInfo.pAttachments = attachment;
+            createInfo.width = grm.getNativeWindow().getWidth();
+            createInfo.height = grm.getNativeWindow().getHeight();
+            createInfo.layers = 1;
+
+            vkCreateFramebuffer(grm.getDevice(), &createInfo, 0, &fb);
+            m_framebuffers.push_back(fb);
+        }
         return Error::NONE;
     }
 

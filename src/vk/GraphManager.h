@@ -5,7 +5,6 @@
 #include <vector>
 #include "../util/utils.h"
 #include "CommandBuffer.h"
-#include "Swapchain.h"
 #include "../core/NativeWindow.h"
 #include "Image.h"
 
@@ -67,6 +66,7 @@ namespace gr
             inline uint32_t getGraphicsQueueFamily() const {return m_queueIdx; }
             inline VkSurfaceKHR getSurface() const { return m_surface; }
             inline NativeWindow getNativeWindow() const { return *m_window; }
+            inline VkPhysicalDeviceMemoryProperties getPhysicalDeviceMemProps() const { return m_memoryProperties; }
 
             void beginDebugMaker(VkCommandBuffer cmdBuffer, const char *name) const;
             void endDebugMaker(VkCommandBuffer cmdBuffer) const;

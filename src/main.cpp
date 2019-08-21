@@ -2,8 +2,8 @@
 
 int main()
 {
-    App app;
-    AppInitInfo appInitInfo = {1280, 768};
+    FEM::App app;
+    FEM::AppInitInfo appInitInfo = {1280, 768};
 
     if (app.init(appInitInfo))
         return EXIT_FAILURE;

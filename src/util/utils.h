@@ -35,11 +35,7 @@ struct Error {
 
     Error(const uint32_t code)
     : m_value(code)
-    {
-#ifdef _DEBUG
-        dprintf(2, "Return error value : %s (%d).\n", ErrorNames[(code < UNKNOWN) ? code : UNKNOWN], code);
-#endif
-    }
+    { }
 
     Error& operator=(const Error& b) { m_value = b.m_value; return *this; }
 

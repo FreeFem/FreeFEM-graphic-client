@@ -18,7 +18,7 @@ static int findMemoryTypeWithProperties(const VkPhysicalDeviceMemoryProperties m
     return -1;
 }
 
-Error Image::init(const VkDevice device, const VkPhysicalDeviceMemoryProperties memProps, const VkBufferUsageFlags imageUsage,
+Error gr::Image::init(const VkDevice device, const VkPhysicalDeviceMemoryProperties memProps, const VkBufferUsageFlags imageUsage,
                     const VkMemoryPropertyFlags requiredMemProps, const VkFormat imageFormat, const int width, const int height,
                     VkImageAspectFlags viewSubresoucesAspectMask)
 {
@@ -56,7 +56,7 @@ Error Image::init(const VkDevice device, const VkPhysicalDeviceMemoryProperties 
 
     if (vkAllocateMemory(device, &memAllocInfo, 0, &m_memory) != VK_SUCCESS)
         return Error::FUNCTION_FAILED;
-    
+
     if (vkBindImageMemory(device, m_handle, m_memory, 0) != VK_SUCCESS)
         return Error::FUNCTION_FAILED;
 
@@ -80,4 +80,11 @@ Error Image::init(const VkDevice device, const VkPhysicalDeviceMemoryProperties 
     if (vkCreateImageView(device, &imageViewCreateInfo, 0, &m_view) != VK_SUCCESS)
         return Error::FUNCTION_FAILED;
     return Error::NONE;
+}
+
+void gr::Image::destroy(const VkDevice& device)
+{
+    vkFreeMemory(device, m_memory, 0);
+    vkDestroyImageView(device, m_view, 0);
+    vkDestroyImage(device, m_handle, 0);
 }

@@ -4,11 +4,11 @@
 #include "GraphManager.h"
 #include "layers.h"
 
-GraphManager::~GraphManager()
+gr::Manager::~Manager()
 {
 }
 
-Error GraphManager::init(const GraphManagerInitInfo& initInfo)
+Error gr::Manager::init(const ManagerInitInfo& initInfo)
 {
     m_window = &initInfo.window;
 
@@ -19,22 +19,6 @@ Error GraphManager::init(const GraphManagerInitInfo& initInfo)
     if (initDevice() != Error::NONE)
         return Error::FUNCTION_FAILED;
     vkGetDeviceQueue(m_device, m_queueIdx, 0, &m_queue);
-
-    if (m_SwapchainCreator.init(m_physicalDevice, m_device, m_window->getNativeWindow(), m_surface))
-        return Error::FUNCTION_FAILED;
-    if (m_SwapchainCreator.GetSurfaceFormat(m_surfaceFormat))
-        return Error::FUNCTION_FAILED;
-    if (m_SwapchainCreator.newSwapchain(VK_NULL_HANDLE, m_swapchain))
-       return Error::FUNCTION_FAILED;
-    if (m_commandBufferCreator.init(m_device, m_queueIdx))
-        return Error::FUNCTION_FAILED;
-    
-    if (m_commandBufferCreator.newCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, m_initCmdBuffer))
-        return Error::FUNCTION_FAILED;
-    if (m_depthImage.init(m_device, m_memoryProperties,
-                VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 0, depthBufferFormat,
-                m_window->getWidth(), m_window->getHeight(), VK_IMAGE_ASPECT_DEPTH_BIT))
-        return Error::FUNCTION_FAILED;
 
     return Error::NONE;
 }
@@ -64,7 +48,7 @@ static void checkValidationLayerSupport(std::vector<const char *> enabledLayers)
     }
 }
 
-Error GraphManager::initInstance()
+Error gr::Manager::initInstance()
 {
     const uint32_t vulkanMinor = 0;
     const uint32_t vulkanMajor = 1;
@@ -152,14 +136,14 @@ Error GraphManager::initInstance()
     return Error::NONE;
 }
 
-Error GraphManager::initSurface()
+Error gr::Manager::initSurface()
 {
     if (glfwCreateWindowSurface(m_instance, m_window->getNativeWindow(), 0, &m_surface) != VK_SUCCESS)
         return Error::FUNCTION_FAILED;
     return Error::NONE;
 }
 
-Error GraphManager::initDevice()
+Error gr::Manager::initDevice()
 {
     uint32_t count = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(m_physicalDevice, &count, 0);
@@ -252,60 +236,19 @@ Error GraphManager::initDevice()
     return Error::NONE;
 }
 
-Error GraphManager::initRenderpass()
+void gr::Manager::beginDebugMaker(VkCommandBuffer cmdBuffer, const char *name) const
 {
-    VkAttachmentDescription attachmentDescription[2] = {{}, {}};
-    attachmentDescription[0].flags = 0;
-    attachmentDescription[0].format = m_surfaceFormat;
-    attachmentDescription[0].samples = VK_SAMPLE_COUNT_1_BIT;
-    attachmentDescription[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    attachmentDescription[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    attachmentDescription[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    attachmentDescription[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    attachmentDescription[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    attachmentDescription[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    if (m_pfnCmdDebugMarkerBeginEXT) {
+        VkDebugMarkerMarkerInfoEXT markerInfo = {};
+        markerInfo.sType = VK_STRUCTURE_TYPE_DEBUG_MARKER_MARKER_INFO_EXT;
+        markerInfo.color[0] = 1.0f;
+        markerInfo.pMarkerName = (name == 0 || strlen(name) == 0) ? name : "Unnamed";
+        m_pfnCmdDebugMarkerBeginEXT(cmdBuffer, &markerInfo);
+    }
+}
 
-    attachmentDescription[1].flags = 0;
-    attachmentDescription[1].format = depthBufferFormat;
-    attachmentDescription[1].samples = VK_SAMPLE_COUNT_1_BIT;
-    attachmentDescription[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    attachmentDescription[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    attachmentDescription[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    attachmentDescription[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    attachmentDescription[1].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-    attachmentDescription[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-    
-    VkAttachmentReference colorAttachmentReference = {};
-    colorAttachmentReference.attachment = 0;
-    colorAttachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-    VkAttachmentReference depthAttachmentRefence = {};
-    depthAttachmentRefence.attachment = 1;
-    depthAttachmentRefence.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-    VkSubpassDescription subpassDescription = {};
-    subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    subpassDescription.flags = 0;
-    subpassDescription.inputAttachmentCount = 0;
-    subpassDescription.pInputAttachments = 0;
-    subpassDescription.colorAttachmentCount = 1;
-    subpassDescription.pColorAttachments = &colorAttachmentReference;
-    subpassDescription.pResolveAttachments = 0;
-    subpassDescription.pDepthStencilAttachment = &depthAttachmentRefence;
-    subpassDescription.preserveAttachmentCount = 0;
-    subpassDescription.pPreserveAttachments = 0;
-
-    VkRenderPassCreateInfo createInfo = {};
-    createInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    createInfo.pNext = 0;
-    createInfo.attachmentCount = 2;
-    createInfo.pAttachments = attachmentDescription;
-    createInfo.subpassCount = 1;
-    createInfo.pSubpasses = &subpassDescription;
-    createInfo.dependencyCount = 0;
-    createInfo.pDependencies = 0;
-
-    if (vkCreateRenderPass(m_device, &createInfo, 0, &m_renderpass) != VK_SUCCESS)
-        return Error::FUNCTION_FAILED;
-    return Error::NONE;
+void gr::Manager::endDebugMaker(VkCommandBuffer cmdBuffer) const
+{
+    if (m_pfnCmdDebugMarkerEndEXT)
+        m_pfnCmdDebugMarkerEndEXT(cmdBuffer);
 }

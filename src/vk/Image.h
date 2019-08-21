@@ -5,18 +5,29 @@
 #include "../util/NonCopyable.h"
 #include "../util/utils.h"
 
-class Image : public NonCopyable {
-    public:
+namespace gr
+{
 
-        Error init(const VkDevice, const VkPhysicalDeviceMemoryProperties, const VkBufferUsageFlags,
-                    const VkMemoryPropertyFlags, const VkFormat imageFormat, const int width, const int height,
-                    VkImageAspectFlags viewSubresoucesAspectMask);
+    class Image {
+        public:
 
-        void destroy();
+            Error init(const VkDevice, const VkPhysicalDeviceMemoryProperties, const VkBufferUsageFlags,
+                        const VkMemoryPropertyFlags, const VkFormat imageFormat, const int width, const int height,
+                        VkImageAspectFlags viewSubresoucesAspectMask);
 
-        VkImage m_handle;
-        VkImageView m_view;
-        VkDeviceMemory m_memory;
-};
+            void destroy(const VkDevice& device);
+
+            inline VkImage getImage() const { return m_handle; }
+            inline VkImageView getImageView() const { return m_view; }
+            inline VkDeviceMemory getMemory() const { return m_memory; }
+
+
+        private:
+            VkImage m_handle = VK_NULL_HANDLE;
+            VkImageView m_view = VK_NULL_HANDLE;
+            VkDeviceMemory m_memory = VK_NULL_HANDLE;
+    };
+
+} // namespace gr
 
 #endif // IMAGE_H

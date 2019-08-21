@@ -5,29 +5,34 @@
 #include <cstdint>
 #include "NativeWindow.h"
 #include "../vk/GraphManager.h"
+#include "../vk/GraphContext.h"
 #include "../util/utils.h"
 #include "../util/NonCopyable.h"
 
-class vkContext;
+namespace FEM
+{
 
-struct AppInitInfo {
-    uint32_t width;
-    uint32_t height;
-};
+    struct AppInitInfo {
+        uint32_t width;
+        uint32_t height;
+    };
 
-class App {
-    public:
-        App() { }
+    class App {
+        public:
+            App() { }
 
-        FORCE_USE_RESULT Error init(const AppInitInfo& initInfo);
+            FORCE_USE_RESULT Error init(const AppInitInfo& initInfo);
 
-        void destroy();
+            void destroy();
 
-        Error mainLoop();
+            Error mainLoop();
 
-    private:
-        NativeWindow m_window;
-        GraphManager m_grManager;
-};
+        private:
+            NativeWindow m_window;
+            gr::Manager m_grManager;
+            gr::Context m_grContext;
+    };
+
+} // namespace FEM
 
 #endif // APP_H

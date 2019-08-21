@@ -7,6 +7,7 @@
 #include "CommandBuffer.h"
 #include "Swapchain.h"
 #include "../core/NativeWindow.h"
+#include "Image.h"
 
 struct GraphManagerInitInfo {
     NativeWindow& window;
@@ -51,7 +52,6 @@ class GraphManager {
         GPUDeviceCapabilities m_capabilities;
         VkPhysicalDeviceProperties m_devProps = {};
         VkPhysicalDeviceFeatures m_devFeatures = {};
-        VkPhysicalDeviceDescriptorIndexingFeaturesEXT m_descriptorIndexingFeatures = {};
 
         PFN_vkDebugMarkerSetObjectNameEXT m_pfnDebugMarkerSetObjectNameEXT = nullptr;
         PFN_vkCmdDebugMarkerBeginEXT m_pfnCmdDebugMarkerBeginEXT = nullptr;
@@ -74,6 +74,13 @@ class GraphManager {
         VkFormat m_surfaceFormat;
         uint8_t m_acquiredImageIdx = UINT8_MAX;
 
+        VkCommandBuffer m_initCmdBuffer;
+
+        static constexpr VkFormat depthBufferFormat = VK_FORMAT_D16_UNORM;
+        Image m_depthImage;
+
+        VkRenderPass m_renderpass;
+
         PerFrame m_frames[2];
 
         VkPhysicalDeviceMemoryProperties m_memoryProperties;
@@ -85,6 +92,7 @@ class GraphManager {
         FORCE_USE_RESULT Error initInstance();
         FORCE_USE_RESULT Error initSurface();
         FORCE_USE_RESULT Error initDevice();
+        FORCE_USE_RESULT Error initRenderpass();
 };
 
 #endif // GRAPH_MANAGER_H

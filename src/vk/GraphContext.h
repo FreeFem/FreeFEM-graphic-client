@@ -6,6 +6,7 @@
 #include "../util/utils.h"
 #include "../util/NonCopyable.h"
 #include "Image.h"
+#include "Pipeline.h"
 
 namespace gr
 {
@@ -31,6 +32,10 @@ namespace gr
             inline VkSwapchainKHR getSwapchainKHR() const { return m_swapchain; }
             inline VkFormat getSurfaceFormat() const { return m_surfaceFormat; }
             inline VkFormat getDepthBufferFormat() const { return depthBufferFormat; }
+            inline std::vector<VkImageView> get_swapImageViews() const { return m_swapImageViews; }
+            inline Image get_depthImage() const { return m_depthImage; }
+
+            Error render(const Manager& grm);
 
         private:
 
@@ -41,23 +46,20 @@ namespace gr
             std::vector<VkImageView> m_swapImageViews = {};
             VkFormat m_surfaceFormat;
 
-            VkRenderPass m_renderpass;
-
             VkCommandBuffer m_cmdBuffer;
 
             uint8_t current_frame = 0;
             Frame m_perFrame[2];
             VkCommandBuffer m_presentCmdBuffer[2];
 
+            Pipeline m_pipeline;
+
             Image m_depthImage;
             static constexpr VkFormat depthBufferFormat = VK_FORMAT_D16_UNORM;
 
-            std::vector<VkFramebuffer> m_framebuffers;
-
             FORCE_USE_RESULT Error initInternal(const Manager&);
             FORCE_USE_RESULT Error initSwapchain(const Manager&);
-            FORCE_USE_RESULT Error initRenderpass(const Manager&);
-            FORCE_USE_RESULT Error initFramebuffer(const Manager&);
+            FORCE_USE_RESULT Error fillInitCmdBuffer(const Manager&);
     };
 
 } // namespace gr

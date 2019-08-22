@@ -27,7 +27,7 @@ file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/shaders DESTINATION ${CMAKE_CURRENT_BINARY
 # Telling Cmake to compile a executable
 add_executable(FreeFEM_graphic_client src/main.cpp src/core/App.cpp
                                       src/core/NativeWindow.cpp src/vk/CommandBuffer.cpp
-                                      src/vk/GraphManager.cpp
+                                      src/vk/GraphManager.cpp src/vk/Pipeline.cpp
                                       src/vk/Image.cpp src/vk/GraphContext.cpp)
 
 # Using C++11 standard

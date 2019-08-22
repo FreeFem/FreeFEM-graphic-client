@@ -63,6 +63,7 @@ namespace gr
             inline VkInstance getInstance() const { return m_instance; }
             inline VkPhysicalDevice getPhysicalDevice() const { return m_physicalDevice; }
             inline VkDevice getDevice() const { return m_device; }
+            inline VkQueue getQueue() const { return m_queue; }
             inline uint32_t getGraphicsQueueFamily() const {return m_queueIdx; }
             inline VkSurfaceKHR getSurface() const { return m_surface; }
             inline NativeWindow getNativeWindow() const { return *m_window; }

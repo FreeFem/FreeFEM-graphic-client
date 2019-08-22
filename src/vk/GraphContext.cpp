@@ -3,6 +3,47 @@
 
 namespace gr
 {
+    static bool allocateCommandBuffer(const VkDevice device,
+                           const VkCommandPool commandPool,
+                           const VkCommandBufferLevel commandBufferLevel,
+                           VkCommandBuffer& outCommandBuffer
+                          )
+    {
+        VkResult res;
+
+        VkCommandBufferAllocateInfo allocInfo = {};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.pNext = 0;
+        allocInfo.commandPool = commandPool;
+        allocInfo.level = commandBufferLevel;
+        allocInfo.commandBufferCount = 1;
+
+        res = vkAllocateCommandBuffers(device, &allocInfo, &outCommandBuffer);
+        if (res != VK_SUCCESS) {
+            return Error::FUNCTION_FAILED;
+        }
+        return true;
+    }
+
+    static VkResult createFence(const VkDevice device, VkFence &outFence)
+    {
+        VkFenceCreateInfo fenceCreateInfo = {};
+        fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fenceCreateInfo.pNext = 0;
+        fenceCreateInfo.flags = 0;
+
+        return vkCreateFence(device, &fenceCreateInfo, 0, &outFence);
+    }
+
+    static VkResult createSemaphore(const VkDevice device, VkSemaphore &outSemaphore)
+    {
+        VkSemaphoreCreateInfo semaphoreCreateInfo = {};
+        semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+        semaphoreCreateInfo.pNext = 0;
+        semaphoreCreateInfo.flags = 0;
+
+        return vkCreateSemaphore(device, &semaphoreCreateInfo, 0, &outSemaphore);
+    }
 
     Error Context::init(const Manager& grm)
     {
@@ -22,17 +63,28 @@ namespace gr
 
         if (vkCreateCommandPool(grm.getDevice(), &createInfo, 0, &m_commandPool) != VK_SUCCESS)
             return Error::FUNCTION_FAILED;
-        if (initSwapchain(grm))
+        if (!allocateCommandBuffer(grm.getDevice(), m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, m_cmdBuffer))
             return Error::FUNCTION_FAILED;
-        if (initRenderpass(grm))
+        if (initSwapchain(grm))
             return Error::FUNCTION_FAILED;
         if (m_depthImage.init(grm.getDevice(), grm.getPhysicalDeviceMemProps(),
             VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 0, depthBufferFormat,
             grm.getNativeWindow().getWidth(), grm.getNativeWindow().getHeight(),
             VK_IMAGE_ASPECT_DEPTH_BIT))
             return Error::FUNCTION_FAILED;
-        if (initFramebuffer(grm))
+        if (fillInitCmdBuffer(grm))
             return Error::FUNCTION_FAILED;
+        if (m_pipeline.init(grm, *this))
+            return Error::FUNCTION_FAILED;
+
+        for (int i = 0; i < 2; i += 1) {
+            allocateCommandBuffer(grm.getDevice(), m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, m_presentCmdBuffer[i]);
+            createFence(grm.getDevice(), m_perFrame[i].presentFence);
+            createSemaphore(grm.getDevice(), m_perFrame[i].acquiredSemaphore);
+            createSemaphore(grm.getDevice(), m_perFrame[i].renderCompletedSemaphore);
+            m_perFrame[i].fenceInitialized = false;
+        }
+
         return Error::NONE;
     }
 
@@ -40,13 +92,8 @@ namespace gr
     {
         vkDeviceWaitIdle(grm.getDevice());
 
-        for (size_t i = 0; i < m_framebuffers.size(); i += 1)
-            vkDestroyFramebuffer(grm.getDevice(), m_framebuffers[i], 0);
         vkFreeCommandBuffers(grm.getDevice(), m_commandPool, 1, &m_cmdBuffer);
         vkFreeCommandBuffers(grm.getDevice(), m_commandPool, 2, m_presentCmdBuffer);
-
-        // Destroy PipelineLayout/Pipeline
-        vkDestroyRenderPass(grm.getDevice(), m_renderpass, 0);
 
         for (size_t i = 0; i < m_swapImages.size(); i += 1) {
             vkDestroyImage(grm.getDevice(), m_swapImages[i], 0);
@@ -59,14 +106,10 @@ namespace gr
         m_swapImageViews.clear();
         if (initSwapchain(grm))
             return Error::FUNCTION_FAILED;
-        if (initRenderpass(grm))
-            return Error::FUNCTION_FAILED;
         if (m_depthImage.init(grm.getDevice(), grm.getPhysicalDeviceMemProps(),
             VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 0, depthBufferFormat,
             grm.getNativeWindow().getWidth(), grm.getNativeWindow().getHeight(),
             VK_IMAGE_ASPECT_DEPTH_BIT))
-            return Error::FUNCTION_FAILED;
-        if (initFramebuffer(grm))
             return Error::FUNCTION_FAILED;
         return Error::NONE;
     }
@@ -189,84 +232,163 @@ namespace gr
         return Error::NONE;
     }
 
-    Error Context::initRenderpass(const Manager& grm)
+    Error Context::fillInitCmdBuffer(const Manager& grm)
     {
-        VkAttachmentDescription attachmentDescription[2] = {{}, {}};
-        attachmentDescription[0].flags = 0;
-        attachmentDescription[0].format = m_surfaceFormat;
-        attachmentDescription[0].samples = VK_SAMPLE_COUNT_1_BIT;
-        attachmentDescription[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachmentDescription[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        attachmentDescription[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachmentDescription[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachmentDescription[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachmentDescription[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        VkResult res;
+        std::vector<VkImageMemoryBarrier> memBarriers;
 
-        attachmentDescription[1].flags = 0;
-        attachmentDescription[1].format = depthBufferFormat;
-        attachmentDescription[1].samples = VK_SAMPLE_COUNT_1_BIT;
-        attachmentDescription[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachmentDescription[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachmentDescription[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachmentDescription[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachmentDescription[1].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-        attachmentDescription[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        {
+            VkImageMemoryBarrier imageMemBarrier = {};
+            imageMemBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            imageMemBarrier.srcAccessMask = 0;
+            imageMemBarrier.dstAccessMask = 0;
+            imageMemBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            imageMemBarrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+            imageMemBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            imageMemBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            imageMemBarrier.subresourceRange = {VK_IMAGE_ASPECT_DEPTH_BIT, 0, 1, 0, 1};
+            imageMemBarrier.image = m_depthImage.getImage();
 
-        VkAttachmentReference colorAttachmentReference = {};
-        colorAttachmentReference.attachment = 0;
-        colorAttachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            memBarriers.push_back(imageMemBarrier);
+        }
 
-        VkAttachmentReference depthAttachmentRefence = {};
-        depthAttachmentRefence.attachment = 1;
-        depthAttachmentRefence.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        VkCommandBufferBeginInfo commandBufferBeginInfo = {};
+        commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-        VkSubpassDescription subpassDescription = {};
-        subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpassDescription.flags = 0;
-        subpassDescription.inputAttachmentCount = 0;
-        subpassDescription.pInputAttachments = 0;
-        subpassDescription.colorAttachmentCount = 1;
-        subpassDescription.pColorAttachments = &colorAttachmentReference;
-        subpassDescription.pResolveAttachments = 0;
-        subpassDescription.pDepthStencilAttachment = &depthAttachmentRefence;
-        subpassDescription.preserveAttachmentCount = 0;
-        subpassDescription.pPreserveAttachments = 0;
-
-        VkRenderPassCreateInfo createInfo = {};
-        createInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        createInfo.pNext = 0;
-        createInfo.attachmentCount = 2;
-        createInfo.pAttachments = attachmentDescription;
-        createInfo.subpassCount = 1;
-        createInfo.pSubpasses = &subpassDescription;
-        createInfo.dependencyCount = 0;
-        createInfo.pDependencies = 0;
-
-        if (vkCreateRenderPass(grm.getDevice(), &createInfo, 0, &m_renderpass) != VK_SUCCESS)
+        res = vkBeginCommandBuffer(m_cmdBuffer, &commandBufferBeginInfo);
+        if (res != VK_SUCCESS) {
             return Error::FUNCTION_FAILED;
-        return Error::NONE;
+        }
+
+        vkCmdPipelineBarrier(m_cmdBuffer,
+                            VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                            VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            (uint32_t)memBarriers.size(),
+                            memBarriers.data());
+
+        res = vkEndCommandBuffer(m_cmdBuffer);
+
+        VkSubmitInfo submitInfo = {};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &m_cmdBuffer;
+
+        vkQueueSubmit(grm.getQueue(), 1, &submitInfo, VK_NULL_HANDLE);
+
+        vkQueueWaitIdle(grm.getQueue());
     }
 
-    Error Context::initFramebuffer(const Manager& grm)
+    Error Context::render(const Manager& grm)
     {
-        for (const auto view : m_swapImageViews) {
-            VkFramebuffer fb;
-
-            VkImageView attachment[2] = {view, m_depthImage.getImageView()};
-            VkFramebufferCreateInfo createInfo = {};
-            createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            createInfo.pNext = 0;
-            createInfo.flags = 0;
-            createInfo.renderPass = m_renderpass;
-            createInfo.attachmentCount = 2;
-            createInfo.pAttachments = attachment;
-            createInfo.width = grm.getNativeWindow().getWidth();
-            createInfo.height = grm.getNativeWindow().getHeight();
-            createInfo.layers = 1;
-
-            vkCreateFramebuffer(grm.getDevice(), &createInfo, 0, &fb);
-            m_framebuffers.push_back(fb);
+        VkResult res;
+        if (m_perFrame[current_frame].fenceInitialized) {
+            vkWaitForFences(grm.getDevice(), 1, &m_perFrame[current_frame].presentFence, VK_TRUE, UINT64_MAX);
+            vkResetFences(grm.getDevice(), 1, &m_perFrame[current_frame].presentFence);
         }
+        uint32_t imageIndex = UINT32_MAX;
+        res = vkAcquireNextImageKHR(grm.getDevice(), m_swapchain, UINT64_MAX, m_perFrame[current_frame].acquiredSemaphore, VK_NULL_HANDLE, &imageIndex);
+
+        m_perFrame[current_frame].fenceInitialized = true;
+        if (res == VK_ERROR_OUT_OF_DATE_KHR) {
+            dprintf(2, "we don't support out-of-date swapchain yet.\n");
+            return Error::FUNCTION_FAILED;
+        } else if (res == VK_SUBOPTIMAL_KHR)
+            dprintf(1, "Swapchain is suboptimal.\n");
+        else if (res != VK_SUCCESS)
+            return Error::FUNCTION_FAILED;
+
+        VkCommandBufferBeginInfo commandbufferBeginInfo = {};
+        commandbufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        commandbufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+
+        res = vkBeginCommandBuffer(m_presentCmdBuffer[current_frame], &commandbufferBeginInfo);
+        if (res != VK_SUCCESS) return Error::FUNCTION_FAILED;
+
+        VkClearValue clearValues[2];
+        clearValues[0].color.float32[0] = 0.0f;
+        clearValues[0].color.float32[1] = 0.0f;
+        clearValues[0].color.float32[2] = 0.0f;
+        clearValues[0].color.float32[3] = 1.0f;
+        clearValues[1].depthStencil.depth = 1.0f;
+        clearValues[1].depthStencil.stencil = 0.0f;
+
+        VkRenderPassBeginInfo renderPassBeginInfo = {};
+        renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassBeginInfo.renderPass = m_pipeline.getRenderpass();
+        renderPassBeginInfo.framebuffer = m_pipeline.getFramebuffers()[imageIndex];
+        renderPassBeginInfo.renderArea.offset = {0, 0};
+        renderPassBeginInfo.renderArea.extent = {grm.getNativeWindow().getWidth(), grm.getNativeWindow().getHeight()};
+        renderPassBeginInfo.clearValueCount = 2;
+        renderPassBeginInfo.pClearValues = clearValues;
+
+        vkCmdBeginRenderPass(m_presentCmdBuffer[current_frame], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        vkCmdBindPipeline(m_presentCmdBuffer[current_frame], VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline.getPipeline());
+
+        VkViewport viewport = {};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = (float)grm.getNativeWindow().getWidth();
+        viewport.height = (float)grm.getNativeWindow().getHeight();
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+
+        vkCmdSetViewport(m_presentCmdBuffer[current_frame], 0, 1, &viewport);
+
+        VkRect2D scissor = {};
+        scissor.offset.x = 0;
+        scissor.offset.y = 0;
+        scissor.extent.width = grm.getNativeWindow().getWidth();
+        scissor.extent.height = grm.getNativeWindow().getHeight();
+
+        vkCmdSetScissor(m_presentCmdBuffer[current_frame], 0, 1, &scissor);
+
+        VkDeviceSize bufferOffsets = 0;
+        vkCmdBindVertexBuffers(m_presentCmdBuffer[current_frame], VERTEX_INPUT_BINDING, 1, &m_pipeline.getBuffers()[0], &bufferOffsets);
+
+        vkCmdDraw(m_presentCmdBuffer[current_frame], 3, 1, 0, 0);
+
+        vkCmdEndRenderPass(m_presentCmdBuffer[current_frame]);
+
+        res = vkEndCommandBuffer(m_presentCmdBuffer[current_frame]);
+
+        VkPipelineStageFlags pipelineStageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        VkSubmitInfo submitInfo = {};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.waitSemaphoreCount = 1;
+        submitInfo.pWaitSemaphores = &m_perFrame[current_frame].acquiredSemaphore;
+        submitInfo.pWaitDstStageMask = &pipelineStageFlags;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &m_presentCmdBuffer[current_frame];
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = &m_perFrame[current_frame].renderCompletedSemaphore;
+
+        res = vkQueueSubmit(grm.getQueue(), 1, &submitInfo, m_perFrame[current_frame].presentFence);
+        if (res != VK_SUCCESS) return Error::FUNCTION_FAILED;
+
+        VkPresentInfoKHR presentInfo = {};
+        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        presentInfo.waitSemaphoreCount = 1;
+        presentInfo.pWaitSemaphores = &m_perFrame[current_frame].renderCompletedSemaphore;
+        presentInfo.swapchainCount = 1;
+        presentInfo.pSwapchains = &m_swapchain;
+        presentInfo.pImageIndices = &imageIndex;
+
+        res = vkQueuePresentKHR(grm.getQueue(), &presentInfo);
+
+
+        if (res == VK_ERROR_OUT_OF_DATE_KHR) {
+            dprintf(2, "we don't support out-of-date swapchain yet.\n");
+            return Error::FUNCTION_FAILED;
+        } else if (res == VK_SUBOPTIMAL_KHR)
+            dprintf(1, "Swapchain is suboptimal.\n");
+        else if (res != VK_SUCCESS)
+            return Error::FUNCTION_FAILED;
         return Error::NONE;
     }
 

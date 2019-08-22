@@ -30,6 +30,8 @@ namespace FEM
             glfwPollEvents();
             if (glfwWindowShouldClose(m_window.getNativeWindow()))
                 Quit = true;
+            m_grContext.render(m_grManager);
+            m_grContext.swapBuffer();
         }
         return Error::NONE;
     }

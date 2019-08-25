@@ -1,5 +1,7 @@
 #include "GraphContext.h"
 #include "GraphManager.h"
+#include "VertexBuffer.h"
+#include "vkcommon.h"
 
 namespace gr
 {
@@ -23,26 +25,6 @@ namespace gr
             return Error::FUNCTION_FAILED;
         }
         return true;
-    }
-
-    static VkResult createFence(const VkDevice device, VkFence &outFence)
-    {
-        VkFenceCreateInfo fenceCreateInfo = {};
-        fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        fenceCreateInfo.pNext = 0;
-        fenceCreateInfo.flags = 0;
-
-        return vkCreateFence(device, &fenceCreateInfo, 0, &outFence);
-    }
-
-    static VkResult createSemaphore(const VkDevice device, VkSemaphore &outSemaphore)
-    {
-        VkSemaphoreCreateInfo semaphoreCreateInfo = {};
-        semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-        semaphoreCreateInfo.pNext = 0;
-        semaphoreCreateInfo.flags = 0;
-
-        return vkCreateSemaphore(device, &semaphoreCreateInfo, 0, &outSemaphore);
     }
 
     Error Context::init(const Manager& grm)
@@ -91,14 +73,23 @@ namespace gr
     Error Context::reload(const Manager& grm)
     {
         vkDeviceWaitIdle(grm.getDevice());
+        for (size_t i = 0; i < m_pipeline.getFramebuffers().size(); i += 1) {
+            vkDestroyFramebuffer(grm.getDevice(), m_pipeline.getFramebuffers()[i], 0);
+        }
+        m_pipeline.getFramebuffers().clear();
 
         vkFreeCommandBuffers(grm.getDevice(), m_commandPool, 1, &m_cmdBuffer);
         vkFreeCommandBuffers(grm.getDevice(), m_commandPool, 2, m_presentCmdBuffer);
+
+        vkDestroyPipeline(grm.getDevice(), m_pipeline.getPipeline(), 0);
+        vkDestroyPipelineLayout(grm.getDevice(), m_pipeline.getPipelineLayout(), 0);
+        vkDestroyRenderPass(grm.getDevice(), m_pipeline.getRenderpass(), 0);
 
         for (size_t i = 0; i < m_swapImages.size(); i += 1) {
             vkDestroyImage(grm.getDevice(), m_swapImages[i], 0);
         }
         m_swapImages.clear();
+        m_depthImage.destroy(grm.getDevice());
 
         for (size_t i = 0; i < m_swapImageViews.size(); i += 1) {
             vkDestroyImageView(grm.getDevice(), m_swapImageViews[i], 0);
@@ -111,6 +102,15 @@ namespace gr
             grm.getNativeWindow().getWidth(), grm.getNativeWindow().getHeight(),
             VK_IMAGE_ASPECT_DEPTH_BIT))
             return Error::FUNCTION_FAILED;
+        if (!allocateCommandBuffer(grm.getDevice(), m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, m_cmdBuffer))
+            return Error::FUNCTION_FAILED;
+        if (fillInitCmdBuffer(grm))
+            return Error::FUNCTION_FAILED;
+        m_pipeline.reload(grm, *this);
+        for (int i = 0; i < 2; i += 1) {
+            allocateCommandBuffer(grm.getDevice(), m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, m_presentCmdBuffer[i]);
+            m_perFrame[i].fenceInitialized = false;
+        }
         return Error::NONE;
     }
 
@@ -191,10 +191,12 @@ namespace gr
         createInfo.oldSwapchain = oldSwapchain;
         createInfo.clipped = VK_TRUE;
 
-        if (vkCreateSwapchainKHR(grm.getDevice(), &createInfo, 0, &m_swapchain) != VK_SUCCESS)
+        VkSwapchainKHR swapchain;
+        if (vkCreateSwapchainKHR(grm.getDevice(), &createInfo, 0, &swapchain) != VK_SUCCESS)
             return Error::FUNCTION_FAILED;
-        if (oldSwapchain != VK_NULL_HANDLE)
-            vkDestroySwapchainKHR(grm.getDevice(), oldSwapchain, 0);
+        m_swapchain = swapchain;
+        // if (oldSwapchain != VK_NULL_HANDLE)
+        //     vkDestroySwapchainKHR(grm.getDevice(), oldSwapchain, 0);
         uint32_t imageCount = 0;
         if (vkGetSwapchainImagesKHR(grm.getDevice(), m_swapchain, &imageCount, 0) != VK_SUCCESS)
             return Error::FUNCTION_FAILED;
@@ -281,6 +283,7 @@ namespace gr
         vkQueueSubmit(grm.getQueue(), 1, &submitInfo, VK_NULL_HANDLE);
 
         vkQueueWaitIdle(grm.getQueue());
+        return Error::NONE;
     }
 
     Error Context::render(const Manager& grm)
@@ -290,6 +293,7 @@ namespace gr
             vkWaitForFences(grm.getDevice(), 1, &m_perFrame[current_frame].presentFence, VK_TRUE, UINT64_MAX);
             vkResetFences(grm.getDevice(), 1, &m_perFrame[current_frame].presentFence);
         }
+
         uint32_t imageIndex = UINT32_MAX;
         res = vkAcquireNextImageKHR(grm.getDevice(), m_swapchain, UINT64_MAX, m_perFrame[current_frame].acquiredSemaphore, VK_NULL_HANDLE, &imageIndex);
 
@@ -349,7 +353,11 @@ namespace gr
         vkCmdSetScissor(m_presentCmdBuffer[current_frame], 0, 1, &scissor);
 
         VkDeviceSize bufferOffsets = 0;
-        vkCmdBindVertexBuffers(m_presentCmdBuffer[current_frame], VERTEX_INPUT_BINDING, 1, &m_pipeline.getBuffers()[0], &bufferOffsets);
+        std::vector<VertexBuffer> vertexBuffers = m_pipeline.getBuffers();
+        for (size_t i = 0; i < vertexBuffers.size(); i += 1) {
+            VkBuffer tmp = vertexBuffers[i].getBuffer();
+            vkCmdBindVertexBuffers(m_presentCmdBuffer[current_frame], i, vertexBuffers.size(), &tmp, &bufferOffsets);
+        }
 
         vkCmdDraw(m_presentCmdBuffer[current_frame], 3, 1, 0, 0);
 

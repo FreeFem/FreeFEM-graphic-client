@@ -1,22 +1,5 @@
-#include <algorithm>
 #include "Image.h"
-
-static int findMemoryTypeWithProperties(const VkPhysicalDeviceMemoryProperties memoryProperties,
-                                 const uint32_t memoryTypeBits,
-                                 const VkMemoryPropertyFlags requiredMemoryProperties)
-{
-    uint32_t typeBits = memoryTypeBits;
-
-    uint32_t len = std::min(memoryProperties.memoryTypeCount, 32u);
-    for (uint32_t i = 0; i < len; i += 1) {
-        if ((typeBits & 1) == 1) {
-            if ((memoryProperties.memoryTypes[i].propertyFlags & requiredMemoryProperties) == requiredMemoryProperties)
-                return (int)i;
-        }
-        typeBits >>= 1;
-    }
-    return -1;
-}
+#include "vkcommon.h"
 
 Error gr::Image::init(const VkDevice device, const VkPhysicalDeviceMemoryProperties memProps, const VkBufferUsageFlags imageUsage,
                     const VkMemoryPropertyFlags requiredMemProps, const VkFormat imageFormat, const int width, const int height,

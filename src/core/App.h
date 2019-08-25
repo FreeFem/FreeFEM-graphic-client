@@ -31,6 +31,14 @@ namespace FEM
             NativeWindow m_window;
             gr::Manager m_grManager;
             gr::Context m_grContext;
+
+            static void framebuffferResizeCallback(GLFWwindow *window, int width, int height)
+            {
+                auto app = reinterpret_cast<App *>(glfwGetWindowUserPointer(window));
+                app->m_window.setWidth(width);
+                app->m_window.setHeight(height);
+                app->m_grContext.reload(app->m_grManager);
+            }
     };
 
 } // namespace FEM

@@ -28,7 +28,8 @@ file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/shaders DESTINATION ${CMAKE_CURRENT_BINARY
 add_executable(FreeFEM_graphic_client src/main.cpp src/core/App.cpp
                                       src/core/NativeWindow.cpp src/vk/CommandBuffer.cpp
                                       src/vk/GraphManager.cpp src/vk/Pipeline.cpp
-                                      src/vk/Image.cpp src/vk/GraphContext.cpp)
+                                      src/vk/Image.cpp src/vk/GraphContext.cpp
+                                      src/vk/vkcommon.cpp src/vk/VertexBuffer.cpp)
 
 # Using C++11 standard
 set_target_properties(FreeFEM_graphic_client PROPERTIES CXX_STANDARD 11)

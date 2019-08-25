@@ -6,6 +6,7 @@ Error NativeWindow::init(uint32_t width, uint32_t height, const char *title)
     m_height = height;
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
     m_window = glfwCreateWindow(m_width, m_height, title, 0, 0);
 
@@ -26,16 +27,6 @@ void NativeWindow::destroy()
 {
     glfwDestroyWindow(m_window);
     m_window = 0;
-}
-
-uint32_t NativeWindow::getWidth() const
-{
-    return m_width;
-}
-
-uint32_t NativeWindow::getHeight() const
-{
-    return m_height;
 }
 
 GLFWwindow *NativeWindow::getNativeWindow() const

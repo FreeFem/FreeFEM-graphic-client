@@ -9,6 +9,9 @@ namespace FEM
             return Error::FUNCTION_FAILED;
         if (m_window.init(initInfo.width, initInfo.height, "FreeFEM++"))
             return Error::FUNCTION_FAILED;
+        glfwSetWindowUserPointer(m_window.getNativeWindow(), this);
+        glfwSetFramebufferSizeCallback(m_window.getNativeWindow(), framebuffferResizeCallback);
+
         gr::ManagerInitInfo grInitInfo = {m_window};
         if (m_grManager.init(grInitInfo))
             return Error::FUNCTION_FAILED;

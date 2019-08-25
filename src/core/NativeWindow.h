@@ -11,8 +11,10 @@ class NativeWindow {
         FORCE_USE_RESULT Error init(uint32_t width, uint32_t height, const char *title);
         void destroy();
 
-        uint32_t getWidth() const;
-        uint32_t getHeight() const;
+        inline uint32_t getWidth() const { return m_width; }
+        inline uint32_t getHeight() const { return m_height; }
+        inline void setWidth(int width) { m_width = width; }
+        inline void setHeight(int height) {m_height = height; }
 
         GLFWwindow *getNativeWindow() const;
 
@@ -25,6 +27,7 @@ class NativeWindow {
         uint32_t m_width;
         uint32_t m_height;
         std::vector<const char *> m_extensions;
+
 };
 
 #endif // NATIVE_WINDOW_H

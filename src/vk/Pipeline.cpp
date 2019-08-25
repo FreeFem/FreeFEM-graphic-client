@@ -124,19 +124,22 @@ namespace gr
         if (initFramebuffers(grm, grc))
             return Error::FUNCTION_FAILED;
 // Creating temporary test buffer
-        if (createAndAllocBuffer(grm.getDevice(), grm.getPhysicalDeviceMemProps(),
-                VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-                vertexBufferSize, vertexBuffer, vertexBufferMem))
-            return Error::FUNCTION_FAILED;
-        {
-            void *mappedBuffer;
-            vkMapMemory(grm.getDevice(), vertexBufferMem, 0, VK_WHOLE_SIZE, 0, &mappedBuffer);
-
-            memcpy(mappedBuffer, vertices, vertexBufferSize);
-            vkUnmapMemory(grm.getDevice(), vertexBufferMem);
-        }
-        m_vertexBuffers.push_back(vertexBuffer);
+        std::vector<gr::AttributeDescription> attributes = {{0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(vertex, x)}, {1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(vertex, r)}};
+        VertexBuffer tmp;
+        tmp.init(grm, (void *)vertices, sizeof(vertex) * NUM_DEMO_VERTICES, sizeof(vertex), attributes, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+        m_vertexBuffers.push_back(tmp);
 //
+        if (initPipeline(grm, grc))
+            return Error::FUNCTION_FAILED;
+        return Error::NONE;
+    }
+
+    Error Pipeline::reload(const Manager& grm, const Context& grc)
+    {
+        if (initRenderpass(grm, grc))
+            return Error::FUNCTION_FAILED;
+        if (initFramebuffers(grm, grc))
+            return Error::FUNCTION_FAILED;
         if (initPipeline(grm, grc))
             return Error::FUNCTION_FAILED;
         return Error::NONE;
@@ -234,8 +237,7 @@ namespace gr
         pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
         pipelineLayoutCreateInfo.pPushConstantRanges = 0;
 
-        VkPipelineLayout pipelineLayout;
-        vkCreatePipelineLayout(grm.getDevice(), &pipelineLayoutCreateInfo, 0, &pipelineLayout);
+        vkCreatePipelineLayout(grm.getDevice(), &pipelineLayoutCreateInfo, 0, &m_layout);
 
         VkShaderModule vertModule, fragModule;
         if (!loadAndCreateShaderModule(grm.getDevice(), VERTEX_SHADER_FILENAME, vertModule))
@@ -359,7 +361,7 @@ namespace gr
         graphicsPipelineCreateInfo.pMultisampleState = &multisampleStateCreateInfo;
         graphicsPipelineCreateInfo.pDepthStencilState = &depthStencilStateCreateInfo;
         graphicsPipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;
-        graphicsPipelineCreateInfo.layout = pipelineLayout;
+        graphicsPipelineCreateInfo.layout = m_layout;
         graphicsPipelineCreateInfo.renderPass = m_renderpass;
         graphicsPipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
         graphicsPipelineCreateInfo.basePipelineIndex = -1;

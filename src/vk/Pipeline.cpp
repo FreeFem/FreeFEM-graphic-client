@@ -149,8 +149,10 @@ namespace gr
         int binding_input = 0;
         std::vector<VkVertexInputBindingDescription> vertexInputBindingDescription = {};
         std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescription = {};
+        VkPrimitiveTopology topology;
         for (const auto vBuffer : m_vertexBuffers) {
             VkVertexInputBindingDescription inputBindingDescription;
+            topology = vBuffer.getTopology();
             inputBindingDescription.binding = binding_input;
             inputBindingDescription.stride = vBuffer.getStride();
             inputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
@@ -180,7 +182,7 @@ namespace gr
 
         VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo = {};
         inputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-        inputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        inputAssemblyStateCreateInfo.topology = topology;
         inputAssemblyStateCreateInfo.primitiveRestartEnable = VK_FALSE;
 
         VkDynamicState dynamicStateEnables[2] = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};

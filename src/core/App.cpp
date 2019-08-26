@@ -1,3 +1,4 @@
+#include <chrono>
 #include "App.h"
 #include "../vk/VertexBuffer.h"
 
@@ -18,6 +19,7 @@ namespace FEM
             return Error::FUNCTION_FAILED;
         if (m_grContext.init(m_grManager))
             return Error::FUNCTION_FAILED;
+
         return Error::NONE;
     }
 
@@ -34,11 +36,9 @@ namespace FEM
             glfwPollEvents();
             if (glfwWindowShouldClose(m_window.getNativeWindow()))
                 Quit = true;
-
             if (update()) {
                 return Error::FUNCTION_FAILED;
             }
-
             m_grContext.render(m_grManager);
             m_grContext.swapBuffer();
         }
@@ -51,7 +51,8 @@ namespace FEM
         if (!i) {
             gr::VertexBuffer object;
             if (object.init(m_grManager, (void *)vertices, sizeof(vertices), sizeof(vertices) / 3,
-                {{0, VK_FORMAT_R32G32B32_SFLOAT, sizeof(float) * 0}, {1, VK_FORMAT_R32G32B32_SFLOAT, sizeof(float) * 3}}, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST))
+                {{0, VK_FORMAT_R32G32B32_SFLOAT, sizeof(float) * 0}, {1, VK_FORMAT_R32G32B32_SFLOAT, sizeof(float) * 3}},
+                VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST))
             {
                 return Error::FUNCTION_FAILED;
             }

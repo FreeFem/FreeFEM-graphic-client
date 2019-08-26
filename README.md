@@ -19,3 +19,8 @@ Optional :
   cd build
   cmake -DCMAKE_BUILD_TYPE=DEBUG ..
   ```
+
+  Build the documentation :
+ ```
+ doxygen Doxyfile
+ ```

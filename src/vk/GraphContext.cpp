@@ -404,7 +404,6 @@ namespace gr
                 dprintf(1, "Swapchain is suboptimal.\n");
             else if (res != VK_SUCCESS)
                 return Error::FUNCTION_FAILED;
-            break;
         }
         return Error::NONE;
     }

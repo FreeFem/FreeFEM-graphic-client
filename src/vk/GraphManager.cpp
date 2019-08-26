@@ -2,7 +2,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include "GraphManager.h"
-#include "layers.h"
+#include "Layers.h"
 
 gr::Manager::~Manager()
 {

@@ -4,17 +4,22 @@
 #include <vulkan/vulkan.h>
 #include <vector>
 #include "../util/utils.h"
-#include "CommandBuffer.h"
 #include "../core/NativeWindow.h"
 #include "Image.h"
 
 
 namespace gr
 {
+    /**
+     * @brief Contains all data used to create a Manager.
+     */
     struct ManagerInitInfo {
         NativeWindow& window;
     };
 
+    /**
+     * @brief Contains the GPU's capabilities.
+     */
     struct GPUDeviceCapabilities {
         size_t m_uniformBufferBindOffsetAlignment = UINT32_MAX;
         size_t m_uniformBufferMaxRange = 0;
@@ -49,7 +54,7 @@ namespace gr
 
 */
     /**
-     * @brief Contain vulkan which don't need to be recreate.
+     * @brief Vulkan object manager.
      */
     class Manager {
         public:
@@ -58,18 +63,41 @@ namespace gr
 
             ~Manager();
 
+            /**
+             * @brief Initialize a manager.
+             *
+             * @param const ManagerInitInfo& initInfo[in] - Data used to create the manager.
+             *
+             * @return FORCE_USE_RESULT Error - Returns Error::NONE if initialization is successful.
+             * Will throw a warning at compilation if result isn't checked.
+             */
             FORCE_USE_RESULT Error init(const ManagerInitInfo& initInfo);
 
+            // @brief Vulkan instance handle getter.
             inline VkInstance getInstance() const { return m_instance; }
+            // @brief Vulkan physical device handle getter.
             inline VkPhysicalDevice getPhysicalDevice() const { return m_physicalDevice; }
+            // @brief Vulkan device handle getter.
             inline VkDevice getDevice() const { return m_device; }
+            // @brief Vulkan device's queue handle getter.
             inline VkQueue getQueue() const { return m_queue; }
+            // @brief Vulkan graphics queue family getter.
             inline uint32_t getGraphicsQueueFamily() const {return m_queueIdx; }
+            // @brief Vulkan surface handle getter.
             inline VkSurfaceKHR getSurface() const { return m_surface; }
+            // @brief NativeWindow getter.
             inline NativeWindow getNativeWindow() const { return *m_window; }
+            // @brief Vulkan physical device memory properties getter.
             inline VkPhysicalDeviceMemoryProperties getPhysicalDeviceMemProps() const { return m_memoryProperties; }
 
+            /**
+             * @brief Debugger for commandbuffer.
+             */
             void beginDebugMaker(VkCommandBuffer cmdBuffer, const char *name) const;
+
+            /**
+             * @brief Debugger for commandbuffer.
+             */
             void endDebugMaker(VkCommandBuffer cmdBuffer) const;
 
         private:
@@ -101,8 +129,28 @@ namespace gr
             VkSurfaceKHR m_surface;
             VkFormat m_surfaceFormat;
 
+            /**
+             * @brief Initialize manager's instance.
+             *
+             * @return FORCE_USE_RESULT Error - Returns Error::NONE if initialization is successful.
+             * Will throw a warning at compilation if result isn't checked.
+             */
             FORCE_USE_RESULT Error initInstance();
+
+            /**
+             * @brief Initialize manager's surface.
+             *
+             * @return FORCE_USE_RESULT Error - Returns Error::NONE if initialization is successful.
+             * Will throw a warning at compilation if result isn't checked.
+             */
             FORCE_USE_RESULT Error initSurface();
+
+            /**
+             * @brief Initialize manager's device.
+             *
+             * @return FORCE_USE_RESULT Error - Returns Error::NONE if initialization is successful.
+             * Will throw a warning at compilation if result isn't checked.
+             */
             FORCE_USE_RESULT Error initDevice();
     };
 } // namespace gr

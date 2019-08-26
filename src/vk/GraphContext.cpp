@@ -56,8 +56,8 @@ namespace gr
             return Error::FUNCTION_FAILED;
         if (fillInitCmdBuffer(grm))
             return Error::FUNCTION_FAILED;
-        if (m_pipeline.init(grm, *this))
-            return Error::FUNCTION_FAILED;
+        // if (m_pipeline.init(grm, *this))
+        //     return Error::FUNCTION_FAILED;
 
         for (int i = 0; i < 2; i += 1) {
             allocateCommandBuffer(grm.getDevice(), m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, m_presentCmdBuffer[i]);
@@ -73,17 +73,20 @@ namespace gr
     Error Context::reload(const Manager& grm)
     {
         vkDeviceWaitIdle(grm.getDevice());
-        for (size_t i = 0; i < m_pipeline.getFramebuffers().size(); i += 1) {
-            vkDestroyFramebuffer(grm.getDevice(), m_pipeline.getFramebuffers()[i], 0);
+        for (const auto pipeline : m_pipelines) {
+            for (size_t i = 0; i < pipeline.getFramebuffers().size(); i += 1) {
+                vkDestroyFramebuffer(grm.getDevice(), pipeline.getFramebuffers()[i], 0);
+            }
+            pipeline.getFramebuffers().clear();
         }
-        m_pipeline.getFramebuffers().clear();
 
         vkFreeCommandBuffers(grm.getDevice(), m_commandPool, 1, &m_cmdBuffer);
         vkFreeCommandBuffers(grm.getDevice(), m_commandPool, 2, m_presentCmdBuffer);
-
-        vkDestroyPipeline(grm.getDevice(), m_pipeline.getPipeline(), 0);
-        vkDestroyPipelineLayout(grm.getDevice(), m_pipeline.getPipelineLayout(), 0);
-        vkDestroyRenderPass(grm.getDevice(), m_pipeline.getRenderpass(), 0);
+        for (const auto pipeline : m_pipelines) {
+            vkDestroyPipeline(grm.getDevice(), pipeline.getPipeline(), 0);
+            vkDestroyPipelineLayout(grm.getDevice(), pipeline.getPipelineLayout(), 0);
+            vkDestroyRenderPass(grm.getDevice(), pipeline.getRenderpass(), 0);
+        }
 
         for (size_t i = 0; i < m_swapImages.size(); i += 1) {
             vkDestroyImage(grm.getDevice(), m_swapImages[i], 0);
@@ -106,7 +109,8 @@ namespace gr
             return Error::FUNCTION_FAILED;
         if (fillInitCmdBuffer(grm))
             return Error::FUNCTION_FAILED;
-        m_pipeline.reload(grm, *this);
+        // if (m_pipeline.reload(grm, *this))
+        //     return Error::FUNCTION_FAILED;
         for (int i = 0; i < 2; i += 1) {
             allocateCommandBuffer(grm.getDevice(), m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, m_presentCmdBuffer[i]);
             m_perFrame[i].fenceInitialized = false;
@@ -288,6 +292,8 @@ namespace gr
 
     Error Context::render(const Manager& grm)
     {
+        if (m_pipelines.empty())
+            return Error::NONE;
         VkResult res;
         if (m_perFrame[current_frame].fenceInitialized) {
             vkWaitForFences(grm.getDevice(), 1, &m_perFrame[current_frame].presentFence, VK_TRUE, UINT64_MAX);
@@ -306,97 +312,113 @@ namespace gr
         else if (res != VK_SUCCESS)
             return Error::FUNCTION_FAILED;
 
-        VkCommandBufferBeginInfo commandbufferBeginInfo = {};
-        commandbufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        commandbufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+        for (const auto pipeline : m_pipelines) {
+            VkCommandBufferBeginInfo commandbufferBeginInfo = {};
+            commandbufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            commandbufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
-        res = vkBeginCommandBuffer(m_presentCmdBuffer[current_frame], &commandbufferBeginInfo);
-        if (res != VK_SUCCESS) return Error::FUNCTION_FAILED;
+            res = vkBeginCommandBuffer(m_presentCmdBuffer[current_frame], &commandbufferBeginInfo);
+            if (res != VK_SUCCESS) return Error::FUNCTION_FAILED;
 
-        VkClearValue clearValues[2];
-        clearValues[0].color.float32[0] = 0.0f;
-        clearValues[0].color.float32[1] = 0.0f;
-        clearValues[0].color.float32[2] = 0.0f;
-        clearValues[0].color.float32[3] = 1.0f;
-        clearValues[1].depthStencil.depth = 1.0f;
-        clearValues[1].depthStencil.stencil = 0.0f;
+            VkClearValue clearValues[2];
+            clearValues[0].color.float32[0] = 1.0f;
+            clearValues[0].color.float32[1] = 1.0f;
+            clearValues[0].color.float32[2] = 1.0f;
+            clearValues[0].color.float32[3] = 1.0f;
+            clearValues[1].depthStencil.depth = 1.0f;
+            clearValues[1].depthStencil.stencil = 0.0f;
 
-        VkRenderPassBeginInfo renderPassBeginInfo = {};
-        renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassBeginInfo.renderPass = m_pipeline.getRenderpass();
-        renderPassBeginInfo.framebuffer = m_pipeline.getFramebuffers()[imageIndex];
-        renderPassBeginInfo.renderArea.offset = {0, 0};
-        renderPassBeginInfo.renderArea.extent = {grm.getNativeWindow().getWidth(), grm.getNativeWindow().getHeight()};
-        renderPassBeginInfo.clearValueCount = 2;
-        renderPassBeginInfo.pClearValues = clearValues;
+            VkRenderPassBeginInfo renderPassBeginInfo = {};
+            renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+            renderPassBeginInfo.renderPass = pipeline.getRenderpass();
+            renderPassBeginInfo.framebuffer = pipeline.getFramebuffers()[imageIndex];
+            renderPassBeginInfo.renderArea.offset = {0, 0};
+            renderPassBeginInfo.renderArea.extent = {grm.getNativeWindow().getWidth(), grm.getNativeWindow().getHeight()};
+            renderPassBeginInfo.clearValueCount = 2;
+            renderPassBeginInfo.pClearValues = clearValues;
 
-        vkCmdBeginRenderPass(m_presentCmdBuffer[current_frame], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+            vkCmdBeginRenderPass(m_presentCmdBuffer[current_frame], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-        vkCmdBindPipeline(m_presentCmdBuffer[current_frame], VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline.getPipeline());
+            vkCmdBindPipeline(m_presentCmdBuffer[current_frame], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.getPipeline());
 
-        VkViewport viewport = {};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = (float)grm.getNativeWindow().getWidth();
-        viewport.height = (float)grm.getNativeWindow().getHeight();
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
+            VkViewport viewport = {};
+            viewport.x = 0.0f;
+            viewport.y = 0.0f;
+            viewport.width = (float)grm.getNativeWindow().getWidth();
+            viewport.height = (float)grm.getNativeWindow().getHeight();
+            viewport.minDepth = 0.0f;
+            viewport.maxDepth = 1.0f;
 
-        vkCmdSetViewport(m_presentCmdBuffer[current_frame], 0, 1, &viewport);
+            vkCmdSetViewport(m_presentCmdBuffer[current_frame], 0, 1, &viewport);
 
-        VkRect2D scissor = {};
-        scissor.offset.x = 0;
-        scissor.offset.y = 0;
-        scissor.extent.width = grm.getNativeWindow().getWidth();
-        scissor.extent.height = grm.getNativeWindow().getHeight();
+            VkRect2D scissor = {};
+            scissor.offset.x = 0;
+            scissor.offset.y = 0;
+            scissor.extent.width = grm.getNativeWindow().getWidth();
+            scissor.extent.height = grm.getNativeWindow().getHeight();
 
-        vkCmdSetScissor(m_presentCmdBuffer[current_frame], 0, 1, &scissor);
+            vkCmdSetScissor(m_presentCmdBuffer[current_frame], 0, 1, &scissor);
 
-        VkDeviceSize bufferOffsets = 0;
-        std::vector<VertexBuffer> vertexBuffers = m_pipeline.getBuffers();
-        for (size_t i = 0; i < vertexBuffers.size(); i += 1) {
-            VkBuffer tmp = vertexBuffers[i].getBuffer();
-            vkCmdBindVertexBuffers(m_presentCmdBuffer[current_frame], i, vertexBuffers.size(), &tmp, &bufferOffsets);
+            VkDeviceSize bufferOffsets = 0;
+            std::vector<VertexBuffer> vertexBuffers = pipeline.getBuffers();
+            for (size_t i = 0; i < vertexBuffers.size(); i += 1) {
+                VkBuffer tmp = vertexBuffers[i].getBuffer();
+                vkCmdBindVertexBuffers(m_presentCmdBuffer[current_frame], i, vertexBuffers.size(), &tmp, &bufferOffsets);
+            }
+
+            vkCmdDraw(m_presentCmdBuffer[current_frame], 3, 1, 0, 0);
+
+            vkCmdEndRenderPass(m_presentCmdBuffer[current_frame]);
+
+            res = vkEndCommandBuffer(m_presentCmdBuffer[current_frame]);
+
+            VkPipelineStageFlags pipelineStageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            VkSubmitInfo submitInfo = {};
+            submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            submitInfo.waitSemaphoreCount = 1;
+            submitInfo.pWaitSemaphores = &m_perFrame[current_frame].acquiredSemaphore;
+            submitInfo.pWaitDstStageMask = &pipelineStageFlags;
+            submitInfo.commandBufferCount = 1;
+            submitInfo.pCommandBuffers = &m_presentCmdBuffer[current_frame];
+            submitInfo.signalSemaphoreCount = 1;
+            submitInfo.pSignalSemaphores = &m_perFrame[current_frame].renderCompletedSemaphore;
+
+            res = vkQueueSubmit(grm.getQueue(), 1, &submitInfo, m_perFrame[current_frame].presentFence);
+            if (res != VK_SUCCESS) return Error::FUNCTION_FAILED;
+
+            VkPresentInfoKHR presentInfo = {};
+            presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+            presentInfo.waitSemaphoreCount = 1;
+            presentInfo.pWaitSemaphores = &m_perFrame[current_frame].renderCompletedSemaphore;
+            presentInfo.swapchainCount = 1;
+            presentInfo.pSwapchains = &m_swapchain;
+            presentInfo.pImageIndices = &imageIndex;
+
+            res = vkQueuePresentKHR(grm.getQueue(), &presentInfo);
+
+
+            if (res == VK_ERROR_OUT_OF_DATE_KHR) {
+                dprintf(2, "we don't support out-of-date swapchain yet.\n");
+                return Error::FUNCTION_FAILED;
+            } else if (res == VK_SUBOPTIMAL_KHR)
+                dprintf(1, "Swapchain is suboptimal.\n");
+            else if (res != VK_SUCCESS)
+                return Error::FUNCTION_FAILED;
+            break;
         }
+        return Error::NONE;
+    }
 
-        vkCmdDraw(m_presentCmdBuffer[current_frame], 3, 1, 0, 0);
+    Error Context::addPipeline(const Manager& grm, VertexBuffer& object, const char *vertexShaderFile, const char *fragmentShaderFile)
+    {
+        Pipeline pipeline;
 
-        vkCmdEndRenderPass(m_presentCmdBuffer[current_frame]);
-
-        res = vkEndCommandBuffer(m_presentCmdBuffer[current_frame]);
-
-        VkPipelineStageFlags pipelineStageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        VkSubmitInfo submitInfo = {};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = &m_perFrame[current_frame].acquiredSemaphore;
-        submitInfo.pWaitDstStageMask = &pipelineStageFlags;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &m_presentCmdBuffer[current_frame];
-        submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = &m_perFrame[current_frame].renderCompletedSemaphore;
-
-        res = vkQueueSubmit(grm.getQueue(), 1, &submitInfo, m_perFrame[current_frame].presentFence);
-        if (res != VK_SUCCESS) return Error::FUNCTION_FAILED;
-
-        VkPresentInfoKHR presentInfo = {};
-        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-        presentInfo.waitSemaphoreCount = 1;
-        presentInfo.pWaitSemaphores = &m_perFrame[current_frame].renderCompletedSemaphore;
-        presentInfo.swapchainCount = 1;
-        presentInfo.pSwapchains = &m_swapchain;
-        presentInfo.pImageIndices = &imageIndex;
-
-        res = vkQueuePresentKHR(grm.getQueue(), &presentInfo);
-
-
-        if (res == VK_ERROR_OUT_OF_DATE_KHR) {
-            dprintf(2, "we don't support out-of-date swapchain yet.\n");
+        pipeline.addData(object);
+        if (pipeline.initShaders(grm.getDevice(), vertexShaderFile, fragmentShaderFile))
             return Error::FUNCTION_FAILED;
-        } else if (res == VK_SUBOPTIMAL_KHR)
-            dprintf(1, "Swapchain is suboptimal.\n");
-        else if (res != VK_SUCCESS)
+        if (pipeline.init(grm, *this))
             return Error::FUNCTION_FAILED;
+        m_pipelines.push_back(pipeline);
         return Error::NONE;
     }
 

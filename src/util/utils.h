@@ -8,16 +8,36 @@
 #if defined(__GNUC__) && (__GNUC__ >= 4)
     /**
      * @brief Force the compiler to throw a warning if the result of the marked function isn't used.
-     * This macro is different for GNU, MSC or other compilers.
+     * This macro is platform specific.
      */
     #define FORCE_USE_RESULT __attribute__((warn_unused_result))
+
+    #define UNUSED_PARAM __attribute__((unused))
 #elif defined(_MSC_VER) && (_MSC_VER >= 1700)
+    /**
+     * @brief Force the compiler to throw a warning if the result of the marked function isn't used.
+     * This macro is platform specific.
+     */
     #define FORCE_USE_RESULT _Check_return_
+
+    #define UNUSED_PARAM
 #else
+    /**
+     * @brief Force the compiler to throw a warning if the result of the marked function isn't used.
+     * This macro is platform specific.
+     */
     #define FORCE_USE_RESULT
+
+    #define UNUSED_PARAM
 #endif
 
+/**
+ * @brief Report errors.
+ */
 struct Error {
+    /**
+     * Error value.
+     */
     uint32_t m_value = NONE;
 
     static constexpr uint32_t NONE = 0;
@@ -27,49 +47,66 @@ struct Error {
     static constexpr uint32_t FILE_ACCESS = 5;
     static constexpr uint32_t UNKNOWN = 6;
 
+    /**
+     * @brief Error's name as strings.
+     */
     const char ErrorNames[6][19] =
     {
         "NONE", "FUNCTION_FAILED", "FAILED_ALLOC",
         "FILE_NOT_FOUND", "FILE_ACCESS_FAILED", "UNKNOWN"
     };
 
+    /**
+     * @brief Error constructor.
+     *
+     * @param uint32_t code[in] - Error code.
+     */
     Error(const uint32_t code)
     : m_value(code)
     { }
 
+    /**
+     * @brief Error copy operator
+     */
     Error& operator=(const Error& b) { m_value = b.m_value; return *this; }
 
+    /**
+     * @brief Error equal operator.
+     *
+     * @param const Error& b[in] - Error to compare.
+     */
     bool operator==(const Error& b) const { return m_value == b.m_value; }
 
+    /**
+     * @brief Error equal operator.
+     *
+     * @param const uint32_t code[in] - Error code to compare.
+     */
     bool operator==(const uint32_t code) const { return m_value == code; }
 
+    /**
+     * @brief Error different operator.
+     *
+     * @param const Error& b[in] - Error to compare.
+     */
     bool operator!=(const Error& b) const { return m_value != b.m_value; }
 
+    /**
+     * @brief Error different operator.
+     *
+     * @param const uint32_t code[in] - Error code to compare.
+     */
     bool operator!=(const uint32_t code) const { return m_value != code; }
 
     operator bool() const { return m_value != NONE; }
 };
 
-/** TMP DATA FOR TEST PURPOSE **/
-
-struct vertex {
-    float x, y, z;
-    float r, g, b;
-};
-
-static const char VERTEX_SHADER_FILENAME[] = "shaders/vertex.spirv";
-static const char FRAGMENT_SHADER_FILENAME[] = "shaders/fragment.spirv";
-
-static constexpr int VERTEX_INPUT_BINDING = 0;
-
 static constexpr int NUM_DEMO_VERTICES = 3;
-static const vertex vertices[NUM_DEMO_VERTICES] =
+static const float vertices[] =
 {
-	//      position             color
-	{  0.5f,  0.5f,  0.0f,  0.1f, 0.8f, 0.1f },
-	{ -0.5f,  0.5f,  0.0f,  0.8f, 0.1f, 0.1f },
-	{  0.0f, -0.5f,  0.0f,  0.1f, 0.1f, 0.8f },
+    0.5f, 0.5f, 0.0f, 0.1f, 0.8f, 0.01f,
+    -0.5f, 0.5f, 0.0f, 0.8f, 0.1f, 0.1f,
+    0.0f, -0.5f, 0.0f, 0.1f, 0.1f, 0.8f
 };
 
-/**                           **/
 #endif // UTILS_H

@@ -38,5 +38,8 @@
 # Cmake
 build
 
+# Documentation
+documentation
+
 # MacOS
 .DS_Store

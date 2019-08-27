@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.0)
 project(FreeFEM_graphic_client VERSION 0.1.0 LANGUAGES CXX)
 
+macro(SET_OPTION option value)
+    set(${option} ${value} CACHE "" INTERNAL FORCE)
+endmacro()
+
 # Force you to build inside a subdirectory such as project_folder/build
 file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
 if(EXISTS "${LOC_PATH}")
@@ -24,9 +28,10 @@ include_directories(extern/glm/glm)
 include_directories(extern/asio/asio/include)
 
 # Adding json to include
-option(GLM_TEST_ENABLE "Build unit tests" OFF)
-set(BUILD_SHARED_LIBS "Build shared library" OFF)
 include_directories(extern/json/include)
+set(GLM_TEST_ENABLE OFF CACHE BOOL "Build unit tests" FORCE)
+#option(GLM_TEST_ENABLE "Build unit tests" OFF)
+option(BUILD_SHARED_LIBS "Build shared library" OFF)
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 

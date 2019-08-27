@@ -19,6 +19,6 @@ vec3 hsv2rgb(vec3 c)
 
 void main()
 {
-	float hue = fract(pushConstants.animationTime / 7000.0);
+	float hue = fract(pushConstants.animationTime);
 	outFragmentColor = vec4(hsv2rgb(vec3(hue, 1.0, 1.0)), 1.0);
 }

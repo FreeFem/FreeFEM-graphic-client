@@ -107,6 +107,8 @@ namespace gr
              */
             void clearPipeline();
 
+            float m_animTime = 0.5f;
+
         private:
             VkCommandPool m_commandPool = VK_NULL_HANDLE;
 

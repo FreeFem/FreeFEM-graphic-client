@@ -7,7 +7,7 @@ int main()
 
     if (app.init(appInitInfo))
         return EXIT_FAILURE;
-    if (!app.mainLoop())
+    if (app.mainLoop())
         return EXIT_FAILURE;
     app.destroy();
     return EXIT_SUCCESS;

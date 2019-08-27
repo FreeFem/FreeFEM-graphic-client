@@ -366,6 +366,14 @@ namespace gr
                 vkCmdBindVertexBuffers(m_presentCmdBuffer[current_frame], i, vertexBuffers.size(), &tmp, &bufferOffsets);
             }
 
+            printf("Pushing constant %f\n", m_animTime);
+            vkCmdPushConstants(m_presentCmdBuffer[current_frame],
+                                pipeline.getPipelineLayout(),
+                                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                                0,
+                                4,
+                                &m_animTime);
+
             vkCmdDraw(m_presentCmdBuffer[current_frame], 3, 1, 0, 0);
 
             vkCmdEndRenderPass(m_presentCmdBuffer[current_frame]);

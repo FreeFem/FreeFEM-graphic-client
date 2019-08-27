@@ -59,6 +59,7 @@ namespace FEM
             m_grContext.addPipeline(m_grManager, object, "shaders/vertex.spirv", "shaders/fragment.spirv");
             i = 1;
         }
+        m_grContext.m_animTime += 0.001f;
         return Error::NONE;
     }
 

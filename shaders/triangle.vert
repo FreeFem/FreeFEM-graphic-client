@@ -13,7 +13,7 @@ layout(push_constant) uniform PushConstants
 
 void main()
 {
-	float angle = pushConstants.animationTime / 7000.0;
+	float angle = pushConstants.animationTime;
 
 	mat2 rotation = mat2(
 		cos(angle), -sin(angle),

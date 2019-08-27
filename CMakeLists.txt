@@ -16,10 +16,16 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wextra -D_DEBUG")
 add_subdirectory(extern/glfw)
 include_directories(extern/glfw/include)
 
+# Adding glm to compilation
+add_subdirectory(extern/glm)
+include_directories(extern/glm/glm)
+
 # Adding asio to include
 include_directories(extern/asio/asio/include)
 
 # Adding json to include
+option(GLM_TEST_ENABLE "Build unit tests" OFF)
+set(BUILD_SHARED_LIBS "Build shared library" OFF)
 include_directories(extern/json/include)
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
@@ -37,6 +43,7 @@ set_target_properties(FreeFEM_graphic_client PROPERTIES CXX_STANDARD 11)
 
 # Linking libraries with target
 target_link_libraries(FreeFEM_graphic_client glfw)
+target_link_libraries(FreeFEM_graphic_client glm)
 target_link_libraries(FreeFEM_graphic_client xcb)
 target_link_libraries(FreeFEM_graphic_client ${THREADS_PREFER_PTHREAD_FLAG})
 target_link_libraries(FreeFEM_graphic_client ${Vulkan_LIBRARY})

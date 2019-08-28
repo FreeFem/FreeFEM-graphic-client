@@ -1,10 +1,13 @@
-#include "Image.h"
 #include "vkcommon.h"
+#include "GraphManager.h"
 
-Error gr::Image::init(const VkDevice device, const VkPhysicalDeviceMemoryProperties memProps, const VkBufferUsageFlags imageUsage,
-                    const VkMemoryPropertyFlags requiredMemProps, const VkFormat imageFormat, const int width, const int height,
+Error gr::Image::init(const Manager& grm, const VkBufferUsageFlags imageUsage,
+                    const VkMemoryPropertyFlags requiredMemProps, const VkFormat imageFormat,
                     VkImageAspectFlags viewSubresoucesAspectMask)
 {
+    int width = grm.getNativeWindow().getWidth();
+    int height = grm.getNativeWindow().getHeight();
+
     VkImageCreateInfo imageCreateInfo = {};
     imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     imageCreateInfo.pNext = 0;
@@ -22,26 +25,14 @@ Error gr::Image::init(const VkDevice device, const VkPhysicalDeviceMemoryPropert
     imageCreateInfo.pQueueFamilyIndices = 0;
     imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-    if (vkCreateImage(device, &imageCreateInfo, 0, &m_handle) != VK_SUCCESS)
+    VmaAllocationCreateInfo allocInfo = {};
+    allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+    if (vmaCreateImage(grm.getAllocator(), &imageCreateInfo, &allocInfo, &m_handle, &m_memory, 0))
         return Error::FUNCTION_FAILED;
 
     VkMemoryRequirements memoryRequirements;
-    vkGetImageMemoryRequirements(device, m_handle, &memoryRequirements);
-
-    int memoryTypeIndex = findMemoryTypeWithProperties(memProps, memoryRequirements.memoryTypeBits, requiredMemProps);
-    if (memoryTypeIndex < 0)
-        return Error::FUNCTION_FAILED;
-    VkMemoryAllocateInfo memAllocInfo = {};
-    memAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    memAllocInfo.pNext = 0;
-    memAllocInfo.allocationSize = memoryRequirements.size;
-    memAllocInfo.memoryTypeIndex = (uint32_t)memoryTypeIndex;
-
-    if (vkAllocateMemory(device, &memAllocInfo, 0, &m_memory) != VK_SUCCESS)
-        return Error::FUNCTION_FAILED;
-
-    if (vkBindImageMemory(device, m_handle, m_memory, 0) != VK_SUCCESS)
-        return Error::FUNCTION_FAILED;
+    vkGetImageMemoryRequirements(grm.getDevice(), m_handle, &memoryRequirements);
 
     VkImageViewCreateInfo imageViewCreateInfo = {};
     imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -60,14 +51,13 @@ Error gr::Image::init(const VkDevice device, const VkPhysicalDeviceMemoryPropert
     imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
     imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 
-    if (vkCreateImageView(device, &imageViewCreateInfo, 0, &m_view) != VK_SUCCESS)
+    if (vkCreateImageView(grm.getDevice(), &imageViewCreateInfo, 0, &m_view) != VK_SUCCESS)
         return Error::FUNCTION_FAILED;
     return Error::NONE;
 }
 
-void gr::Image::destroy(const VkDevice& device)
+void gr::Image::destroy(const Manager& grm)
 {
-    vkFreeMemory(device, m_memory, 0);
-    vkDestroyImageView(device, m_view, 0);
-    vkDestroyImage(device, m_handle, 0);
+    vkDestroyImageView(grm.getDevice(), m_view, 0);
+    vmaDestroyImage(grm.getAllocator(), m_handle, m_memory);
 }

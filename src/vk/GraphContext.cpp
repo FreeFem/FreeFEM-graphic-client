@@ -1,6 +1,6 @@
 #include "GraphContext.h"
 #include "GraphManager.h"
-#include "VertexBuffer.h"
+#include "Buffers.h"
 #include "vkcommon.h"
 
 namespace gr
@@ -49,15 +49,10 @@ namespace gr
             return Error::FUNCTION_FAILED;
         if (initSwapchain(grm))
             return Error::FUNCTION_FAILED;
-        if (m_depthImage.init(grm.getDevice(), grm.getPhysicalDeviceMemProps(),
-            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 0, depthBufferFormat,
-            grm.getNativeWindow().getWidth(), grm.getNativeWindow().getHeight(),
-            VK_IMAGE_ASPECT_DEPTH_BIT))
+        if (m_depthImage.init(grm, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 0, depthBufferFormat, VK_IMAGE_ASPECT_DEPTH_BIT))
             return Error::FUNCTION_FAILED;
         if (fillInitCmdBuffer(grm))
             return Error::FUNCTION_FAILED;
-        // if (m_pipeline.init(grm, *this))
-        //     return Error::FUNCTION_FAILED;
 
         for (int i = 0; i < 2; i += 1) {
             allocateCommandBuffer(grm.getDevice(), m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, m_presentCmdBuffer[i]);
@@ -92,7 +87,7 @@ namespace gr
             vkDestroyImage(grm.getDevice(), m_swapImages[i], 0);
         }
         m_swapImages.clear();
-        m_depthImage.destroy(grm.getDevice());
+        m_depthImage.destroy(grm);
 
         for (size_t i = 0; i < m_swapImageViews.size(); i += 1) {
             vkDestroyImageView(grm.getDevice(), m_swapImageViews[i], 0);
@@ -100,10 +95,7 @@ namespace gr
         m_swapImageViews.clear();
         if (initSwapchain(grm))
             return Error::FUNCTION_FAILED;
-        if (m_depthImage.init(grm.getDevice(), grm.getPhysicalDeviceMemProps(),
-            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 0, depthBufferFormat,
-            grm.getNativeWindow().getWidth(), grm.getNativeWindow().getHeight(),
-            VK_IMAGE_ASPECT_DEPTH_BIT))
+        if (m_depthImage.init(grm, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 0, depthBufferFormat, VK_IMAGE_ASPECT_DEPTH_BIT))
             return Error::FUNCTION_FAILED;
         if (!allocateCommandBuffer(grm.getDevice(), m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, m_cmdBuffer))
             return Error::FUNCTION_FAILED;
@@ -362,11 +354,10 @@ namespace gr
             VkDeviceSize bufferOffsets = 0;
             std::vector<VertexBuffer> vertexBuffers = pipeline.getBuffers();
             for (size_t i = 0; i < vertexBuffers.size(); i += 1) {
-                VkBuffer tmp = vertexBuffers[i].getBuffer();
+                VkBuffer tmp = vertexBuffers[i].getHandle();
                 vkCmdBindVertexBuffers(m_presentCmdBuffer[current_frame], i, vertexBuffers.size(), &tmp, &bufferOffsets);
             }
 
-            printf("Pushing constant %f\n", m_animTime);
             vkCmdPushConstants(m_presentCmdBuffer[current_frame],
                                 pipeline.getPipelineLayout(),
                                 VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
@@ -426,6 +417,26 @@ namespace gr
         if (pipeline.init(grm, *this))
             return Error::FUNCTION_FAILED;
         m_pipelines.push_back(pipeline);
+        return Error::NONE;
+    }
+
+    Error Context::initGlobalDescriptor(const Manager& grm)
+    {
+        VkDescriptorSetLayoutBinding layoutBinding = {};
+
+        layoutBinding.binding = 0;
+        layoutBinding.descriptorCount = 1;
+        layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        layoutBinding.pImmutableSamplers = 0;
+        layoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+        VkDescriptorSetLayoutCreateInfo layoutInfo = {};
+        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        layoutInfo.bindingCount = 1;
+        layoutInfo.pBindings = &layoutBinding;
+
+        if (vkCreateDescriptorSetLayout(grm.getDevice(), &layoutInfo, 0, &m_globalInfoLayout))
+            return Error::FUNCTION_FAILED;
         return Error::NONE;
     }
 

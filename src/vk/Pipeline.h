@@ -5,7 +5,7 @@
 #include <list>
 #include <vector>
 #include "../util/utils.h"
-#include "VertexBuffer.h"
+#include "Buffers.h"
 #include "Shader.h"
 
 namespace gr

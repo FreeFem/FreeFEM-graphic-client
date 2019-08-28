@@ -18,6 +18,8 @@ Error gr::Manager::init(const ManagerInitInfo& initInfo)
         return Error::FUNCTION_FAILED;
     if (initDevice() != Error::NONE)
         return Error::FUNCTION_FAILED;
+    if (initAllocator())
+        return Error::FUNCTION_FAILED;
     vkGetDeviceQueue(m_device, m_queueIdx, 0, &m_queue);
 
     return Error::NONE;
@@ -233,6 +235,17 @@ Error gr::Manager::initDevice()
     }
 #endif
 
+    return Error::NONE;
+}
+
+Error gr::Manager::initAllocator()
+{
+    VmaAllocatorCreateInfo allocatorInfo = {};
+    allocatorInfo.device = m_device;
+    allocatorInfo.physicalDevice = m_physicalDevice;
+
+    if (vmaCreateAllocator(&allocatorInfo, &m_allocator))
+        return Error::FUNCTION_FAILED;
     return Error::NONE;
 }
 

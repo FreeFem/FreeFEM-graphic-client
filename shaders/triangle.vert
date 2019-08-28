@@ -6,19 +6,15 @@ layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 colorIn;
 layout(location = 0) out vec3 colorOut;
 
-layout(push_constant) uniform PushConstants
+layout(binding = 0) uniform GlobalUniformInfos
 {
-	float animationTime;
-} pushConstants;
+    mat4 model;
+    mat4 view;
+    mat4 proj;
+} GlobalUniformInfos;
 
 void main()
 {
-	float angle = pushConstants.animationTime;
-
-	mat2 rotation = mat2(
-		cos(angle), -sin(angle),
-		sin(angle), cos(angle)
-	);
 	colorOut = colorIn;
-	gl_Position = vec4(rotation * position.xy, 1.0, 1.0);
+	gl_Position = GlobalUniformInfos.proj * GlobalUniformInfos.view * GlobalUniformInfos.model * vec4(position.xy, 0.0, 1.0);
 }

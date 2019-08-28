@@ -2,11 +2,14 @@
 #define IMAGE_H
 
 #include <vulkan/vulkan.h>
+#include "vk_mem_alloc.h"
 #include "../util/NonCopyable.h"
 #include "../util/utils.h"
 
 namespace gr
 {
+
+    class Manager;
 
     /**
      * @brief Wrapper around a vulkan image.
@@ -17,24 +20,21 @@ namespace gr
             /**
              * @brief Initialize a new vulkan image.
              *
-             * @param const VkDevice device[in] - Device used to allocate the memory.
-             * @param const VkPhysicalDeviceMemoryProperties memPhysicalDeviceProps[in] - Physical device memory properties.
+             * @param const Manager& grm[in] - Graphic manager used to create the image.
              * @param const VkBufferUsageFlags imageUsage[in] - Image's use.
              * @param const VkMemoryPropertyFlags memProps[in] - Prefered memory properties.
-             * @param const int width[in] - Image's width in pixel.
-             * @param const int height[in] - Image's height in pixel.
              * @param VkImageAspectFlags[in] - Image's aspect flag.
              *
              * @return Error - Returns Error::NONE if initialization is successful.
              */
-            Error init(const VkDevice, const VkPhysicalDeviceMemoryProperties, const VkBufferUsageFlags,
-                        const VkMemoryPropertyFlags, const VkFormat imageFormat, const int width, const int height,
-                        VkImageAspectFlags viewSubresoucesAspectMask);
+            Error init(const Manager& grm, const VkBufferUsageFlags imageUsage,
+                    const VkMemoryPropertyFlags requiredMemProps, const VkFormat imageFormat,
+                    VkImageAspectFlags viewSubresoucesAspectMask);
 
             /**
              * @brief Destroy image.
              */
-            void destroy(const VkDevice& device);
+            void destroy(const Manager& grm);
 
             /**
              * @brief Vulkan image handle getter.
@@ -49,13 +49,13 @@ namespace gr
             /**
              * @brief Vulkan image memory handle getter.
              */
-            inline VkDeviceMemory getMemory() const { return m_memory; }
+            inline VmaAllocation getAllocation() const { return m_memory; }
 
 
         private:
             VkImage m_handle = VK_NULL_HANDLE;
             VkImageView m_view = VK_NULL_HANDLE;
-            VkDeviceMemory m_memory = VK_NULL_HANDLE;
+            VmaAllocation m_memory;
     };
 
 } // namespace gr

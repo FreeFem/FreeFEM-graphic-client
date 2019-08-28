@@ -123,6 +123,8 @@ namespace gr
             Frame m_perFrame[2];
             VkCommandBuffer m_presentCmdBuffer[2];
 
+            VkDescriptorSetLayout m_globalInfoLayout;
+
             std::vector<Pipeline> m_pipelines;
 
             Image m_depthImage;
@@ -157,6 +159,17 @@ namespace gr
              * Will throw a warning at compilation if result isn't checked.
              */
             FORCE_USE_RESULT Error fillInitCmdBuffer(const Manager&);
+
+            /**
+             * @brief Initialized a context's swapchain.
+             *
+             * @param const Manager& grm[in] - Graphic manager used to create the context.
+             *
+             * @return FORCE_USE_RESULT Error - Return Error::NONE if initialization is successful.
+             * Will throw a warning at compilation if result isn't checked.
+             */
+            FORCE_USE_RESULT Error initGlobalDescriptor(const Manager&);
+
     };
 
 } // namespace gr

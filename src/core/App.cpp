@@ -1,6 +1,6 @@
 #include <chrono>
 #include "App.h"
-#include "../vk/VertexBuffer.h"
+#include "../vk/Buffers.h"
 
 namespace FEM
 {

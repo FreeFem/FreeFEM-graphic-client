@@ -6,7 +6,7 @@
 #include "../util/utils.h"
 #include "../core/NativeWindow.h"
 #include "Image.h"
-
+#include "vk_mem_alloc.h"
 
 namespace gr
 {
@@ -77,6 +77,8 @@ namespace gr
             inline VkInstance getInstance() const { return m_instance; }
             // @brief Vulkan physical device handle getter.
             inline VkPhysicalDevice getPhysicalDevice() const { return m_physicalDevice; }
+            // @brief Vulakn allocator getter.
+            inline VmaAllocator getAllocator() const { return m_allocator; }
             // @brief Vulkan device handle getter.
             inline VkDevice getDevice() const { return m_device; }
             // @brief Vulkan device's queue handle getter.
@@ -112,6 +114,8 @@ namespace gr
             VkDevice m_device = VK_NULL_HANDLE;
             uint32_t m_queueIdx;
             VkQueue m_queue = VK_NULL_HANDLE;
+
+            VmaAllocator m_allocator;
 
             GPUDeviceCapabilities m_capabilities;
             VkPhysicalDeviceProperties m_devProps = {};
@@ -152,6 +156,14 @@ namespace gr
              * Will throw a warning at compilation if result isn't checked.
              */
             FORCE_USE_RESULT Error initDevice();
+
+            /**
+             * @brief Initialize vulkan memory allocator.
+             *
+             * @return FORCE_USE_RESULT Error - Returns Error::NONE if initialization is successful.
+             * Will throw a warning at compilation if result isn't checked.
+             */
+            FORCE_USE_RESULT Error initAllocator();
     };
 } // namespace gr
 

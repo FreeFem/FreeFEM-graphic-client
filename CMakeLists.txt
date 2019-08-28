@@ -16,6 +16,9 @@ find_package(Vulkan REQUIRED)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wextra -D_DEBUG")
 
+# Adding VulkanSDK include path
+include_directories(${vulkan_INCLUDE_DIR})
+
 # Adding glfw to compilation
 add_subdirectory(extern/glfw)
 include_directories(extern/glfw/include)
@@ -26,6 +29,9 @@ include_directories(extern/glm/glm)
 
 # Adding asio to include
 include_directories(extern/asio/asio/include)
+
+# Adding VulkanMemoryAllocator to include path
+include_directories(extern/VulkanMemoryAllocator/src)
 
 # Adding json to include
 include_directories(extern/json/include)
@@ -40,8 +46,8 @@ add_executable(FreeFEM_graphic_client src/main.cpp src/core/App.cpp
                                       src/core/NativeWindow.cpp src/vk/Layers.cpp
                                       src/vk/GraphManager.cpp src/vk/Pipeline.cpp
                                       src/vk/Image.cpp src/vk/GraphContext.cpp
-                                      src/vk/vkcommon.cpp src/vk/VertexBuffer.cpp
-                                      src/vk/Shader.cpp)
+                                      src/vk/vkcommon.cpp src/vk/Buffers.cpp
+                                      src/vk/Shader.cpp src/util/wmaDeclaration.cpp)
 
 # Using C++11 standard
 set_target_properties(FreeFEM_graphic_client PROPERTIES CXX_STANDARD 11)

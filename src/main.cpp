@@ -1,4 +1,5 @@
 #include "core/App.h"
+#include "vk/Camera.h"
 
 int main()
 {

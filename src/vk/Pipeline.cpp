@@ -122,19 +122,17 @@ namespace gr
 
     Error Pipeline::initPipeline(const Manager& grm, UNUSED_PARAM const Context& grc)
     {
-        VkPushConstantRange pushConstant = {};
-        pushConstant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-        pushConstant.offset = 0;
-        pushConstant.size = 4;
+        VkPushConstantRange pushConstantRange = {};
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        pushConstantRange.offset = 0;
+        pushConstantRange.size = sizeof(glm::mat4);
 
         VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
         pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutCreateInfo.pNext = 0;
         pipelineLayoutCreateInfo.flags = 0;
-        pipelineLayoutCreateInfo.setLayoutCount = 0;
-        pipelineLayoutCreateInfo.pSetLayouts = 0;
         pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
-        pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstant;
+        pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 
         vkCreatePipelineLayout(grm.getDevice(), &pipelineLayoutCreateInfo, 0, &m_layout);
 

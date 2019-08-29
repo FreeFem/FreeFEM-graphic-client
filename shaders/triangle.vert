@@ -6,15 +6,12 @@ layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 colorIn;
 layout(location = 0) out vec3 colorOut;
 
-layout(binding = 0) uniform GlobalUniformInfos
-{
-    mat4 model;
-    mat4 view;
-    mat4 proj;
+layout (push_constant) uniform GlobalState {
+    mat4 Camera;
 } GlobalUniformInfos;
 
 void main()
 {
 	colorOut = colorIn;
-	gl_Position = GlobalUniformInfos.proj * GlobalUniformInfos.view * GlobalUniformInfos.model * vec4(position.xy, 0.0, 1.0);
+	gl_Position = GlobalUniformInfos.Camera * vec4(position.xy, 0.0, 1.0);
 }

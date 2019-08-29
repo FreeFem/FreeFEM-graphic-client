@@ -1,6 +1,7 @@
 #include "GraphContext.h"
 #include "GraphManager.h"
 #include "Buffers.h"
+#include "Camera.h"
 #include "vkcommon.h"
 
 namespace gr
@@ -42,6 +43,8 @@ namespace gr
         createInfo.pNext = 0;
         createInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
         createInfo.queueFamilyIndex = grm.getGraphicsQueueFamily();
+
+        m_camera.init();
 
         if (vkCreateCommandPool(grm.getDevice(), &createInfo, 0, &m_commandPool) != VK_SUCCESS)
             return Error::FUNCTION_FAILED;
@@ -101,8 +104,6 @@ namespace gr
             return Error::FUNCTION_FAILED;
         if (fillInitCmdBuffer(grm))
             return Error::FUNCTION_FAILED;
-        // if (m_pipeline.reload(grm, *this))
-        //     return Error::FUNCTION_FAILED;
         for (int i = 0; i < 2; i += 1) {
             allocateCommandBuffer(grm.getDevice(), m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, m_presentCmdBuffer[i]);
             m_perFrame[i].fenceInitialized = false;
@@ -191,8 +192,6 @@ namespace gr
         if (vkCreateSwapchainKHR(grm.getDevice(), &createInfo, 0, &swapchain) != VK_SUCCESS)
             return Error::FUNCTION_FAILED;
         m_swapchain = swapchain;
-        // if (oldSwapchain != VK_NULL_HANDLE)
-        //     vkDestroySwapchainKHR(grm.getDevice(), oldSwapchain, 0);
         uint32_t imageCount = 0;
         if (vkGetSwapchainImagesKHR(grm.getDevice(), m_swapchain, &imageCount, 0) != VK_SUCCESS)
             return Error::FUNCTION_FAILED;
@@ -358,12 +357,8 @@ namespace gr
                 vkCmdBindVertexBuffers(m_presentCmdBuffer[current_frame], i, vertexBuffers.size(), &tmp, &bufferOffsets);
             }
 
-            vkCmdPushConstants(m_presentCmdBuffer[current_frame],
-                                pipeline.getPipelineLayout(),
-                                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                                0,
-                                4,
-                                &m_animTime);
+            vkCmdPushConstants(m_presentCmdBuffer[current_frame], pipeline.getPipelineLayout(),
+                VK_SHADER_STAGE_VERTEX_BIT, 0, 4, m_camera.getCameraMatrix());
 
             vkCmdDraw(m_presentCmdBuffer[current_frame], 3, 1, 0, 0);
 
@@ -417,26 +412,6 @@ namespace gr
         if (pipeline.init(grm, *this))
             return Error::FUNCTION_FAILED;
         m_pipelines.push_back(pipeline);
-        return Error::NONE;
-    }
-
-    Error Context::initGlobalDescriptor(const Manager& grm)
-    {
-        VkDescriptorSetLayoutBinding layoutBinding = {};
-
-        layoutBinding.binding = 0;
-        layoutBinding.descriptorCount = 1;
-        layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        layoutBinding.pImmutableSamplers = 0;
-        layoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-        VkDescriptorSetLayoutCreateInfo layoutInfo = {};
-        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = 1;
-        layoutInfo.pBindings = &layoutBinding;
-
-        if (vkCreateDescriptorSetLayout(grm.getDevice(), &layoutInfo, 0, &m_globalInfoLayout))
-            return Error::FUNCTION_FAILED;
         return Error::NONE;
     }
 

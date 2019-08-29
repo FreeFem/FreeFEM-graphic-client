@@ -7,6 +7,7 @@
 #include "../util/NonCopyable.h"
 #include "Image.h"
 #include "Pipeline.h"
+#include "Camera.h"
 
 namespace gr
 {
@@ -119,11 +120,11 @@ namespace gr
 
             VkCommandBuffer m_cmdBuffer;
 
+            Camera m_camera;
+
             uint8_t current_frame = 0;
             Frame m_perFrame[2];
             VkCommandBuffer m_presentCmdBuffer[2];
-
-            VkDescriptorSetLayout m_globalInfoLayout;
 
             std::vector<Pipeline> m_pipelines;
 
@@ -159,16 +160,6 @@ namespace gr
              * Will throw a warning at compilation if result isn't checked.
              */
             FORCE_USE_RESULT Error fillInitCmdBuffer(const Manager&);
-
-            /**
-             * @brief Initialized a context's swapchain.
-             *
-             * @param const Manager& grm[in] - Graphic manager used to create the context.
-             *
-             * @return FORCE_USE_RESULT Error - Return Error::NONE if initialization is successful.
-             * Will throw a warning at compilation if result isn't checked.
-             */
-            FORCE_USE_RESULT Error initGlobalDescriptor(const Manager&);
 
     };
 

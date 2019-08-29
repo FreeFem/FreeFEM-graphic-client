@@ -50,7 +50,7 @@ namespace FEM
         static int i = 0;
         if (!i) {
             gr::VertexBuffer object;
-            if (object.init(m_grManager, (void *)vertices, sizeof(vertices), sizeof(float) * 6,
+            if (object.init(m_grManager, (void *)vertices, NUM_DEMO_VERTICES, SIZE_DEMO_VERTEX,
                 {{0, VK_FORMAT_R32G32B32_SFLOAT, sizeof(float) * 0}, {1, VK_FORMAT_R32G32B32_SFLOAT, sizeof(float) * 3}},
                 VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST))
             {

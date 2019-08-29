@@ -84,7 +84,8 @@ namespace gr
 
         initBuffer(grm, bufferInfos, allocInfos, stride);
 
-        memcpy(m_allocInfo.pMappedData, data, stride);
+        if (data != 0)
+            memcpy(m_allocInfo.pMappedData, data, stride);
         m_binding = binding;
         m_stride = stride;
         return Error::NONE;

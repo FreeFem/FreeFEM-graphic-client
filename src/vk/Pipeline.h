@@ -61,7 +61,15 @@ namespace gr
             /**
              * WIP
              */
-            inline void addData(VertexBuffer& vBuffer) { m_vertexBuffers.push_back(vBuffer); }
+            inline void addData(VertexBuffer vBuffer) { m_vertexBuffers.push_back(vBuffer); }
+
+            inline uint32_t getVerticesCount() const {
+                uint32_t ret = 0;
+                for (const auto vBuffer : m_vertexBuffers) {
+                    ret += vBuffer.getVerticesCount();
+                }
+                return ret;
+            }
 
             // @brief Vulkan pipeline getter.
             inline VkPipeline getPipeline() const { return m_handle; }
@@ -76,12 +84,17 @@ namespace gr
             // @brief VertexBuffer getter.
             inline std::vector<VertexBuffer> getBuffers() const { return m_vertexBuffers; }
 
+            inline std::vector<VkDescriptorSet> getDescriptorSets() const { return m_descriptorSet; }
+
         private:
             VkPipeline m_handle;
             VkPipelineLayout m_layout;
             VkRenderPass m_renderpass;
             std::vector<VkFramebuffer> m_framebuffers = {};
             std::vector<VertexBuffer> m_vertexBuffers = {};
+            VkDescriptorSetLayout m_descriptorSetLayout;
+            std::vector<VkDescriptorSet> m_descriptorSet = {};
+            std::vector<UniformBuffer> m_uniformBuffers = {};
             Shader m_shaders;
 
             /**
@@ -116,6 +129,17 @@ namespace gr
              * Will throw a warning at compilation if result isn't checked.
              */
             FORCE_USE_RESULT Error initPipeline(const Manager&, UNUSED_PARAM const Context&);
+
+            /**
+             * @brief Initialize pipeline's vulkan descriptor set layout.
+             *
+             * @param const Manager& grm - Graphic manager used to create the pipeline.
+             * @param const Context& grm - Graphic context used to create the pipeline.
+             *
+             * @return FORCE_USE_RESULT Error - Returns Error::NONE if initilization is successful.
+             * Will throw a warning at compilation if result isn't checked.
+             */
+            FORCE_USE_RESULT Error initDescriptorSetLayout(const Manager&, UNUSED_PARAM const Context&);
     };
 
 } // namespace gr

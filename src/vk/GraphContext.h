@@ -79,12 +79,22 @@ namespace gr
             /**
              * @brief Swapchain image views getter.
              */
-            inline std::vector<VkImageView> get_swapImageViews() const { return m_swapImageViews; }
+            inline std::vector<VkImageView> getSwapImageViews() const { return m_swapImageViews; }
 
+            /**
+             * @brief Swapchain images getter.
+             */
+            inline std::vector<VkImage> getSwapImages() const { return m_swapImages; }
+
+            inline VkDescriptorPool getDescriptorPool() const { return m_descriptorPool; }
+
+            inline std::vector<Pipeline> getPipelines() { return m_pipelines; }
+
+            inline Camera getCamera() const { return m_camera; }
             /**
              * @brief Depth image getter.
              */
-            inline Image get_depthImage() const { return m_depthImage; }
+            inline Image getDepthImage() const { return m_depthImage; }
 
             /**
              * @brief Render a frame.
@@ -120,6 +130,7 @@ namespace gr
 
             VkCommandBuffer m_cmdBuffer;
 
+            VkDescriptorPool m_descriptorPool;
             Camera m_camera;
 
             uint8_t current_frame = 0;

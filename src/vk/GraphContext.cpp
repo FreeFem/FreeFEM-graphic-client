@@ -44,14 +44,28 @@ namespace gr
         createInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
         createInfo.queueFamilyIndex = grm.getGraphicsQueueFamily();
 
-        m_camera.init();
-
+        m_camera.setPerspective(90.f, 1280.f / 768.f, 0.1f, 1000.f);
+        //m_camera.setPosition({8.f, 5.f, 7.f});
+        m_camera.viewMatrixtest();
         if (vkCreateCommandPool(grm.getDevice(), &createInfo, 0, &m_commandPool) != VK_SUCCESS)
             return Error::FUNCTION_FAILED;
         if (!allocateCommandBuffer(grm.getDevice(), m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, m_cmdBuffer))
             return Error::FUNCTION_FAILED;
         if (initSwapchain(grm))
             return Error::FUNCTION_FAILED;
+
+    // Creating the Descriptor pool
+        VkDescriptorPoolSize poolSize = {};
+        poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSize.descriptorCount = (uint32_t)m_swapImages.size();
+        VkDescriptorPoolCreateInfo poolInfo = {};
+        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        poolInfo.poolSizeCount = 1;
+        poolInfo.pPoolSizes = &poolSize;
+        poolInfo.maxSets = (uint32_t)m_swapImages.size();
+        if (vkCreateDescriptorPool(grm.getDevice(), &poolInfo, 0, &m_descriptorPool))
+            return Error::FUNCTION_FAILED;
+
         if (m_depthImage.init(grm, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 0, depthBufferFormat, VK_IMAGE_ASPECT_DEPTH_BIT))
             return Error::FUNCTION_FAILED;
         if (fillInitCmdBuffer(grm))
@@ -309,6 +323,7 @@ namespace gr
             commandbufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
             res = vkBeginCommandBuffer(m_presentCmdBuffer[current_frame], &commandbufferBeginInfo);
+            grm.beginDebugMaker(m_presentCmdBuffer[current_frame], "PresentCmdBuffer");
             if (res != VK_SUCCESS) return Error::FUNCTION_FAILED;
 
             VkClearValue clearValues[2];
@@ -357,13 +372,13 @@ namespace gr
                 vkCmdBindVertexBuffers(m_presentCmdBuffer[current_frame], i, vertexBuffers.size(), &tmp, &bufferOffsets);
             }
 
-            vkCmdPushConstants(m_presentCmdBuffer[current_frame], pipeline.getPipelineLayout(),
-                VK_SHADER_STAGE_VERTEX_BIT, 0, 4, m_camera.getCameraMatrix());
+            vkCmdBindDescriptorSets(m_presentCmdBuffer[current_frame], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.getPipelineLayout(), 0, 1, &pipeline.getDescriptorSets()[0], 0, 0);
 
-            vkCmdDraw(m_presentCmdBuffer[current_frame], 3, 1, 0, 0);
+            vkCmdDraw(m_presentCmdBuffer[current_frame], pipeline.getVerticesCount(), 1, 0, 0);
 
             vkCmdEndRenderPass(m_presentCmdBuffer[current_frame]);
 
+            grm.endDebugMaker(m_presentCmdBuffer[current_frame]);
             res = vkEndCommandBuffer(m_presentCmdBuffer[current_frame]);
 
             VkPipelineStageFlags pipelineStageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;

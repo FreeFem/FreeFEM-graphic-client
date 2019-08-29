@@ -13,6 +13,8 @@ namespace gr
             return Error::FUNCTION_FAILED;
         if (initFramebuffers(grm, grc))
             return Error::FUNCTION_FAILED;
+        if (initDescriptorSetLayout(grm, grc))
+            return Error::FUNCTION_FAILED;
         if (initPipeline(grm, grc))
             return Error::FUNCTION_FAILED;
         return Error::NONE;
@@ -96,10 +98,10 @@ namespace gr
 
     Error Pipeline::initFramebuffers(const Manager& grm, const Context& grc)
     {
-        for (const auto view : grc.get_swapImageViews()) {
+        for (const auto view : grc.getSwapImageViews()) {
             VkFramebuffer fb;
 
-            VkImageView attachment[2] = {view, grc.get_depthImage().getImageView()};
+            VkImageView attachment[2] = {view, grc.getDepthImage().getImageView()};
             VkFramebufferCreateInfo createInfo = {};
             createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
             createInfo.pNext = 0;
@@ -122,17 +124,12 @@ namespace gr
 
     Error Pipeline::initPipeline(const Manager& grm, UNUSED_PARAM const Context& grc)
     {
-        VkPushConstantRange pushConstantRange = {};
-        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        pushConstantRange.offset = 0;
-        pushConstantRange.size = sizeof(glm::mat4);
-
         VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
         pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutCreateInfo.pNext = 0;
         pipelineLayoutCreateInfo.flags = 0;
-        pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
-        pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
+        pipelineLayoutCreateInfo.setLayoutCount = 1;
+        pipelineLayoutCreateInfo.pSetLayouts = &m_descriptorSetLayout;
 
         vkCreatePipelineLayout(grm.getDevice(), &pipelineLayoutCreateInfo, 0, &m_layout);
 
@@ -153,6 +150,7 @@ namespace gr
         std::vector<VkVertexInputBindingDescription> vertexInputBindingDescription = {};
         std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescription = {};
         VkPrimitiveTopology topology;
+        printf("Number of Buffer to render : %lu\n", m_vertexBuffers.size());
         for (const auto vBuffer : m_vertexBuffers) {
             VkVertexInputBindingDescription inputBindingDescription;
             topology = vBuffer.getTopology();
@@ -172,6 +170,7 @@ namespace gr
                 location += 1;
             }
 
+            printf("Binding point : %d\n", binding_input);
             binding_input += 1;
 
         }
@@ -270,6 +269,59 @@ namespace gr
 
         if (vkCreateGraphicsPipelines(grm.getDevice(), VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, 0, &m_handle))
             return Error::FUNCTION_FAILED;
+        return Error::NONE;
+    }
+
+    Error Pipeline::initDescriptorSetLayout(const Manager& grm, UNUSED_PARAM const Context& grc)
+    {
+        VkDescriptorSetLayoutBinding cameraLayoutBinding = {};
+        cameraLayoutBinding.binding = 0;
+        cameraLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        cameraLayoutBinding.descriptorCount = 1;
+        cameraLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+        VkDescriptorSetLayoutCreateInfo layoutInfo = {};
+        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        layoutInfo.bindingCount = 1;
+        layoutInfo.pBindings = &cameraLayoutBinding;
+
+        if (vkCreateDescriptorSetLayout(grm.getDevice(), &layoutInfo, 0, &m_descriptorSetLayout))
+            return Error::FUNCTION_FAILED;
+
+        VkDeviceSize bufferSize = sizeof(Camera::UniformCamera);
+        m_uniformBuffers.resize(grc.getSwapImages().size());
+
+        for (size_t i = 0; i < grc.getSwapImages().size(); i += 1) {
+            m_uniformBuffers[i].init(grm, grc.getCamera().getCamHandlePTR(), sizeof(Camera::UniformCamera), 0);
+        }
+
+        std::vector<VkDescriptorSetLayout> layouts(grc.getSwapImages().size(), m_descriptorSetLayout);
+        VkDescriptorSetAllocateInfo allocInfo = {};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = grc.getDescriptorPool();
+        allocInfo.descriptorSetCount = (uint32_t)grc.getSwapImages().size();
+        allocInfo.pSetLayouts = layouts.data();
+
+        m_descriptorSet.resize(grc.getSwapImages().size());
+        if (vkAllocateDescriptorSets(grm.getDevice(), &allocInfo, m_descriptorSet.data()))
+            return Error::FUNCTION_FAILED;
+        for (size_t i = 0; i < grc.getSwapImages().size(); i += 1) {
+            VkDescriptorBufferInfo bufferInfo = {};
+            bufferInfo.buffer = m_uniformBuffers[i].getHandle();
+            bufferInfo.offset = 0;
+            bufferInfo.range = sizeof(Camera::UniformCamera);
+
+            VkWriteDescriptorSet descriptorWrite = {};
+            descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrite.dstSet = m_descriptorSet[i];
+            descriptorWrite.dstBinding = 0;
+            descriptorWrite.dstArrayElement = 0;
+            descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            descriptorWrite.descriptorCount = 1;
+            descriptorWrite.pBufferInfo = &bufferInfo;
+
+            vkUpdateDescriptorSets(grm.getDevice(), 1, &descriptorWrite, 0, 0);
+        }
         return Error::NONE;
     }
 

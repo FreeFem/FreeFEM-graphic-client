@@ -63,6 +63,7 @@ namespace gr {
             // @brief Buffer stride getter.
             inline VkDeviceSize getStride() const { return m_stride; }
             // @brief Buffer topology getter.
+            inline VkDeviceSize getVerticesCount() const { return m_count; }
             inline VkPrimitiveTopology getTopology() const { return m_topology; }
         private:
             size_t m_count = 0;

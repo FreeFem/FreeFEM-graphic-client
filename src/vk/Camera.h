@@ -13,45 +13,74 @@ namespace gr {
 
     class Camera {
         public:
+            enum CamType { lookAt, firstPerson };
 
-            void init(glm::vec3 position = glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3 front = glm::vec3(0.0f, 0.0f, -1.0f), float yaw = -90.f, float pitch = 0.f)
+            CamType type = CamType::lookAt;
+
+            glm::vec3 rotation = glm::vec3();
+            glm::vec3 position = glm::vec3();
+
+            bool updated = false;
+
+            void setPerspective(float field_of_view, float aspect, float near, float far)
             {
-                MovementSpeed = 2.5f;
-                Front = front;
-                Position = position;
-                WorldUp = up;
-                Yaw = yaw;
-                Pitch = pitch;
-                updateCameraVectors();
+                fov = field_of_view;
+                znear = near;
+                zfar = far;
+                CamHandle.perspective = glm::perspective(glm::radians(fov), aspect, znear, zfar);
             }
 
-            inline glm::mat4 *getCameraMatrix() { matrix = glm::lookAt(Position, Position + Front, Up); return &matrix; }
+            void updateAspectRatio(float aspect) { CamHandle.perspective = glm::perspective(glm::radians(fov), aspect, znear, zfar); }
 
-            void updateCameraVectors()
+            void setPosition(glm::vec3 new_position) { position = new_position; updateViewMatrix(); }
+            void setRotation(glm::vec3 new_rotation) { rotation = new_rotation; updateViewMatrix(); }
+
+            void rotate(glm::vec3 delta) { rotation += delta; updateViewMatrix(); }
+            void translate(glm::vec3 delta) { position += delta; updateViewMatrix(); }
+
+            void update(float deltaTime) { updated = false; }
+
+            typedef struct {
+                alignas(16) glm::mat4 perspective;
+                alignas(16) glm::mat4 view;
+                alignas(16) glm::mat4 model = glm::mat4(1.0f);
+            } UniformCamera;
+
+            void viewMatrixtest()
             {
-                // Calculate the new Front vector
-                glm::vec3 front;
-                front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-                front.y = sin(glm::radians(Pitch));
-                front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-                Front = glm::normalize(front);
-                // Also re-calculate the Right and Up vector
-                Right = glm::normalize(glm::cross(Front, WorldUp));  // Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
-                Up    = glm::normalize(glm::cross(Right, Front));
+                glm::mat4 view = glm::lookAt(glm::vec3(3.f, 3.f, 3.f), glm::vec3(0, 0, 0), glm::vec3(0, 0, 1));
+                CamHandle.view = CamHandle.perspective * view;
             }
+
+            UniformCamera *getCamHandlePTR() { return &CamHandle; }
+
+            UniformCamera CamHandle;
 
         private:
-            glm::vec3 Position;
-            glm::vec3 Front;
-            glm::vec3 Up;
-            glm::vec3 Right;
-            glm::vec3 WorldUp;
-            glm::mat4x4 matrix;
+            float fov;
+            float znear, zfar;
 
-            float Yaw;
-            float Pitch;
+            void updateViewMatrix()
+            {
+                glm::mat4 rotM = glm::mat4(1.0f);
+                glm::mat4 transM;
 
-            float MovementSpeed;
+                rotM = glm::rotate(rotM, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+                rotM = glm::rotate(rotM, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+                rotM = glm::rotate(rotM, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+
+                transM = glm::translate(glm::mat4(1.0f), position);
+
+                // if (type == CamType::firstPerson) {
+                //     CamHandle.view = rotM * transM;
+                // } else {
+                //     CamHandle.view = transM * rotM;
+                // }
+
+                updated = true;
+            }
+
+
 
     };
 

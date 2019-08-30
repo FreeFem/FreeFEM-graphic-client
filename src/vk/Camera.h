@@ -71,11 +71,12 @@ namespace gr {
 
                 transM = glm::translate(glm::mat4(1.0f), position);
 
-                // if (type == CamType::firstPerson) {
-                //     CamHandle.view = rotM * transM;
-                // } else {
-                //     CamHandle.view = transM * rotM;
-                // }
+                if (type == CamType::firstPerson) {
+                    CamHandle.view = rotM * transM;
+                } else {
+                    CamHandle.view = glm::lookAt(position, glm::vec3(0, 0, 0), glm::vec3(0, 0, 1));
+                    //CamHandle.view = transM * rotM;
+                }
 
                 updated = true;
             }

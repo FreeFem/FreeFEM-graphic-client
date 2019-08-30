@@ -27,5 +27,5 @@ mat4 viewMatrix(vec3 eye, vec3 center, vec3 up) {
 void main()
 {
 	colorOut = colorIn;
-	gl_Position = GlobalUniformInfos.view * vec4(position, 1.0);
+	gl_Position = GlobalUniformInfos.projection * GlobalUniformInfos.view * vec4(position, 1.0);
 }

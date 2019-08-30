@@ -45,8 +45,8 @@ namespace gr
         createInfo.queueFamilyIndex = grm.getGraphicsQueueFamily();
 
         m_camera.setPerspective(90.f, 1280.f / 768.f, 0.1f, 1000.f);
-        //m_camera.setPosition({8.f, 5.f, 7.f});
-        m_camera.viewMatrixtest();
+        m_camera.setPosition({3.f, 3.f, 3.f});
+        //m_camera.viewMatrixtest();
         if (vkCreateCommandPool(grm.getDevice(), &createInfo, 0, &m_commandPool) != VK_SUCCESS)
             return Error::FUNCTION_FAILED;
         if (!allocateCommandBuffer(grm.getDevice(), m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, m_cmdBuffer))

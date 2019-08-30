@@ -69,12 +69,15 @@ class App {
      * @param int width[in] - New width of the framebuffer.
      * @param int height[in] - New width of the framebuffer.
      */
-    static void framebuffferResizeCallback(GLFWwindow *window, int width, int height) {
+    static void framebufferResizeCallback(GLFWwindow *window, int width, int height) {
         auto app = reinterpret_cast<App *>(glfwGetWindowUserPointer(window));
         app->m_window.setWidth(width);
         app->m_window.setHeight(height);
-        // if (app->m_grContext.reload(app->m_grManager))
-        //     return;
+        app->m_grContext.destroy(app->m_grManager);
+        if (app->m_grContext.init(app->m_grManager)) {
+            LOGE("GLFW FramebufferResize Callback", "Failed to recreate gr::Context.");
+            return;
+        }
     }
 
     ErrorValues update( );

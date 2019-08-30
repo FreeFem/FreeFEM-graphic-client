@@ -44,6 +44,14 @@ class Context : public NonCopyable {
     FORCE_USE_RESULT ErrorValues init(const Manager&);
 
     /**
+     * @brief Destroy the context.
+     *
+     * @param const Manager& grm[in] - Graphic manager used to create the
+     * context.
+     */
+    void destroy(const Manager&);
+
+    /**
      * @brief Render a frame.
      */
     // ErrorValues render(const Manager& grm);
@@ -51,6 +59,7 @@ class Context : public NonCopyable {
     VkSwapchainKHR Swapchain = VK_NULL_HANDLE;
     std::vector<VkImage> SwapImages = {};
     std::vector<VkImageView> SwapImageViews = {};
+    std::vector<VkFramebuffer> FrameBuffers = {};
     VkFormat SurfaceFormat;
 
     VkCommandBuffer InitializerCommandBuffer;

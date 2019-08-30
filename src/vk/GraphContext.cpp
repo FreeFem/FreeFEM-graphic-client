@@ -68,8 +68,6 @@ ErrorValues Context::initInternal(const Manager& grm) {
 ErrorValues Context::initSwapchain(const Manager& grm) {
     uint32_t surfaceFormatCount;
 
-    VkSwapchainKHR oldSwapchain = (Swapchain) ? Swapchain : VK_NULL_HANDLE;
-
     if (vkGetPhysicalDeviceSurfaceFormatsKHR(grm.PhysicalDevice, grm.Surface, &surfaceFormatCount, 0) != VK_SUCCESS) {
         LOGE(FILE_LOCATION( ), "Failed to get surface format.");
         return ErrorValues::FUNCTION_FAILED;
@@ -158,7 +156,7 @@ ErrorValues Context::initSwapchain(const Manager& grm) {
     createInfo.imageArrayLayers = 1;
     createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
     createInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
-    createInfo.oldSwapchain = oldSwapchain;
+    createInfo.oldSwapchain = VK_NULL_HANDLE;
     createInfo.clipped = VK_TRUE;
 
     VkSwapchainKHR swapchain;
@@ -254,6 +252,21 @@ ErrorValues Context::fillInitCmdBuffer(const Manager& grm) {
 
     vkQueueWaitIdle(grm.Queue);
     return ErrorValues::NONE;
+}
+
+void Context::destroy(const Manager& grm)
+{
+    DepthImage.destroy(grm);
+
+    /*
+        Destroy pipelines elements
+    */
+    vkFreeCommandBuffers(grm.Device, grm.CommandPool, 1, &InitializerCommandBuffer);
+
+    for (auto imageView : SwapImageViews) {
+        vkDestroyImageView(grm.Device, imageView, 0);
+    }
+    vkDestroySwapchainKHR(grm.Device, Swapchain, 0);
 }
 
 // ErrorValues Context::render(const Manager& grm) {

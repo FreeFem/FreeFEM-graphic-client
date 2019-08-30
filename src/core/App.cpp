@@ -14,7 +14,7 @@ ErrorValues App::init(const AppInitInfo& initInfo) {
         return ErrorValues::FUNCTION_FAILED;
     }
     glfwSetWindowUserPointer(m_window.getNativeWindow( ), this);
-    glfwSetFramebufferSizeCallback(m_window.getNativeWindow( ), framebuffferResizeCallback);
+    glfwSetFramebufferSizeCallback(m_window.getNativeWindow( ), framebufferResizeCallback);
 
     gr::ManagerInitInfo grInitInfo = {m_window};
     if (m_grManager.init(grInitInfo)) {

@@ -1,12 +1,14 @@
 #ifndef NON_COPYABLE_H
 #define NON_COPYABLE_H
 
+namespace FEM {
+
 /**
  * @brief Inheriting classes can't be copied.
  */
 struct NonCopyable {
-    NonCopyable() = default;
-    ~NonCopyable() = default;
+    NonCopyable( ) = default;
+    ~NonCopyable( ) = default;
 
     /**
      * @brief Deleted copy constructor.
@@ -19,4 +21,5 @@ struct NonCopyable {
     NonCopyable& operator=(const NonCopyable&) = delete;
 };
 
-#endif // NON_COPYABLE_H
+}    // namespace FEM
+#endif    // NON_COPYABLE_H

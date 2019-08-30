@@ -1,12 +1,14 @@
-#include "vkcommon.h"
+#include "Image.h"
 #include "GraphManager.h"
+#include "vkcommon.h"
 
-Error gr::Image::init(const Manager& grm, const VkBufferUsageFlags imageUsage,
-                    const VkMemoryPropertyFlags requiredMemProps, const VkFormat imageFormat,
-                    VkImageAspectFlags viewSubresoucesAspectMask)
-{
-    int width = grm.getNativeWindow().getWidth();
-    int height = grm.getNativeWindow().getHeight();
+namespace FEM {
+namespace gr {
+
+ErrorValues Image::init(const Manager& grm, const VkBufferUsageFlags imageUsage, const VkFormat imageFormat,
+                        VkImageAspectFlags viewSubresoucesAspectMask) {
+    int width = grm.Window->getWidth( );
+    int height = grm.Window->getHeight( );
 
     VkImageCreateInfo imageCreateInfo = {};
     imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -28,17 +30,17 @@ Error gr::Image::init(const Manager& grm, const VkBufferUsageFlags imageUsage,
     VmaAllocationCreateInfo allocInfo = {};
     allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-    if (vmaCreateImage(grm.getAllocator(), &imageCreateInfo, &allocInfo, &m_handle, &m_memory, 0))
-        return Error::FUNCTION_FAILED;
+    if (vmaCreateImage(grm.Allocator, &imageCreateInfo, &allocInfo, &Handle, &Memory, 0))
+        return ErrorValues::FUNCTION_FAILED;
 
     VkMemoryRequirements memoryRequirements;
-    vkGetImageMemoryRequirements(grm.getDevice(), m_handle, &memoryRequirements);
+    vkGetImageMemoryRequirements(grm.Device, Handle, &memoryRequirements);
 
     VkImageViewCreateInfo imageViewCreateInfo = {};
     imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     imageViewCreateInfo.pNext = 0;
     imageViewCreateInfo.flags = 0;
-    imageViewCreateInfo.image = m_handle;
+    imageViewCreateInfo.image = Handle;
     imageViewCreateInfo.format = imageFormat;
     imageViewCreateInfo.subresourceRange.aspectMask = viewSubresoucesAspectMask;
     imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
@@ -51,13 +53,15 @@ Error gr::Image::init(const Manager& grm, const VkBufferUsageFlags imageUsage,
     imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
     imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 
-    if (vkCreateImageView(grm.getDevice(), &imageViewCreateInfo, 0, &m_view) != VK_SUCCESS)
-        return Error::FUNCTION_FAILED;
-    return Error::NONE;
+    if (vkCreateImageView(grm.Device, &imageViewCreateInfo, 0, &View) != VK_SUCCESS)
+        return ErrorValues::FUNCTION_FAILED;
+    return ErrorValues::NONE;
 }
 
-void gr::Image::destroy(const Manager& grm)
-{
-    vkDestroyImageView(grm.getDevice(), m_view, 0);
-    vmaDestroyImage(grm.getAllocator(), m_handle, m_memory);
+void Image::destroy(const Manager& grm) {
+    vkDestroyImageView(grm.Device, View, 0);
+    vmaDestroyImage(grm.Allocator, Handle, Memory);
 }
+
+}    // namespace gr
+}    // namespace FEM

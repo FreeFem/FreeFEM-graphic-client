@@ -1,57 +1,47 @@
 #include <cstring>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+#include "../util/Logger.h"
 #include "GraphManager.h"
 #include "Layers.h"
 
-gr::Manager::~Manager()
-{
+namespace FEM {
+namespace gr {
+
+ErrorValues Manager::init(const ManagerInitInfo &initInfo) {
+    Window = &initInfo.window;
+
+    if (initInstance( ) != ErrorValues::NONE) return ErrorValues::FUNCTION_FAILED;
+    if (initSurface( ) != ErrorValues::NONE) return ErrorValues::FUNCTION_FAILED;
+    if (initDevice( ) != ErrorValues::NONE) return ErrorValues::FUNCTION_FAILED;
+    if (initAllocator( )) return ErrorValues::FUNCTION_FAILED;
+    vkGetDeviceQueue(Device, QueueIdx, 0, &Queue);
+    if (initCommandPool( )) return ErrorValues::FUNCTION_FAILED;
+    return ErrorValues::NONE;
 }
 
-Error gr::Manager::init(const ManagerInitInfo& initInfo)
-{
-    m_window = &initInfo.window;
-
-    if (initInstance() != Error::NONE)
-        return Error::FUNCTION_FAILED;
-    if (initSurface() != Error::NONE)
-        return Error::FUNCTION_FAILED;
-    if (initDevice() != Error::NONE)
-        return Error::FUNCTION_FAILED;
-    if (initAllocator())
-        return Error::FUNCTION_FAILED;
-    vkGetDeviceQueue(m_device, m_queueIdx, 0, &m_queue);
-
-    return Error::NONE;
-}
-
-static void checkValidationLayerSupport(std::vector<const char *> enabledLayers)
-{
+static void checkValidationLayerSupport(std::vector<const char *> enabledLayers) {
     uint32_t layerCount;
     vkEnumerateInstanceLayerProperties(&layerCount, 0);
 
     std::vector<VkLayerProperties> availableLayers(layerCount);
-    vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+    vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data( ));
 
-    printf("Activated Layers :\n");
-    auto ite = enabledLayers.begin();
+    auto ite = enabledLayers.begin( );
     for (const char *layerName : enabledLayers) {
         bool layerFound = false;
-        for (const auto& layerProps : availableLayers) {
+        for (const auto &layerProps : availableLayers) {
             if (strcmp(layerName, layerProps.layerName) == 0) {
-                printf("* %s\n", layerProps.layerName);
                 layerFound = true;
                 break;
             }
         }
-        if (!layerFound)
-            enabledLayers.erase(ite);
+        if (!layerFound) enabledLayers.erase(ite);
         ++ite;
     }
 }
 
-Error gr::Manager::initInstance()
-{
+ErrorValues Manager::initInstance( ) {
     const uint32_t vulkanMinor = 0;
     const uint32_t vulkanMajor = 1;
 
@@ -71,10 +61,10 @@ Error gr::Manager::initInstance()
     VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
     checkValidationLayerSupport(debugLayers);
 
-    createInfo.enabledLayerCount = (uint32_t)debugLayers.size();
-    createInfo.ppEnabledLayerNames = debugLayers.data();
+    createInfo.enabledLayerCount = (uint32_t)debugLayers.size( );
+    createInfo.ppEnabledLayerNames = debugLayers.data( );
     populateDebugMessengerCreateInfo(debugCreateInfo);
-    createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo;
+    createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT *)&debugCreateInfo;
 #else
     createInfo.enabledLayerCount = 0;
     createInfo.ppEnabledLayerNames = 0;
@@ -82,88 +72,95 @@ Error gr::Manager::initInstance()
 
     uint32_t glfwExtensionCount = 0;
     const char **glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-    for (uint_fast32_t i = 0; i < glfwExtensionCount; i += 1)
-        m_extensions.push_back(glfwExtensions[i]);
+    for (uint_fast32_t i = 0; i < glfwExtensionCount; i += 1) Extensions.push_back(glfwExtensions[i]);
 #ifdef _DEBUG
-    m_extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
-    m_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+    Extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+    Extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 #endif
-    createInfo.enabledExtensionCount = (uint32_t)m_extensions.size();
-    createInfo.ppEnabledExtensionNames = m_extensions.data();
+    createInfo.enabledExtensionCount = (uint32_t)Extensions.size( );
+    createInfo.ppEnabledExtensionNames = Extensions.data( );
 
-    if (vkCreateInstance(&createInfo, 0, &m_instance) != VK_SUCCESS)
-        return Error::FUNCTION_FAILED;
+    if (vkCreateInstance(&createInfo, 0, &Instance)) {
+        LOGE(FILE_LOCATION( ), "Failed to create VkInstance.");
+        return ErrorValues::FUNCTION_FAILED;
+    }
 #ifdef _DEBUG
     VkDebugReportCallbackCreateInfoEXT createInfoDebug = {};
     createInfoDebug.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
     createInfoDebug.pfnCallback = debugReportCallbackEXT;
-    createInfoDebug.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT
-                    | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
+    createInfoDebug.flags =
+        VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
     createInfoDebug.pUserData = this;
 
     PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT =
         reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT>(
-            vkGetInstanceProcAddr(m_instance, "vkCreateDebugReportCallbackEXT"));
-    if (!vkCreateDebugReportCallbackEXT)
-        return VK_INCOMPLETE;
-    vkCreateDebugReportCallbackEXT(m_instance, &createInfoDebug, 0, &m_debugCallback);
+            vkGetInstanceProcAddr(Instance, "vkCreateDebugReportCallbackEXT"));
+    if (!vkCreateDebugReportCallbackEXT) return VK_INCOMPLETE;
+    vkCreateDebugReportCallbackEXT(Instance, &createInfoDebug, 0, &DebugCallback);
 #endif
     VkResult result;
 
-    // Create physical device (Dump way of picking the device in the list, will rework that piece of code later)
+    // Create physical device (Dump way of picking the device in the list, will
+    // rework that piece of code later)
     uint32_t count = 0;
-    result = vkEnumeratePhysicalDevices(m_instance, &count, 0);
-    if (result != VK_SUCCESS || count < 1)
-        return Error::FUNCTION_FAILED;
+    result = vkEnumeratePhysicalDevices(Instance, &count, 0);
+    if (result != VK_SUCCESS || count < 1) {
+        LOGE(FILE_LOCATION( ), "Couldn't enumerate GPUs.");
+        return ErrorValues::FUNCTION_FAILED;
+    }
     count = 1;
-    result = vkEnumeratePhysicalDevices(m_instance, &count, &m_physicalDevice);
-    if (result != VK_SUCCESS)
-        return Error::FUNCTION_FAILED;
+    result = vkEnumeratePhysicalDevices(Instance, &count, &PhysicalDevice);
+    if (result != VK_SUCCESS) {
+        LOGE(FILE_LOCATION( ), "Couldn't enumerate GPUs.");
+        return ErrorValues::FUNCTION_FAILED;
+    }
+    vkGetPhysicalDeviceProperties(PhysicalDevice, &PhysicalDeviceProperties);
 
-    vkGetPhysicalDeviceProperties(m_physicalDevice, &m_devProps);
+    GPUCapabilities.m_gpuVendor = PhysicalDeviceProperties.vendorID;
 
-    m_capabilities.m_gpuVendor = m_devProps.vendorID;
+    vkGetPhysicalDeviceFeatures(PhysicalDevice, &PhysicalDeviceFeatures);
+    GPUCapabilities.m_uniformBufferBindOffsetAlignment =
+        std::max<uint32_t>(16, PhysicalDeviceProperties.limits.minUniformBufferOffsetAlignment);
+    GPUCapabilities.m_storageBufferMaxRange = PhysicalDeviceProperties.limits.maxUniformBufferRange;
+    GPUCapabilities.m_storageBufferBindOffsetAlignment =
+        std::max<uint32_t>(16, PhysicalDeviceProperties.limits.minStorageBufferOffsetAlignment);
+    GPUCapabilities.m_storageBufferMaxRange = PhysicalDeviceProperties.limits.maxStorageBufferRange;
+    GPUCapabilities.m_textureBufferBindOffsetAlignment =
+        std::max<uint32_t>(16, PhysicalDeviceProperties.limits.minTexelBufferOffsetAlignment);
+    GPUCapabilities.m_textureBufferMaxRange = UINT32_MAX;
 
-    vkGetPhysicalDeviceFeatures(m_physicalDevice, &m_devFeatures);
-    m_capabilities.m_uniformBufferBindOffsetAlignment = std::max<uint32_t>(16, m_devProps.limits.minUniformBufferOffsetAlignment);
-    m_capabilities.m_storageBufferMaxRange = m_devProps.limits.maxUniformBufferRange;
-    m_capabilities.m_storageBufferBindOffsetAlignment = std::max<uint32_t>(16, m_devProps.limits.minStorageBufferOffsetAlignment);
-	m_capabilities.m_storageBufferMaxRange = m_devProps.limits.maxStorageBufferRange;
-	m_capabilities.m_textureBufferBindOffsetAlignment = std::max<uint32_t>(16, m_devProps.limits.minTexelBufferOffsetAlignment);
-	m_capabilities.m_textureBufferMaxRange = UINT32_MAX;
+    GPUCapabilities.m_majorApiVersion = vulkanMajor;
+    GPUCapabilities.m_minorApiVersion = vulkanMinor;
 
-	m_capabilities.m_majorApiVersion = vulkanMajor;
-	m_capabilities.m_minorApiVersion = vulkanMinor;
-
-    return Error::NONE;
+    return ErrorValues::NONE;
 }
 
-Error gr::Manager::initSurface()
-{
-    if (glfwCreateWindowSurface(m_instance, m_window->getNativeWindow(), 0, &m_surface) != VK_SUCCESS)
-        return Error::FUNCTION_FAILED;
-    return Error::NONE;
+ErrorValues Manager::initSurface( ) {
+    if (glfwCreateWindowSurface(Instance, Window->getNativeWindow( ), 0, &Surface) != VK_SUCCESS) {
+        LOGE(FILE_LOCATION( ), "GLFW failed to create VkSurfaceKHR.");
+        return ErrorValues::FUNCTION_FAILED;
+    }
+    return ErrorValues::NONE;
 }
 
-Error gr::Manager::initDevice()
-{
+ErrorValues Manager::initDevice( ) {
     uint32_t count = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties(m_physicalDevice, &count, 0);
+    vkGetPhysicalDeviceQueueFamilyProperties(PhysicalDevice, &count, 0);
 
     std::vector<VkQueueFamilyProperties> queueInfos(count);
-    vkGetPhysicalDeviceQueueFamilyProperties(m_physicalDevice, &count, queueInfos.data());
+    vkGetPhysicalDeviceQueueFamilyProperties(PhysicalDevice, &count, queueInfos.data( ));
 
     uint32_t desiredFamilyIdx = UINT32_MAX;
     const VkQueueFlags DESIRED_QUEUE_FLAGS = VK_QUEUE_GRAPHICS_BIT;
 
-    vkGetPhysicalDeviceFeatures(m_physicalDevice, &m_devFeatures);
-    vkGetPhysicalDeviceMemoryProperties(m_physicalDevice, &m_memoryProperties);
+    vkGetPhysicalDeviceFeatures(PhysicalDevice, &PhysicalDeviceFeatures);
+    vkGetPhysicalDeviceMemoryProperties(PhysicalDevice, &PhysicalDeviceMemoryProperties);
 
     // Pick the queue family
     for (uint_fast32_t i = 0; i < count; i += 1) {
         if ((queueInfos[i].queueFlags & DESIRED_QUEUE_FLAGS) == DESIRED_QUEUE_FLAGS) {
             VkBool32 supportsPresent = false;
-            vkGetPhysicalDeviceSurfaceSupportKHR(m_physicalDevice, i, m_surface, &supportsPresent);
+            vkGetPhysicalDeviceSurfaceSupportKHR(PhysicalDevice, i, Surface, &supportsPresent);
             if (supportsPresent) {
                 desiredFamilyIdx = i;
                 break;
@@ -171,10 +168,10 @@ Error gr::Manager::initDevice()
         }
     }
     if (desiredFamilyIdx == UINT32_MAX) {
-        return Error::FUNCTION_FAILED;
+        return ErrorValues::FUNCTION_FAILED;
     }
 
-    m_queueIdx = desiredFamilyIdx;
+    QueueIdx = desiredFamilyIdx;
 
     float priority = 1.0f;
     VkDeviceQueueCreateInfo queueCreateInfo = {};
@@ -187,7 +184,7 @@ Error gr::Manager::initDevice()
     deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     deviceCreateInfo.queueCreateInfoCount = 1;
     deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
-    deviceCreateInfo.pEnabledFeatures = &m_devFeatures;
+    deviceCreateInfo.pEnabledFeatures = &PhysicalDeviceFeatures;
 
     // Extensions
     std::vector<const char *> extensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
@@ -195,73 +192,96 @@ Error gr::Manager::initDevice()
 #ifdef _DEBUG
     extensions.push_back(VK_EXT_DEBUG_MARKER_EXTENSION_NAME);
 
-    if (m_capabilities.m_gpuVendor == 0x1002 || m_capabilities.m_gpuVendor == 0x1022)
+    if (GPUCapabilities.m_gpuVendor == 0x1002 || GPUCapabilities.m_gpuVendor == 0x1022)
         extensions.push_back(VK_AMD_SHADER_INFO_EXTENSION_NAME);
 
-    deviceCreateInfo.enabledLayerCount = (uint32_t)debugLayers.size();
-    deviceCreateInfo.ppEnabledLayerNames = debugLayers.data();
+    deviceCreateInfo.enabledLayerCount = (uint32_t)debugLayers.size( );
+    deviceCreateInfo.ppEnabledLayerNames = debugLayers.data( );
 #endif
 
-    deviceCreateInfo.enabledExtensionCount = (uint32_t)extensions.size();
-    deviceCreateInfo.ppEnabledExtensionNames = extensions.data();
+    deviceCreateInfo.enabledExtensionCount = (uint32_t)extensions.size( );
+    deviceCreateInfo.ppEnabledExtensionNames = extensions.data( );
 
-    vkCreateDevice(m_physicalDevice, &deviceCreateInfo, 0, &m_device);
+    vkCreateDevice(PhysicalDevice, &deviceCreateInfo, 0, &Device);
 
 #ifdef _DEBUG
-    m_pfnDebugMarkerSetObjectNameEXT = reinterpret_cast<PFN_vkDebugMarkerSetObjectNameEXT>
-                (vkGetDeviceProcAddr(m_device, "vkDebugMarkerSetObjectNameEXT"));
-    if (m_pfnDebugMarkerSetObjectNameEXT == 0)
-        dprintf(2, "VK_EXT_debug_marker is present but vkDebugMarkerSetObjectNameEXT is not there\n");
-    m_pfnCmdDebugMarkerBeginEXT = reinterpret_cast<PFN_vkCmdDebugMarkerBeginEXT>
-                (vkGetDeviceProcAddr(m_device, "vkCmdDebugMarkerBeginEXT"));
-    if (m_pfnCmdDebugMarkerBeginEXT == 0)
-        dprintf(2, "VK_EXT_debug_marker is present but vkCmdDebugMarkerBeginEXT is not there\n");
-    m_pfnCmdDebugMarkerEndEXT = reinterpret_cast<PFN_vkCmdDebugMarkerEndEXT>
-                (vkGetDeviceProcAddr(m_device, "vkCmdDebugMarkerEndEXT"));
-    if (m_pfnCmdDebugMarkerEndEXT == 0)
-        dprintf(2, "VK_EXT_debug_marker is present but vkCmdDebugMarkerEndEXT is not there\n");
-    m_pfnCreateDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>
-                (vkGetInstanceProcAddr(m_instance, "vkCreateDebugUtilsMessengerEXT"));
-    if (m_pfnCreateDebugUtilsMessengerEXT) {
+    PfnDebugMarkerSetObjectNameEXT = reinterpret_cast<PFN_vkDebugMarkerSetObjectNameEXT>(
+        vkGetDeviceProcAddr(Device, "vkDebugMarkerSetObjectNameEXT"));
+    if (PfnDebugMarkerSetObjectNameEXT == 0)
+        dprintf(2,
+                "VK_EXT_debug_marker is present but "
+                "vkDebugMarkerSetObjectNameEXT is not there\n");
+    PfnCmdDebugMarkerBeginEXT =
+        reinterpret_cast<PFN_vkCmdDebugMarkerBeginEXT>(vkGetDeviceProcAddr(Device, "vkCmdDebugMarkerBeginEXT"));
+    if (PfnCmdDebugMarkerBeginEXT == 0)
+        dprintf(2,
+                "VK_EXT_debug_marker is present but vkCmdDebugMarkerBeginEXT "
+                "is not there\n");
+    PfnCmdDebugMarkerEndEXT =
+        reinterpret_cast<PFN_vkCmdDebugMarkerEndEXT>(vkGetDeviceProcAddr(Device, "vkCmdDebugMarkerEndEXT"));
+    if (PfnCmdDebugMarkerEndEXT == 0)
+        dprintf(2,
+                "VK_EXT_debug_marker is present but vkCmdDebugMarkerEndEXT is "
+                "not there\n");
+    PfnCreateDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
+        vkGetInstanceProcAddr(Instance, "vkCreateDebugUtilsMessengerEXT"));
+    if (PfnCreateDebugUtilsMessengerEXT) {
         VkDebugUtilsMessengerCreateInfoEXT dcreateInfo = {};
         populateDebugMessengerCreateInfo(dcreateInfo);
-        m_pfnCreateDebugUtilsMessengerEXT(m_instance, &dcreateInfo, 0, &m_DebugMessenger);
+        PfnCreateDebugUtilsMessengerEXT(Instance, &dcreateInfo, 0, &DebugMessenger);
     }
-    if (m_capabilities.m_gpuVendor == 0x1002 || m_capabilities.m_gpuVendor == 0x1022) {
-        m_pfnGetShaderInfoAMD = reinterpret_cast<PFN_vkGetShaderInfoAMD>
-                    (vkGetDeviceProcAddr(m_device, "vkGetShaderInfoAMD"));
-        if (m_pfnGetShaderInfoAMD == 0)
-            dprintf(2, "VK_AMD_shader_info is present but vkGetShaderInfoAMD is not there\n");
+    if (GPUCapabilities.m_gpuVendor == 0x1002 || GPUCapabilities.m_gpuVendor == 0x1022) {
+        PfnGetShaderInfoAMD =
+            reinterpret_cast<PFN_vkGetShaderInfoAMD>(vkGetDeviceProcAddr(Device, "vkGetShaderInfoAMD"));
+        if (PfnGetShaderInfoAMD == 0)
+            dprintf(2,
+                    "VK_AMD_shader_info is present but vkGetShaderInfoAMD is "
+                    "not there\n");
     }
 #endif
 
-    return Error::NONE;
+    return ErrorValues::NONE;
 }
 
-Error gr::Manager::initAllocator()
-{
+ErrorValues Manager::initAllocator( ) {
     VmaAllocatorCreateInfo allocatorInfo = {};
-    allocatorInfo.device = m_device;
-    allocatorInfo.physicalDevice = m_physicalDevice;
+    allocatorInfo.device = Device;
+    allocatorInfo.physicalDevice = PhysicalDevice;
 
-    if (vmaCreateAllocator(&allocatorInfo, &m_allocator))
-        return Error::FUNCTION_FAILED;
-    return Error::NONE;
+    if (vmaCreateAllocator(&allocatorInfo, &Allocator)) {
+        LOGE(FILE_LOCATION( ), "Failed to create wmaAllocator.");
+        return ErrorValues::FUNCTION_FAILED;
+    }
+    return ErrorValues::NONE;
 }
 
-void gr::Manager::beginDebugMaker(VkCommandBuffer cmdBuffer, const char *name) const
-{
-    if (m_pfnCmdDebugMarkerBeginEXT) {
+ErrorValues Manager::initCommandPool( ) {
+    VkCommandPoolCreateInfo createInfo = {};
+
+    createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    createInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    createInfo.queueFamilyIndex = QueueIdx;
+
+    if (vkCreateCommandPool(Device, &createInfo, 0, &CommandPool)) {
+        LOGE(FILE_LOCATION( ), "Failed to create VkCommandPool.");
+        return ErrorValues::FUNCTION_FAILED;
+    }
+    return ErrorValues::NONE;
+}
+
+void Manager::beginDebugMaker(VkCommandBuffer cmdBuffer, const char *name) const {
+    if (PfnCmdDebugMarkerBeginEXT) {
         VkDebugMarkerMarkerInfoEXT markerInfo = {};
         markerInfo.sType = VK_STRUCTURE_TYPE_DEBUG_MARKER_MARKER_INFO_EXT;
         markerInfo.color[0] = 1.0f;
         markerInfo.pMarkerName = (name == 0 || strlen(name) == 0) ? name : "Unnamed";
-        m_pfnCmdDebugMarkerBeginEXT(cmdBuffer, &markerInfo);
+        PfnCmdDebugMarkerBeginEXT(cmdBuffer, &markerInfo);
     }
 }
 
-void gr::Manager::endDebugMaker(VkCommandBuffer cmdBuffer) const
-{
-    if (m_pfnCmdDebugMarkerEndEXT)
-        m_pfnCmdDebugMarkerEndEXT(cmdBuffer);
+void Manager::endDebugMaker(VkCommandBuffer cmdBuffer) const {
+    if (PfnCmdDebugMarkerEndEXT) PfnCmdDebugMarkerEndEXT(cmdBuffer);
 }
+
+}    // namespace gr
+}    // namespace FEM

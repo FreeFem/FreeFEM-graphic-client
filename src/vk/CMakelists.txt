@@ -1,0 +1,10 @@
+list(APPEND freeFEM_SOURCES
+    ${CMAKE_CURRENT_LIST_DIR}/wmaDeclaration.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/GraphManager.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/GraphContext.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/Image.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/Layers.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/vkcommon.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/Shader.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/Buffers.cpp
+)

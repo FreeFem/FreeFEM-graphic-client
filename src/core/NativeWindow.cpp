@@ -1,7 +1,8 @@
 #include "NativeWindow.h"
 
-Error NativeWindow::init(uint32_t width, uint32_t height, const char *title)
-{
+namespace FEM {
+
+ErrorValues NativeWindow::init(uint32_t width, uint32_t height, const char *title) {
     m_width = width;
     m_height = height;
 
@@ -10,36 +11,29 @@ Error NativeWindow::init(uint32_t width, uint32_t height, const char *title)
 
     m_window = glfwCreateWindow(m_width, m_height, title, 0, 0);
 
-    if (m_window == NULL)
-        return Error::FUNCTION_FAILED;
+    if (m_window == NULL) {
+        LOGE(FILE_LOCATION( ), "Failed to create a window.");
+        return ErrorValues::FUNCTION_FAILED;
+    }
 
     uint32_t glfwExtensionsCount = 0;
     const char **glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionsCount);
 
     m_extensions.reserve(glfwExtensionsCount);
-    for (uint_fast32_t i = 0; i < glfwExtensionsCount; i += 1)
-        m_extensions.push_back(glfwExtensions[i]);
+    for (uint_fast32_t i = 0; i < glfwExtensionsCount; i += 1) m_extensions.push_back(glfwExtensions[i]);
 
-    return Error::NONE;
+    return ErrorValues::NONE;
 }
 
-void NativeWindow::destroy()
-{
+void NativeWindow::destroy( ) {
     glfwDestroyWindow(m_window);
     m_window = 0;
 }
 
-GLFWwindow *NativeWindow::getNativeWindow() const
-{
-    return m_window;
-}
+GLFWwindow *NativeWindow::getNativeWindow( ) const { return m_window; }
 
-std::vector<const char *> NativeWindow::getNativeExtensions() const
-{
-    return m_extensions;
-}
+std::vector<const char *> NativeWindow::getNativeExtensions( ) const { return m_extensions; }
 
-bool NativeWindow::isUsable() const
-{
-    return (m_window) ? true : false;
-}
+bool NativeWindow::isUsable( ) const { return (m_window) ? true : false; }
+
+}    // namespace FEM

@@ -1,40 +1,43 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <assert.h>
 #include <cstdint>
 #include <cstdio>
-#include <assert.h>
+#include "NonCopyable.h"
+
+namespace FEM {
 
 #if defined(__GNUC__) && (__GNUC__ >= 4)
-    /**
-     * @brief Force the compiler to throw a warning if the result of the marked function isn't used.
-     * This macro is platform specific.
-     */
-    #define FORCE_USE_RESULT __attribute__((warn_unused_result))
+/**
+ * @brief Force the compiler to throw a warning if the result of the marked
+ * function isn't used. This macro is platform specific.
+ */
+#define FORCE_USE_RESULT __attribute__((warn_unused_result))
 
-    #define UNUSED_PARAM __attribute__((unused))
+#define UNUSED_PARAM __attribute__((unused))
 #elif defined(_MSC_VER) && (_MSC_VER >= 1700)
-    /**
-     * @brief Force the compiler to throw a warning if the result of the marked function isn't used.
-     * This macro is platform specific.
-     */
-    #define FORCE_USE_RESULT _Check_return_
+/**
+ * @brief Force the compiler to throw a warning if the result of the marked
+ * function isn't used. This macro is platform specific.
+ */
+#define FORCE_USE_RESULT _Check_return_
 
-    #define UNUSED_PARAM
+#define UNUSED_PARAM
 #else
-    /**
-     * @brief Force the compiler to throw a warning if the result of the marked function isn't used.
-     * This macro is platform specific.
-     */
-    #define FORCE_USE_RESULT
+/**
+ * @brief Force the compiler to throw a warning if the result of the marked
+ * function isn't used. This macro is platform specific.
+ */
+#define FORCE_USE_RESULT
 
-    #define UNUSED_PARAM
+#define UNUSED_PARAM
 #endif
 
 /**
- * @brief Report errors.
+ * @brief Return values
  */
-struct Error {
+struct ErrorValues {
     /**
      * Error value.
      */
@@ -50,32 +53,34 @@ struct Error {
     /**
      * @brief Error's name as strings.
      */
-    const char ErrorNames[6][19] =
-    {
-        "NONE", "FUNCTION_FAILED", "FAILED_ALLOC",
-        "FILE_NOT_FOUND", "FILE_ACCESS_FAILED", "UNKNOWN"
-    };
+    const char ErrorNames[6][19] = {"NONE",           "FUNCTION_FAILED",    "FAILED_ALLOC",
+                                    "FILE_NOT_FOUND", "FILE_ACCESS_FAILED", "UNKNOWN"};
 
+    /**
+     * @brief Default constructor.
+     */
+    ErrorValues( ) : m_value(ErrorValues::NONE) {}
     /**
      * @brief Error constructor.
      *
      * @param uint32_t code[in] - Error code.
      */
-    Error(const uint32_t code)
-    : m_value(code)
-    { }
+    ErrorValues(const uint32_t code) : m_value(code) {}
 
     /**
      * @brief Error copy operator
      */
-    Error& operator=(const Error& b) { m_value = b.m_value; return *this; }
+    ErrorValues& operator=(const ErrorValues& b) {
+        m_value = b.m_value;
+        return *this;
+    }
 
     /**
      * @brief Error equal operator.
      *
      * @param const Error& b[in] - Error to compare.
      */
-    bool operator==(const Error& b) const { return m_value == b.m_value; }
+    bool operator==(const ErrorValues& b) const { return m_value == b.m_value; }
 
     /**
      * @brief Error equal operator.
@@ -89,7 +94,7 @@ struct Error {
      *
      * @param const Error& b[in] - Error to compare.
      */
-    bool operator!=(const Error& b) const { return m_value != b.m_value; }
+    bool operator!=(const ErrorValues& b) const { return m_value != b.m_value; }
 
     /**
      * @brief Error different operator.
@@ -98,9 +103,10 @@ struct Error {
      */
     bool operator!=(const uint32_t code) const { return m_value != code; }
 
-    operator bool() const { return m_value != NONE; }
+    operator bool( ) const { return m_value != NONE; }
 };
 
+}    // namespace FEM
 // Triangle
 // static constexpr int NUM_DEMO_VERTICES = 3;
 // static constexpr int SIZE_DEMO_VERTEX = sizeof(float) * 6;
@@ -109,7 +115,6 @@ struct Error {
 //     -1.f, -1.f, 0.f, 1.f, 0.f, 0.f,
 //     1.f, -1.f, 0.f, 1.f, 0.f, 0.f,
 // };
-
 
 // Quad
 // static constexpr int NUM_DEMO_VERTICES = 6;
@@ -127,43 +132,17 @@ struct Error {
 static constexpr int NUM_DEMO_VERTICES = 36;
 static constexpr int SIZE_DEMO_VERTEX = sizeof(float) * 6;
 static const float vertices[] = {
-    -0.5f,-0.5f,-0.5f, 0.5, 0.5, 0.5,
-    -0.5f,-0.5f, 0.5f, 0.5, 0.5, 0.5,
-    -0.5f, 0.5f, 0.5f, 0.5, 0.5, 0.5,
-    0.5f, 0.5f,-0.5f, 0.5, 0.5, 0.5,
-    -0.5f,-0.5f,-0.5f, 0.5, 0.5, 0.5,
-    -0.5f, 0.5f,-0.5f, 0.5, 0.5, 0.5,
-    0.5f,-0.5f, 0.5f, 0.5, 0.5, 0.5,
-    -0.5f,-0.5f,-0.5f, 0.5, 0.5, 0.5,
-    0.5f,-0.5f,-0.5f, 0.5, 0.5, 0.5,
-    0.5f, 0.5f,-0.5f, 0.5, 0.5, 0.5,
-    0.5f,-0.5f,-0.5f, 0.5, 0.5, 0.5,
-    -0.5f,-0.5f,-0.5f, 0.5, 0.5, 0.5,
-    -0.5f,-0.5f,-0.5f, 0.5, 0.5, 0.5,
-    -0.5f, 0.5f, 0.5f, 0.5, 0.5, 0.5,
-    -0.5f, 0.5f,-0.5f, 0.5, 0.5, 0.5,
-    0.5f,-0.5f, 0.5f, 0.5, 0.5, 0.5,
-    -0.5f,-0.5f, 0.5f, 0.5, 0.5, 0.5,
-    -0.5f,-0.5f,-0.5f, 0.5, 0.5, 0.5,
-    -0.5f, 0.5f, 0.5f, 0.5, 0.5, 0.5,
-    -0.5f,-0.5f, 0.5f, 0.5, 0.5, 0.5,
-    0.5f,-0.5f, 0.5f, 0.5, 0.5, 0.5,
-    0.5f, 0.5f, 0.5f, 0.5, 0.5, 0.5,
-    0.5f,-0.5f,-0.5f, 0.5, 0.5, 0.5,
-    0.5f, 0.5f,-0.5f, 0.5, 0.5, 0.5,
-    0.5f,-0.5f,-0.5f, 0.5, 0.5, 0.5,
-    0.5f, 0.5f, 0.5f, 0.5, 0.5, 0.5,
-    0.5f,-0.5f, 0.5f, 0.5, 0.5, 0.5,
-    0.5f, 0.5f, 0.5f, 0.5, 0.5, 0.5,
-    0.5f, 0.5f,-0.5f, 0.5, 0.5, 0.5,
-    -0.5f, 0.5f,-0.5f, 0.5, 0.5, 0.5,
-    0.5f, 0.5f, 0.5f, 0.5, 0.5, 0.5,
-    -0.5f, 0.5f,-0.5f, 0.5, 0.5, 0.5,
-    -0.5f, 0.5f, 0.5f, 0.5, 0.5, 0.5,
-    0.5f, 0.5f, 0.5f, 0.5, 0.5, 0.5,
-    -0.5f, 0.5f, 0.5f, 0.5, 0.5, 0.5,
-    0.5f,-0.5f, 0.5f, 0.5, 0.5, 0.5
-};
+    -0.5f, -0.5f, -0.5f, 0.5, 0.5, 0.5, -0.5f, -0.5f, 0.5f,  0.5, 0.5, 0.5, -0.5f, 0.5f,  0.5f,  0.5, 0.5, 0.5,
+    0.5f,  0.5f,  -0.5f, 0.5, 0.5, 0.5, -0.5f, -0.5f, -0.5f, 0.5, 0.5, 0.5, -0.5f, 0.5f,  -0.5f, 0.5, 0.5, 0.5,
+    0.5f,  -0.5f, 0.5f,  0.5, 0.5, 0.5, -0.5f, -0.5f, -0.5f, 0.5, 0.5, 0.5, 0.5f,  -0.5f, -0.5f, 0.5, 0.5, 0.5,
+    0.5f,  0.5f,  -0.5f, 0.5, 0.5, 0.5, 0.5f,  -0.5f, -0.5f, 0.5, 0.5, 0.5, -0.5f, -0.5f, -0.5f, 0.5, 0.5, 0.5,
+    -0.5f, -0.5f, -0.5f, 0.5, 0.5, 0.5, -0.5f, 0.5f,  0.5f,  0.5, 0.5, 0.5, -0.5f, 0.5f,  -0.5f, 0.5, 0.5, 0.5,
+    0.5f,  -0.5f, 0.5f,  0.5, 0.5, 0.5, -0.5f, -0.5f, 0.5f,  0.5, 0.5, 0.5, -0.5f, -0.5f, -0.5f, 0.5, 0.5, 0.5,
+    -0.5f, 0.5f,  0.5f,  0.5, 0.5, 0.5, -0.5f, -0.5f, 0.5f,  0.5, 0.5, 0.5, 0.5f,  -0.5f, 0.5f,  0.5, 0.5, 0.5,
+    0.5f,  0.5f,  0.5f,  0.5, 0.5, 0.5, 0.5f,  -0.5f, -0.5f, 0.5, 0.5, 0.5, 0.5f,  0.5f,  -0.5f, 0.5, 0.5, 0.5,
+    0.5f,  -0.5f, -0.5f, 0.5, 0.5, 0.5, 0.5f,  0.5f,  0.5f,  0.5, 0.5, 0.5, 0.5f,  -0.5f, 0.5f,  0.5, 0.5, 0.5,
+    0.5f,  0.5f,  0.5f,  0.5, 0.5, 0.5, 0.5f,  0.5f,  -0.5f, 0.5, 0.5, 0.5, -0.5f, 0.5f,  -0.5f, 0.5, 0.5, 0.5,
+    0.5f,  0.5f,  0.5f,  0.5, 0.5, 0.5, -0.5f, 0.5f,  -0.5f, 0.5, 0.5, 0.5, -0.5f, 0.5f,  0.5f,  0.5, 0.5, 0.5,
+    0.5f,  0.5f,  0.5f,  0.5, 0.5, 0.5, -0.5f, 0.5f,  0.5f,  0.5, 0.5, 0.5, 0.5f,  -0.5f, 0.5f,  0.5, 0.5, 0.5};
 
-
-#endif // UTILS_H
+#endif    // UTILS_H

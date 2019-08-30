@@ -101,6 +101,8 @@ class Manager : public NonCopyable {
 
     VkCommandPool CommandPool = VK_NULL_HANDLE;
 
+    void destroy();
+
    private:
     VkDebugReportCallbackEXT DebugCallback = VK_NULL_HANDLE;
     VkDebugUtilsMessengerEXT DebugMessenger = VK_NULL_HANDLE;

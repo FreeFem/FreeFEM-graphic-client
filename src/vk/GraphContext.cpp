@@ -262,7 +262,13 @@ void Context::destroy(const Manager& grm)
         Destroy pipelines elements
     */
     vkFreeCommandBuffers(grm.Device, grm.CommandPool, 1, &InitializerCommandBuffer);
-
+    vkFreeCommandBuffers(grm.Device, grm.CommandPool, 2, PresentCmdBuffer);
+    for (int i = 0; i < 2; i += 1) {
+        vkDestroyFence(grm.Device, PerFrame[i].presentFence, 0);
+        vkDestroySemaphore(grm.Device, PerFrame[i].acquiredSemaphore, 0);
+        vkDestroySemaphore(grm.Device, PerFrame[i].renderCompletedSemaphore, 0);
+        PerFrame[i].fenceInitialized = false;
+    }
     for (auto imageView : SwapImageViews) {
         vkDestroyImageView(grm.Device, imageView, 0);
     }

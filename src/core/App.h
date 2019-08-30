@@ -52,15 +52,15 @@ class App {
     /**
      * @brief Wrapper around a GLFW window.
      */
-    NativeWindow m_window;
+    NativeWindow Window;
     /**
      * @brief Vulkan manager used to create graphic contextes.
      */
-    gr::Manager m_grManager;
+    gr::Manager GrManager;
     /**
      * @brief Vulkan graphic context used to create gr::Pipeline and render.
      */
-    gr::Context m_grContext;
+    gr::Context GrContext;
 
     /**
      * @brief GLFW framebuffer resize callback.
@@ -71,10 +71,10 @@ class App {
      */
     static void framebufferResizeCallback(GLFWwindow *window, int width, int height) {
         auto app = reinterpret_cast<App *>(glfwGetWindowUserPointer(window));
-        app->m_window.setWidth(width);
-        app->m_window.setHeight(height);
-        app->m_grContext.destroy(app->m_grManager);
-        if (app->m_grContext.init(app->m_grManager)) {
+        app->Window.setWidth(width);
+        app->Window.setHeight(height);
+        app->GrContext.destroy(app->GrManager);
+        if (app->GrContext.init(app->GrManager)) {
             LOGE("GLFW FramebufferResize Callback", "Failed to recreate gr::Context.");
             return;
         }

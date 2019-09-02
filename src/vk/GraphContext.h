@@ -3,6 +3,7 @@
 
 #include <vulkan/vulkan.h>
 #include <vector>
+#include <array>
 #include "../util/NonCopyable.h"
 #include "../util/utils.h"
 #include "Image.h"
@@ -51,10 +52,7 @@ class Context : public NonCopyable {
      */
     void destroy(const Manager&);
 
-    /**
-     * @brief Render a frame.
-     */
-    // ErrorValues render(const Manager& grm);
+    void SwapBuffer() { CurrentFrame = !CurrentFrame; }
 
     VkSwapchainKHR Swapchain = VK_NULL_HANDLE;
     std::vector<VkImage> SwapImages = {};
@@ -65,7 +63,8 @@ class Context : public NonCopyable {
     VkCommandBuffer InitializerCommandBuffer;
 
     uint8_t CurrentFrame = 0;
-    Frame PerFrame[2];
+    std::array<Frame, 2> PerFrame;
+    void BlockFrame() { PerFrame[CurrentFrame].fenceInitialized = true; }
     VkCommandBuffer PresentCmdBuffer[2];
 
     Image DepthImage;

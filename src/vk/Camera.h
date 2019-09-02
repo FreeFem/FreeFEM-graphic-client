@@ -9,6 +9,8 @@
 #include <iostream>
 #include "../util/utils.h"
 
+namespace FEM {
+
 namespace gr {
 
 class Camera {
@@ -86,13 +88,12 @@ class Camera {
             CamHandle.view = rotM * transM;
         } else {
             CamHandle.view = glm::lookAt(position, glm::vec3(0, 0, 0), glm::vec3(0, 0, 1));
-            // CamHandle.view = transM * rotM;
         }
 
         updated = true;
     }
 };
-
 };    // namespace gr
+};    // namespace FEM
 
 #endif    // CAMERA_H

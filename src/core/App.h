@@ -8,6 +8,7 @@
 #include "../util/utils.h"
 #include "../vk/GraphContext.h"
 #include "../vk/GraphManager.h"
+#include "../vk/Renderer.h"
 #include "NativeWindow.h"
 
 namespace FEM {
@@ -61,6 +62,8 @@ class App {
      * @brief Vulkan graphic context used to create gr::Pipeline and render.
      */
     gr::Context GrContext;
+
+    gr::Renderer GrRenderer;
 
     /**
      * @brief GLFW framebuffer resize callback.

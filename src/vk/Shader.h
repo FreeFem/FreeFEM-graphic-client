@@ -13,7 +13,7 @@ class Shader {
    public:
     ErrorValues init(const VkDevice &device, const char *vertexShaderFile, const char *fragmentShaderFile);
 
-    void destroy( );
+    void destroy(const VkDevice& device);
 
     VkShaderModule VertexModule = VK_NULL_HANDLE;
     VkShaderModule FragmentModule = VK_NULL_HANDLE;

@@ -1,36 +1,15 @@
-#include "Pipeline.h"
-#include <cstring>
-#include <fstream>
-#include <iostream>
-#include "GraphContext.h"
-#include "GraphManager.h"
+#include "Renderer.h"
+
+namespace FEM {
 
 namespace gr {
-Error Pipeline::init(const Manager& grm, const Context& grc) {
-    if (initRenderpass(grm, grc)) return Error::FUNCTION_FAILED;
-    if (initFramebuffers(grm, grc)) return Error::FUNCTION_FAILED;
-    if (initDescriptorSetLayout(grm, grc)) return Error::FUNCTION_FAILED;
-    if (initPipeline(grm, grc)) return Error::FUNCTION_FAILED;
-    return Error::NONE;
-}
 
-Error Pipeline::initShaders(const VkDevice& device, const char* vertexShaderFilename,
-                            const char* fragmentShaderFilename) {
-    if (m_shaders.init(device, vertexShaderFilename, fragmentShaderFilename)) return Error::FUNCTION_FAILED;
-    return Error::NONE;
-}
+ErrorValues Pipeline::init(const Manager& grm, const Context& grc, Renderer& grr) {
 
-Error Pipeline::reload(const Manager& grm, const Context& grc) {
-    if (initRenderpass(grm, grc)) return Error::FUNCTION_FAILED;
-    if (initFramebuffers(grm, grc)) return Error::FUNCTION_FAILED;
-    if (initPipeline(grm, grc)) return Error::FUNCTION_FAILED;
-    return Error::NONE;
-}
-
-Error Pipeline::initRenderpass(const Manager& grm, const Context& grc) {
+    // Initialize RenderPass
     VkAttachmentDescription attachmentDescription[2] = {{}, {}};
     attachmentDescription[0].flags = 0;
-    attachmentDescription[0].format = grc.getSurfaceFormat( );
+    attachmentDescription[0].format = grc.SurfaceFormat;
     attachmentDescription[0].samples = VK_SAMPLE_COUNT_1_BIT;
     attachmentDescription[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     attachmentDescription[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -40,7 +19,7 @@ Error Pipeline::initRenderpass(const Manager& grm, const Context& grc) {
     attachmentDescription[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
     attachmentDescription[1].flags = 0;
-    attachmentDescription[1].format = grc.getDepthBufferFormat( );
+    attachmentDescription[1].format = grc.DepthBufferFormat;
     attachmentDescription[1].samples = VK_SAMPLE_COUNT_1_BIT;
     attachmentDescription[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     attachmentDescription[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
@@ -79,56 +58,56 @@ Error Pipeline::initRenderpass(const Manager& grm, const Context& grc) {
     createInfo.dependencyCount = 0;
     createInfo.pDependencies = 0;
 
-    if (vkCreateRenderPass(grm.getDevice( ), &createInfo, 0, &m_renderpass) != VK_SUCCESS)
-        return Error::FUNCTION_FAILED;
-    return Error::NONE;
-}
+    if (vkCreateRenderPass(grm.Device, &createInfo, 0, &RenderPass) != VK_SUCCESS) return ErrorValues::FUNCTION_FAILED;
 
-Error Pipeline::initFramebuffers(const Manager& grm, const Context& grc) {
-    for (const auto view : grc.getSwapImageViews( )) {
+    // Initialize Framebuffers
+    for (const auto view : grc.SwapImageViews) {
         VkFramebuffer fb;
 
-        VkImageView attachment[2] = {view, grc.getDepthImage( ).getImageView( )};
+        VkImageView attachment[2] = {view, grc.DepthImage.getImageView( )};
         VkFramebufferCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         createInfo.pNext = 0;
         createInfo.flags = 0;
-        createInfo.renderPass = m_renderpass;
+        createInfo.renderPass = RenderPass;
         createInfo.attachmentCount = 2;
         createInfo.pAttachments = attachment;
-        createInfo.width = grm.getNativeWindow( ).getWidth( );
-        createInfo.height = grm.getNativeWindow( ).getHeight( );
+        createInfo.width = grm.Window->getWidth( );
+        createInfo.height = grm.Window->getHeight( );
         createInfo.layers = 1;
 
-        vkCreateFramebuffer(grm.getDevice( ), &createInfo, 0, &fb);
-        m_framebuffers.push_back(fb);
+        vkCreateFramebuffer(grm.Device, &createInfo, 0, &fb);
+        Framebuffers.push_back(fb);
     }
-    return Error::NONE;
-}
 
-const char* VERTEX_SHADER_FILENAME = "";
-const char* FRAGMENT_SHADER_FILENAME = "";
+    // To-do initialize DescriptorSets
 
-Error Pipeline::initPipeline(const Manager& grm, UNUSED_PARAM const Context& grc) {
+    // Initialize Pipeline
+    VkPushConstantRange pushRange;
+    pushRange.offset = 0;
+    pushRange.size = sizeof(glm::mat4);
+    pushRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
     VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
     pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutCreateInfo.pNext = 0;
     pipelineLayoutCreateInfo.flags = 0;
-    pipelineLayoutCreateInfo.setLayoutCount = 1;
-    pipelineLayoutCreateInfo.pSetLayouts = &m_descriptorSetLayout;
+    pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+    pipelineLayoutCreateInfo.pPushConstantRanges = &pushRange;
 
-    vkCreatePipelineLayout(grm.getDevice( ), &pipelineLayoutCreateInfo, 0, &m_layout);
+    vkCreatePipelineLayout(grm.Device, &pipelineLayoutCreateInfo, 0, &PipelineLayout);
 
+    int shaderCount = 2;
     VkPipelineShaderStageCreateInfo shaderStageCreateInfo[2] = {{}, {}};
     shaderStageCreateInfo[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     shaderStageCreateInfo[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-    shaderStageCreateInfo[0].module = m_shaders.getVertexModule( );
+    shaderStageCreateInfo[0].module = ShaderModules.VertexModule;
     shaderStageCreateInfo[0].pName = "main";
     shaderStageCreateInfo[0].pSpecializationInfo = 0;
 
     shaderStageCreateInfo[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     shaderStageCreateInfo[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    shaderStageCreateInfo[1].module = m_shaders.getFragmentModule( );
+    shaderStageCreateInfo[1].module = ShaderModules.FragmentModule;
     shaderStageCreateInfo[1].pName = "main";
     shaderStageCreateInfo[1].pSpecializationInfo = 0;
 
@@ -136,8 +115,8 @@ Error Pipeline::initPipeline(const Manager& grm, UNUSED_PARAM const Context& grc
     std::vector<VkVertexInputBindingDescription> vertexInputBindingDescription = {};
     std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescription = {};
     VkPrimitiveTopology topology;
-    printf("Number of Buffer to render : %lu\n", m_vertexBuffers.size( ));
-    for (const auto vBuffer : m_vertexBuffers) {
+
+    for (const auto vBuffer : VertexBuffers) {
         VkVertexInputBindingDescription inputBindingDescription;
         topology = vBuffer.getTopology( );
         inputBindingDescription.binding = binding_input;
@@ -156,7 +135,6 @@ Error Pipeline::initPipeline(const Manager& grm, UNUSED_PARAM const Context& grc
             location += 1;
         }
 
-        printf("Binding point : %d\n", binding_input);
         binding_input += 1;
     }
 
@@ -188,11 +166,11 @@ Error Pipeline::initPipeline(const Manager& grm, UNUSED_PARAM const Context& grc
     rasterizationStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     rasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
     rasterizationStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
-    rasterizationStateCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
+    rasterizationStateCreateInfo.polygonMode = VK_POLYGON_MODE_LINE;
     rasterizationStateCreateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
     rasterizationStateCreateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
     rasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
-    rasterizationStateCreateInfo.lineWidth = 1;
+    rasterizationStateCreateInfo.lineWidth = 2;
 
     VkPipelineColorBlendAttachmentState colorBlendAttachementState = {};
     colorBlendAttachementState.blendEnable = VK_FALSE;
@@ -237,7 +215,7 @@ Error Pipeline::initPipeline(const Manager& grm, UNUSED_PARAM const Context& grc
 
     VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = {};
     graphicsPipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    graphicsPipelineCreateInfo.stageCount = 2;
+    graphicsPipelineCreateInfo.stageCount = shaderCount;
     graphicsPipelineCreateInfo.pStages = shaderStageCreateInfo;
     graphicsPipelineCreateInfo.pVertexInputState = &vertexInputStateCreateinfo;
     graphicsPipelineCreateInfo.pInputAssemblyState = &inputAssemblyStateCreateInfo;
@@ -247,65 +225,185 @@ Error Pipeline::initPipeline(const Manager& grm, UNUSED_PARAM const Context& grc
     graphicsPipelineCreateInfo.pMultisampleState = &multisampleStateCreateInfo;
     graphicsPipelineCreateInfo.pDepthStencilState = &depthStencilStateCreateInfo;
     graphicsPipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;
-    graphicsPipelineCreateInfo.layout = m_layout;
-    graphicsPipelineCreateInfo.renderPass = m_renderpass;
+    graphicsPipelineCreateInfo.layout = PipelineLayout;
+    graphicsPipelineCreateInfo.renderPass = RenderPass;
     graphicsPipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
     graphicsPipelineCreateInfo.basePipelineIndex = -1;
 
-    if (vkCreateGraphicsPipelines(grm.getDevice( ), VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, 0, &m_handle))
-        return Error::FUNCTION_FAILED;
-    return Error::NONE;
+    if (vkCreateGraphicsPipelines(grm.Device, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, 0, &PipelineHandle))
+        return ErrorValues::FUNCTION_FAILED;
+    return ErrorValues::NONE;
 }
 
-Error Pipeline::initDescriptorSetLayout(const Manager& grm, UNUSED_PARAM const Context& grc) {
-    VkDescriptorSetLayoutBinding cameraLayoutBinding = {};
-    cameraLayoutBinding.binding = 0;
-    cameraLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    cameraLayoutBinding.descriptorCount = 1;
-    cameraLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+void Pipeline::destroy(const Manager& grm, const Context& grc) {
+    ShaderModules.destroy(grm.Device);
 
-    VkDescriptorSetLayoutCreateInfo layoutInfo = {};
-    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 1;
-    layoutInfo.pBindings = &cameraLayoutBinding;
+    for (size_t i = 0; i < Framebuffers.size( ); i += 1) vkDestroyFramebuffer(grm.Device, Framebuffers[i], 0);
 
-    if (vkCreateDescriptorSetLayout(grm.getDevice( ), &layoutInfo, 0, &m_descriptorSetLayout))
-        return Error::FUNCTION_FAILED;
+    for (size_t i = 0; i < VertexBuffers.size(); i += 1) VertexBuffers[i].destroy(grm);
+    vkDestroyPipeline(grm.Device, PipelineHandle, 0);
+    vkDestroyPipelineLayout(grm.Device, PipelineLayout, 0);
+    vkDestroyRenderPass(grm.Device, RenderPass, 0);
+}
 
-    VkDeviceSize bufferSize = sizeof(Camera::UniformCamera);
-    m_uniformBuffers.resize(grc.getSwapImages( ).size( ));
+ErrorValues Pipeline::reload(const Manager& grm, const Context& grc, Renderer& grr) {
+    for (size_t i = 0; i < Framebuffers.size( ); i += 1) vkDestroyFramebuffer(grm.Device, Framebuffers[i], 0);
 
-    for (size_t i = 0; i < grc.getSwapImages( ).size( ); i += 1) {
-        m_uniformBuffers[i].init(grm, grc.getCamera( ).getCamHandlePTR( ), sizeof(Camera::UniformCamera), 0);
+    vkDestroyPipeline(grm.Device, PipelineHandle, 0);
+    vkDestroyPipelineLayout(grm.Device, PipelineLayout, 0);
+    vkDestroyRenderPass(grm.Device, RenderPass, 0);
+    init(grm, grc, grr);
+
+    return ErrorValues::NONE;
+}
+
+ErrorValues Pipeline::render(const Manager& grm, Context& grc, Renderer& grr) {
+    VkResult res;
+    if (grc.PerFrame[grc.CurrentFrame].fenceInitialized) {
+        vkWaitForFences(grm.Device, 1, &grc.PerFrame[grc.CurrentFrame].presentFence, VK_TRUE, UINT64_MAX);
+        vkResetFences(grm.Device, 1, &grc.PerFrame[grc.CurrentFrame].presentFence);
     }
 
-    std::vector<VkDescriptorSetLayout> layouts(grc.getSwapImages( ).size( ), m_descriptorSetLayout);
-    VkDescriptorSetAllocateInfo allocInfo = {};
-    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocInfo.descriptorPool = grc.getDescriptorPool( );
-    allocInfo.descriptorSetCount = (uint32_t)grc.getSwapImages( ).size( );
-    allocInfo.pSetLayouts = layouts.data( );
+    grc.BlockFrame();
 
-    m_descriptorSet.resize(grc.getSwapImages( ).size( ));
-    if (vkAllocateDescriptorSets(grm.getDevice( ), &allocInfo, m_descriptorSet.data( ))) return Error::FUNCTION_FAILED;
-    for (size_t i = 0; i < grc.getSwapImages( ).size( ); i += 1) {
-        VkDescriptorBufferInfo bufferInfo = {};
-        bufferInfo.buffer = m_uniformBuffers[i].getHandle( );
-        bufferInfo.offset = 0;
-        bufferInfo.range = sizeof(Camera::UniformCamera);
+    uint32_t imageIndex = UINT32_MAX;
+    res = vkAcquireNextImageKHR(grm.Device, grc.Swapchain, UINT64_MAX, grc.PerFrame[grc.CurrentFrame].acquiredSemaphore,
+                                VK_NULL_HANDLE, &imageIndex);
+    if (res == VK_ERROR_OUT_OF_DATE_KHR) {
+        LOGI("Pipeline::render", "We don't support out-of-date swapchain.");
+        return ErrorValues::FUNCTION_FAILED;
+    } else if (res == VK_SUBOPTIMAL_KHR)
+        LOGI("Pipeline::render", "Swapchain is suboptimal.");
+    else if (res != VK_SUCCESS)
+        return ErrorValues::FUNCTION_FAILED;
+    VkCommandBufferBeginInfo cmdBufferBeginInfo = {};
+    cmdBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    cmdBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
-        VkWriteDescriptorSet descriptorWrite = {};
-        descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrite.dstSet = m_descriptorSet[i];
-        descriptorWrite.dstBinding = 0;
-        descriptorWrite.dstArrayElement = 0;
-        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptorWrite.descriptorCount = 1;
-        descriptorWrite.pBufferInfo = &bufferInfo;
+    res = vkBeginCommandBuffer(grc.PresentCmdBuffer[grc.CurrentFrame], &cmdBufferBeginInfo);
+    grm.beginDebugMaker(grc.PresentCmdBuffer[grc.CurrentFrame], "PresentCmdBuffer");
 
-        vkUpdateDescriptorSets(grm.getDevice( ), 1, &descriptorWrite, 0, 0);
+    if (res != VK_SUCCESS) return ErrorValues::FUNCTION_FAILED;
+
+    VkClearValue clearValues[2];
+    clearValues[0].color.float32[0] = 1.0f;
+    clearValues[0].color.float32[1] = 1.0f;
+    clearValues[0].color.float32[2] = 1.0f;
+    clearValues[0].color.float32[3] = 1.0f;
+    clearValues[1].depthStencil.depth = 1.0f;
+    clearValues[1].depthStencil.stencil = 0.0f;
+
+    VkRenderPassBeginInfo renderPassBeginInfo = {};
+    renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassBeginInfo.renderPass = RenderPass;
+    renderPassBeginInfo.framebuffer = Framebuffers[imageIndex];
+    renderPassBeginInfo.renderArea.offset = {0, 0};
+    renderPassBeginInfo.renderArea.extent = {grm.Window->getWidth( ), grm.Window->getHeight( )};
+    renderPassBeginInfo.clearValueCount = 2;
+    renderPassBeginInfo.pClearValues = clearValues;
+
+    vkCmdBeginRenderPass(grc.PresentCmdBuffer[grc.CurrentFrame], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+    vkCmdBindPipeline(grc.PresentCmdBuffer[grc.CurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, PipelineHandle);
+
+    VkViewport viewport = {};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = (float)grm.Window->getWidth( );
+    viewport.height = (float)grm.Window->getHeight( );
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+
+    vkCmdSetViewport(grc.PresentCmdBuffer[grc.CurrentFrame], 0, 1, &viewport);
+
+    VkRect2D scissor = {};
+    scissor.offset.x = 0;
+    scissor.offset.y = 0;
+    scissor.extent.width = grm.Window->getWidth( );
+    scissor.extent.height = grm.Window->getHeight( );
+
+    vkCmdSetScissor(grc.PresentCmdBuffer[grc.CurrentFrame], 0, 1, &scissor);
+
+    VkDeviceSize bufferOffsets = 0;
+    std::vector<VertexBuffer> vertexBuffers = VertexBuffers;
+    for (size_t i = 0; i < vertexBuffers.size( ); i += 1) {
+        VkBuffer tmp = vertexBuffers[i].getHandle( );
+        vkCmdBindVertexBuffers(grc.PresentCmdBuffer[grc.CurrentFrame], i, vertexBuffers.size( ), &tmp, &bufferOffsets);
     }
-    return Error::NONE;
+
+    Camera::UniformCamera *currentGlobalCamera = grr.Cam.getCamHandlePTR();
+    PushCamera.perspective = currentGlobalCamera->perspective;
+    PushCamera.view = currentGlobalCamera->view;
+    PushCamera.model = glm::rotate(PushCamera.model, glm::radians(0.5f), glm::vec3(0.f, 1.f, 1.f));
+    PushMatrix = PushCamera.perspective * PushCamera.view * PushCamera.model;
+
+    vkCmdPushConstants(grc.PresentCmdBuffer[grc.CurrentFrame], PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
+                       sizeof(glm::mat4), &PushMatrix);
+
+    vkCmdDraw(grc.PresentCmdBuffer[grc.CurrentFrame], VerticesCount( ), 1, 0, 0);
+
+    vkCmdEndRenderPass(grc.PresentCmdBuffer[grc.CurrentFrame]);
+
+    grm.endDebugMaker(grc.PresentCmdBuffer[grc.CurrentFrame]);
+    res = vkEndCommandBuffer(grc.PresentCmdBuffer[grc.CurrentFrame]);
+
+    VkPipelineStageFlags pipelineStageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    VkSubmitInfo submitInfo = {};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.waitSemaphoreCount = 1;
+    submitInfo.pWaitSemaphores = &grc.PerFrame[grc.CurrentFrame].acquiredSemaphore;
+    submitInfo.pWaitDstStageMask = &pipelineStageFlags;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &grc.PresentCmdBuffer[grc.CurrentFrame];
+    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.pSignalSemaphores = &grc.PerFrame[grc.CurrentFrame].renderCompletedSemaphore;
+
+    res = vkQueueSubmit(grm.Queue, 1, &submitInfo, grc.PerFrame[grc.CurrentFrame].presentFence);
+
+    if (res != VK_SUCCESS) return ErrorValues::FUNCTION_FAILED;
+
+    VkPresentInfoKHR presentInfo = {};
+    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    presentInfo.waitSemaphoreCount = 1;
+    presentInfo.pWaitSemaphores = &grc.PerFrame[grc.CurrentFrame].renderCompletedSemaphore;
+    presentInfo.swapchainCount = 1;
+    presentInfo.pSwapchains = &grc.Swapchain;
+    presentInfo.pImageIndices = &imageIndex;
+
+    res = vkQueuePresentKHR(grm.Queue, &presentInfo);
+
+    if (res == VK_ERROR_OUT_OF_DATE_KHR) {
+        LOGI("Pipeline::render", "We don't support out-of-date swapchain.");
+        return ErrorValues::FUNCTION_FAILED;
+    } else if (res == VK_SUBOPTIMAL_KHR)
+        LOGI("Pipeline::render", "Swapchain is suboptimal.");
+    else if (res != VK_SUCCESS)
+        return ErrorValues::FUNCTION_FAILED;
+
+    return ErrorValues::NONE;
+}
+
+ErrorValues Renderer::render(const Manager& grm, Context& grc)
+{
+    if (List.Pipelines.empty())
+        return ErrorValues::NONE;
+    size_t size = List.Pipelines.size();
+
+    for (size_t i = 0; i < size; i += 1) {
+        if (List[i].render(grm, grc, *this))
+            return ErrorValues::FUNCTION_FAILED;
+    }
+    return ErrorValues::NONE;
+}
+
+void Renderer::destroy(const Manager& grm, const Context& grc)
+{
+    for (size_t i = 0; i < List.Pipelines.size(); i += 1)
+    {
+        List.Pipelines[i].destroy(grm, grc);
+    }
 }
 
 }    // namespace gr
+
+}    // namespace FEM

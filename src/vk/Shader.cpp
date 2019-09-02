@@ -13,6 +13,12 @@ ErrorValues Shader::init(const VkDevice &device, const char *vertexShaderFile, c
     return ErrorValues::NONE;
 }
 
+void Shader::destroy(const VkDevice &device)
+{
+    vkDestroyShaderModule(device, VertexModule, 0);
+    vkDestroyShaderModule(device, FragmentModule, 0);
+}
+
 ErrorValues Shader::createVertexShader(const VkDevice &device, const char *vertexShaderFile) {
     std::ifstream inFile;
     inFile.open(vertexShaderFile, std::ios_base::binary | std::ios_base::ate);

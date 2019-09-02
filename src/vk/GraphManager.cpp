@@ -283,18 +283,16 @@ void Manager::endDebugMaker(VkCommandBuffer cmdBuffer) const {
     if (PfnCmdDebugMarkerEndEXT) PfnCmdDebugMarkerEndEXT(cmdBuffer);
 }
 
-void Manager::destroy()
-{
+void Manager::destroy( ) {
     vmaDestroyAllocator(Allocator);
     vkDestroyCommandPool(Device, CommandPool, 0);
     vkDestroyDevice(Device, 0);
 #ifdef _DEBUG
-    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(Instance, "vkDestroyDebugUtilsMessengerEXT");
-    if (func)
-        func(Instance, DebugMessenger, 0);
-    auto func1 = (PFN_vkDestroyDebugReportCallbackEXT) vkGetInstanceProcAddr(Instance, "vkDestroyDebugReportCallbackEXT");
-    if (func1)
-        func1(Instance, DebugCallback, 0);
+    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(Instance, "vkDestroyDebugUtilsMessengerEXT");
+    if (func) func(Instance, DebugMessenger, 0);
+    auto func1 =
+        (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(Instance, "vkDestroyDebugReportCallbackEXT");
+    if (func1) func1(Instance, DebugCallback, 0);
 #endif
 
     vkDestroySurfaceKHR(Instance, Surface, 0);

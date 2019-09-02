@@ -25,17 +25,26 @@ ErrorValues App::init(const AppInitInfo& initInfo) {
         LOGE(FILE_LOCATION( ), "Failed to create gr::Context.");
         return ErrorValues::FUNCTION_FAILED;
     }
+
+    if (GrRenderer.init(GrManager, GrContext)) {
+        LOGE(FILE_LOCATION( ), "Failed to create gr::Renderer.");
+        return ErrorValues::FUNCTION_FAILED;
+    }
     return ErrorValues::NONE;
 }
 
 void App::destroy( ) {
+    vkDeviceWaitIdle(GrManager.Device);
+    GrRenderer.destroy(GrManager, GrContext);
     GrContext.destroy(GrManager);
-    GrManager.destroy();
+    GrManager.destroy( );
     Window.destroy( );
 }
 
 ErrorValues App::mainLoop( ) {
     bool Quit = false;
+    GrRenderer.Cam.setPerspective(90.f, (float)((float)GrManager.Window->getWidth() / (float)GrManager.Window->getHeight()), 0.1f, 1000.f);
+    GrRenderer.Cam.setPosition(glm::vec3(3.f, 3.f, 3.f));
 
     while (!Quit) {
         glfwPollEvents( );
@@ -43,30 +52,15 @@ ErrorValues App::mainLoop( ) {
             LOGI("", "Closing window.");
             Quit = true;
         }
-        // if (update()) {
-        //     return ErrorValues::FUNCTION_FAILED;
-        // }
-        // GrContext.render(GrManager);
+        update();
+        GrRenderer.render(GrManager, GrContext);
+        GrContext.SwapBuffer();
     }
     return ErrorValues::NONE;
 }
 
 ErrorValues App::update( ) {
-    // static int i = 0;
-    // if (!i) {
-    //     gr::VertexBuffer object;
-    //     if (object.init(GrManager, (void *)vertices, NUM_DEMO_VERTICES,
-    //     SIZE_DEMO_VERTEX,
-    //         {{0, VK_FORMAT_R32G32B32_SFLOAT, sizeof(float) * 0}, {1,
-    //         VK_FORMAT_R32G32B32_SFLOAT, sizeof(float) * 3}},
-    //         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST))
-    //     {
-    //         return ErrorValues::FUNCTION_FAILED;
-    //     }
-    //     GrContext.addPipeline(GrManager, object, "shaders/vertex.spirv",
-    //     "shaders/fragment.spirv"); i = 1;
-    // }
-    // GrContext.m_animTime += 0.001f;
+    GrRenderer.update();
     return ErrorValues::NONE;
 }
 

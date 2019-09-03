@@ -39,12 +39,47 @@ set(GLM_TEST_ENABLE OFF CACHE BOOL "Build unit tests" FORCE)
 #option(GLM_TEST_ENABLE "Build unit tests" OFF)
 option(BUILD_SHARED_LIBS "Build shared library" OFF)
 
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-
 include(src/CMakelists.txt)
 
 # Telling Cmake to compile a executable
 add_executable(FreeFEM_graphic_client ${freeFEM_SOURCES})
+
+# Compiling shaders
+if (UNIX)
+    set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator")
+else (UNIX)
+    set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator.exe")
+endif(UNIX)
+
+file(GLOB_RECURSE GLSL_SOURCE_FILES
+    "shaders/*.frag"
+    "shaders/*.vert"
+    )
+
+foreach(GLSL ${GLSL_SOURCE_FILES})
+  get_filename_component(FILE_NAME ${GLSL} NAME)
+  set(SPIRV "${PROJECT_BINARY_DIR}/shaders/${FILE_NAME}.spirv")
+  add_custom_command(
+    OUTPUT ${SPIRV}
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_BINARY_DIR}/shaders/"
+    COMMAND ${GLSL_VALIDATOR} -V ${GLSL} -o ${SPIRV}
+    DEPENDS ${GLSL})
+  list(APPEND SPIRV_BINARY_FILES ${SPIRV})
+endforeach(GLSL)
+
+add_custom_target(
+    Shaders
+    DEPENDS ${SPIRV_BINARY_FILES}
+    )
+
+add_dependencies(FreeFEM_graphic_client Shaders)
+
+add_custom_command(TARGET FreeFEM_graphic_client POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_BINARY_DIR}/shaders/"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${PROJECT_BINARY_DIR}/shaders"
+        "${PROJECT_BINARY_DIR}/shaders"
+        )
 
 # Using C++11 standard
 set_target_properties(FreeFEM_graphic_client PROPERTIES CXX_STANDARD 11)

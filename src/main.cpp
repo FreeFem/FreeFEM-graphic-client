@@ -1,15 +1,21 @@
-#include "core/App.h"
-#include "vk/Camera.h"
+#include "core/Application.h"
+#include "vk/Buffer.h"
 
-int main( ) {
-    FEM::App app;
-    FEM::AppInitInfo appInitInfo = {1280, 768};
+int main(int ac, char **av) {
+    FEM::Application App;
+    FEM::ApplicationCreateInfo AppCreateInfos = FEM::getApplicationInfos(ac, av);
 
-    if (app.init(appInitInfo)) {
-        LOGE(FILE_LOCATION( ), "Failed to init FEM::App.");
+    if (!FEM::newGLFWContext())
+        return EXIT_FAILURE;
+
+    if (!FEM::newApplication(&App, AppCreateInfos)) {
+        LOGE("main", "Failed to initialize Application.");
         return EXIT_FAILURE;
     }
-    if (app.mainLoop( )) return EXIT_FAILURE;
-    app.destroy( );
+
+    FEM::runApplication(&App);
+
+    FEM::destroyApplication(&App);
+
     return EXIT_SUCCESS;
 }

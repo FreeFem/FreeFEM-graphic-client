@@ -11,7 +11,7 @@
 
 class Logger : public FEM::NonCopyable {
    public:
-    Logger( ){};
+    Logger( ) {};
 
     void loge(std::string location, std::string infos) {
         std::string data;

@@ -1,40 +1,36 @@
 #ifndef APPLICATION_H_
 #define APPLICATION_H_
 
-#include "Window.h"
-#include "../vk/VulkanContext.h"
 #include "../vk/Pipeline.h"
 #include "../vk/ShaderLoader.h"
+#include "../vk/VulkanContext.h"
+#include "Window.h"
 
-namespace FEM
-{
+namespace FEM {
 
-    struct ApplicationCreateInfo {
-        uint32_t ScreenWidth;
-        uint32_t ScreenHeight;
-    };
+struct ApplicationCreateInfo {
+    uint32_t ScreenWidth;
+    uint32_t ScreenHeight;
+};
 
-    struct Application {
+struct Application {
+    Window Screen;
 
-        Window Screen;
+    VK::VulkanContext vkContext;
+    VK::Pipeline Renderer;
+    VK::ShaderLoader Shaders;
+};
 
-        VK::VulkanContext vkContext;
-        VK::Pipeline Renderer;
-        VK::ShaderLoader Shaders;
+ApplicationCreateInfo getApplicationInfos(int ac, char **av);
 
-    };
+bool newApplication(Application *App, const ApplicationCreateInfo AppCreateInfos);
 
-    ApplicationCreateInfo getApplicationInfos(int ac, char **av);
+void destroyApplication(Application *App);
 
-    bool newApplication(Application *App, const ApplicationCreateInfo AppCreateInfos);
+void runApplication(Application *App);
 
-    void destroyApplication(Application *App);
+bool renderCurrent(VK::VulkanContext &vkContext, const VK::Pipeline Renderer, const Window Win);
 
-    void runApplication(Application *App);
+}    // namespace FEM
 
-    bool renderCurrent(VK::VulkanContext& vkContext, const VK::Pipeline Renderer, const Window Win);
-
-} // namespace FEM
-
-
-#endif // APPLICATION_H_
+#endif    // APPLICATION_H_

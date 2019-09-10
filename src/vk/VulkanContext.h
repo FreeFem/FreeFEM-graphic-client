@@ -3,13 +3,11 @@
 
 #include <vulkan/vulkan.h>
 #include "../util/utils.h"
-#include "vk_mem_alloc.h"
 #include "Image.h"
+#include "vk_mem_alloc.h"
 
-namespace FEM
-{
-namespace VK
-{
+namespace FEM {
+namespace VK {
 
 struct QueueInfo {
     uint32_t Index;
@@ -25,7 +23,6 @@ struct FrameInfo {
 };
 
 struct VulkanContext {
-
     VkInstance Instance;
     uint32_t InstanceExtensionsCount;
     char **InstanceExtensions;
@@ -73,14 +70,12 @@ struct VulkanContext {
 
 #ifdef _DEBUG
 static const uint32_t LayerCount = 1;
-static const char *Layers[] = {
-    "VK_LAYER_LUNARG_standard_validation"
-};
+static const char *Layers[] = {"VK_LAYER_LUNARG_standard_validation"};
 
-VKAPI_ATTR VkBool32 VKAPI_CALL debugMessengerCallback(UNUSED_PARAM VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-                                                      UNUSED_PARAM VkDebugUtilsMessageTypeFlagsEXT messageType,
-                                                      const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-                                                      UNUSED_PARAM void* pUserData);
+VKAPI_ATTR VkBool32 VKAPI_CALL
+debugMessengerCallback(UNUSED_PARAM VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                       UNUSED_PARAM VkDebugUtilsMessageTypeFlagsEXT messageType,
+                       const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, UNUSED_PARAM void *pUserData);
 
 VKAPI_ATTR VkBool32 VKAPI_CALL debugReportCallbackEXT(UNUSED_PARAM VkDebugReportFlagsEXT flags,
                                                       UNUSED_PARAM VkDebugReportObjectTypeEXT objectType,
@@ -94,8 +89,7 @@ bool newVulkanContext(VulkanContext *vkContext, const Window *Win);
 
 void destroyVulkanContext(VulkanContext *vkContext);
 
-} // namespace VK
-} // namespace FEM
+}    // namespace VK
+}    // namespace FEM
 
-
-#endif // VULKAN_CONTEXT_H_
+#endif    // VULKAN_CONTEXT_H_

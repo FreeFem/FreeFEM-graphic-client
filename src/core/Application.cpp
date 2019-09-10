@@ -1,12 +1,10 @@
-#include <cstring>
 #include "Application.h"
+#include <cstring>
 #include "../vk/Buffer.h"
 
-namespace FEM
-{
+namespace FEM {
 
-static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
+static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     Application *App = (Application *)glfwGetWindowUserPointer(window);
 
     if (key == GLFW_KEY_UP && action == GLFW_PRESS)
@@ -19,21 +17,17 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
         App->Renderer.Cam->View = glm::translate(App->Renderer.Cam->View, glm::vec3(0.5f, 0, 0));
 }
 
-ApplicationCreateInfo getApplicationInfos(int ac, char **av)
-{
+ApplicationCreateInfo getApplicationInfos(int ac, char **av) {
     ApplicationCreateInfo infos = {1280, 768};
     int ite = 1;
 
-    if (ac == 1)
-        return infos;
+    if (ac == 1) return infos;
     while (ite < ac) {
         if (strcmp(av[ite], "-ScreenWidth") == 0) {
-            if (ite + 1 >= ac)
-                return infos;
+            if (ite + 1 >= ac) return infos;
             infos.ScreenWidth = atoi(av[ite + 1]);
         } else if (strcmp(av[ite], "-ScreenHeight") == 0) {
-            if (ite + 1 >= ac)
-                return infos;
+            if (ite + 1 >= ac) return infos;
             infos.ScreenHeight = atoi(av[ite + 1]);
         }
         ite += 1;
@@ -41,8 +35,7 @@ ApplicationCreateInfo getApplicationInfos(int ac, char **av)
     return infos;
 }
 
-bool newApplication(Application *App, const ApplicationCreateInfo AppCreateInfos)
-{
+bool newApplication(Application *App, const ApplicationCreateInfo AppCreateInfos) {
     if (!newWindow(&App->Screen, AppCreateInfos.ScreenWidth, AppCreateInfos.ScreenHeight, "FreeFEM++")) {
         LOGE("newApplication", "Failed to initialize Window.");
         return false;
@@ -57,13 +50,11 @@ bool newApplication(Application *App, const ApplicationCreateInfo AppCreateInfos
         LOGE("newApplication", "Failed to initialize Pipeline.");
         return false;
     }
-    App->Shaders = VK::newShaderLoader();
+    App->Shaders = VK::newShaderLoader( );
     return true;
 }
 
-
-void destroyApplication(Application *App)
-{
+void destroyApplication(Application *App) {
     destroyWindow(&App->Screen);
     VK::destroyShaderLoader(App->Shaders, App->vkContext);
     vkDeviceWaitIdle(App->vkContext.Device);
@@ -71,8 +62,7 @@ void destroyApplication(Application *App)
     VK::destroyVulkanContext(&App->vkContext);
 }
 
-void runApplication(Application *App)
-{
+void runApplication(Application *App) {
     LOGI("Application", "Running !");
     bool Quit = false;
 
@@ -106,12 +96,13 @@ void runApplication(Application *App)
         LOGI("Loop", "Failed to create tmp vertexBuffer");
         return;
     }
-    memcpy(my_pipeline->VBuffer.VulkanData.MemoryInfos.pMappedData, vertices, my_pipeline->VBuffer.VulkanData.MemoryInfos.size);
+    memcpy(my_pipeline->VBuffer.VulkanData.MemoryInfos.pMappedData, vertices,
+           my_pipeline->VBuffer.VulkanData.MemoryInfos.size);
     computeCamera(App->Renderer.Cam);
     VK::addSubPipeline(my_pipeline, App->vkContext, &App->Renderer);
 
     while (!Quit) {
-        glfwPollEvents();
+        glfwPollEvents( );
         if (glfwWindowShouldClose(App->Screen.Handle)) {
             LOGI("Application", "Closing !");
             Quit = true;
@@ -124,8 +115,7 @@ void runApplication(Application *App)
     return;
 }
 
-bool renderCurrent(VK::VulkanContext& vkContext, const VK::Pipeline Renderer, const Window Win)
-{
+bool renderCurrent(VK::VulkanContext &vkContext, const VK::Pipeline Renderer, const Window Win) {
     VkResult res;
     if (vkContext.FrameInfos[vkContext.CurrentFrame].initialize == true) {
         vkWaitForFences(vkContext.Device, 1, &vkContext.FrameInfos[vkContext.CurrentFrame].Fence, VK_TRUE, UINT64_MAX);
@@ -135,7 +125,9 @@ bool renderCurrent(VK::VulkanContext& vkContext, const VK::Pipeline Renderer, co
     vkContext.FrameInfos[vkContext.CurrentFrame].initialize = true;
 
     uint32_t imageIndex = UINT32_MAX;
-    res = vkAcquireNextImageKHR(vkContext.Device, vkContext.Swapchain, UINT64_MAX, vkContext.FrameInfos[vkContext.CurrentFrame].Semaphores[0], VK_NULL_HANDLE, &imageIndex);
+    res =
+        vkAcquireNextImageKHR(vkContext.Device, vkContext.Swapchain, UINT64_MAX,
+                              vkContext.FrameInfos[vkContext.CurrentFrame].Semaphores[0], VK_NULL_HANDLE, &imageIndex);
 
     if (res == VK_ERROR_OUT_OF_DATE_KHR)
         return false;
@@ -147,12 +139,10 @@ bool renderCurrent(VK::VulkanContext& vkContext, const VK::Pipeline Renderer, co
     BeginInfos.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
     VK::PipelineSubResources *SubPipeline = Renderer.SubPipelines;
-    //while (SubPipeline != 0) {
 
-        if (vkBeginCommandBuffer(vkContext.CommandBuffers[vkContext.CurrentFrame], &BeginInfos))
-            return false;
+    if (vkBeginCommandBuffer(vkContext.CommandBuffers[vkContext.CurrentFrame], &BeginInfos)) return false;
 
-
+    while (SubPipeline != 0) {
         VkClearValue clearValue[2];
         clearValue[0].color.float32[0] = 1.0f;
         clearValue[0].color.float32[1] = 1.0f;
@@ -170,9 +160,11 @@ bool renderCurrent(VK::VulkanContext& vkContext, const VK::Pipeline Renderer, co
         renderPassBeginInfo.clearValueCount = 2;
         renderPassBeginInfo.pClearValues = clearValue;
 
-        vkCmdBeginRenderPass(vkContext.CommandBuffers[vkContext.CurrentFrame], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBeginRenderPass(vkContext.CommandBuffers[vkContext.CurrentFrame], &renderPassBeginInfo,
+                             VK_SUBPASS_CONTENTS_INLINE);
 
-        vkCmdBindPipeline(vkContext.CommandBuffers[vkContext.CurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, SubPipeline->Handle);
+        vkCmdBindPipeline(vkContext.CommandBuffers[vkContext.CurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS,
+                          SubPipeline->Handle);
 
         VkViewport viewport = {};
         viewport.x = 0.0f;
@@ -193,47 +185,48 @@ bool renderCurrent(VK::VulkanContext& vkContext, const VK::Pipeline Renderer, co
         vkCmdSetScissor(vkContext.CommandBuffers[vkContext.CurrentFrame], 0, 1, &scissor);
 
         VkDeviceSize bufferOffsets = 0;
-        vkCmdBindVertexBuffers(vkContext.CommandBuffers[vkContext.CurrentFrame], 0, 1, &SubPipeline->VBuffer.VulkanData.Handle, &bufferOffsets);
+        vkCmdBindVertexBuffers(vkContext.CommandBuffers[vkContext.CurrentFrame], 0, 1,
+                               &SubPipeline->VBuffer.VulkanData.Handle, &bufferOffsets);
 
-        vkCmdPushConstants(vkContext.CommandBuffers[vkContext.CurrentFrame], SubPipeline->Layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &Renderer.Cam->finalCamera);
+        vkCmdPushConstants(vkContext.CommandBuffers[vkContext.CurrentFrame], SubPipeline->Layout,
+                           VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &Renderer.Cam->finalCamera);
 
-        vkCmdDraw(vkContext.CommandBuffers[vkContext.CurrentFrame], SubPipeline->VBuffer.VulkanData.CreationInfos.ElementCount, 1, 0, 0);
+        vkCmdDraw(vkContext.CommandBuffers[vkContext.CurrentFrame],
+                  SubPipeline->VBuffer.VulkanData.CreationInfos.ElementCount, 1, 0, 0);
 
         vkCmdEndRenderPass(vkContext.CommandBuffers[vkContext.CurrentFrame]);
+    }
+    vkEndCommandBuffer(vkContext.CommandBuffers[vkContext.CurrentFrame]);
 
-        vkEndCommandBuffer(vkContext.CommandBuffers[vkContext.CurrentFrame]);
+    VkPipelineStageFlags pipelineStageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    VkSubmitInfo submitInfo = {};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.waitSemaphoreCount = 1;
+    submitInfo.pWaitSemaphores = &vkContext.FrameInfos[vkContext.CurrentFrame].Semaphores[0];
+    submitInfo.pWaitDstStageMask = &pipelineStageFlags;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &vkContext.CommandBuffers[vkContext.CurrentFrame];
+    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.pSignalSemaphores = &vkContext.FrameInfos[vkContext.CurrentFrame].Semaphores[1];
 
-        VkPipelineStageFlags pipelineStageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        VkSubmitInfo submitInfo = {};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = &vkContext.FrameInfos[vkContext.CurrentFrame].Semaphores[0];
-        submitInfo.pWaitDstStageMask = &pipelineStageFlags;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &vkContext.CommandBuffers[vkContext.CurrentFrame];
-        submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = &vkContext.FrameInfos[vkContext.CurrentFrame].Semaphores[1];
+    res = vkQueueSubmit(vkContext.Queue, 1, &submitInfo, vkContext.FrameInfos[vkContext.CurrentFrame].Fence);
 
-        res = vkQueueSubmit(vkContext.Queue, 1, &submitInfo, vkContext.FrameInfos[vkContext.CurrentFrame].Fence);
+    if (res != VK_SUCCESS) return false;
 
-        if (res != VK_SUCCESS)
-            return false;
+    VkPresentInfoKHR presentInfo = {};
+    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    presentInfo.waitSemaphoreCount = 1;
+    presentInfo.pWaitSemaphores = &vkContext.FrameInfos[vkContext.CurrentFrame].Semaphores[1];
+    presentInfo.swapchainCount = 1;
+    presentInfo.pSwapchains = &vkContext.Swapchain;
+    presentInfo.pImageIndices = &imageIndex;
 
-        VkPresentInfoKHR presentInfo = {};
-        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-        presentInfo.waitSemaphoreCount = 1;
-        presentInfo.pWaitSemaphores = &vkContext.FrameInfos[vkContext.CurrentFrame].Semaphores[1];
-        presentInfo.swapchainCount = 1;
-        presentInfo.pSwapchains = &vkContext.Swapchain;
-        presentInfo.pImageIndices = &imageIndex;
-
-        res = vkQueuePresentKHR(vkContext.Queue, &presentInfo);
-        if (res == VK_ERROR_OUT_OF_DATE_KHR)
-            return false;
-        else if (res != VK_SUCCESS && res != VK_SUBOPTIMAL_KHR)
-            return false;
-    //}
+    res = vkQueuePresentKHR(vkContext.Queue, &presentInfo);
+    if (res == VK_ERROR_OUT_OF_DATE_KHR)
+        return false;
+    else if (res != VK_SUCCESS && res != VK_SUBOPTIMAL_KHR)
+        return false;
     return true;
 }
 
-} // namespace FEM
+}    // namespace FEM

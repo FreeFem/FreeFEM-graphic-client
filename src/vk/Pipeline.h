@@ -20,7 +20,6 @@ struct PipelineSubResources {
 };
 
 struct Pipeline {
-
     uint32_t SubPipelineCount;
     PipelineSubResources *SubPipelines;
 
@@ -33,7 +32,6 @@ struct Pipeline {
     uint32_t FramebufferCount;
     VkFramebuffer *Framebuffers;
     Camera *Cam;
-
 };
 
 bool newPipeline(Pipeline *Handle, const VulkanContext vkContext, const Window Win);
@@ -42,9 +40,10 @@ void destroyPipeline(Pipeline Handle, const VulkanContext vkContext);
 
 bool addSubPipeline(PipelineSubResources *SubPipeline, const VulkanContext vkContext, Pipeline *MotherPipeline);
 
-void destroySubPipeline(PipelineSubResources *SubPipeline, const VulkanContext vkContext, const Pipeline MotherPipeline);
+void destroySubPipeline(PipelineSubResources *SubPipeline, const VulkanContext vkContext,
+                        const Pipeline MotherPipeline);
 
-}
-}
+}    // namespace VK
+}    // namespace FEM
 
-#endif // PIPELINE_H_
+#endif    // PIPELINE_H_

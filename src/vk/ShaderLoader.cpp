@@ -1,28 +1,25 @@
-#include <cstdlib>
-#include <cstdio>
-#include <cstring>
-#include <unistd.h>
+#include "ShaderLoader.h"
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <fcntl.h>
+#include <unistd.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include "../core/Window.h"
 #include "VulkanContext.h"
-#include "ShaderLoader.h"
 
 namespace FEM {
 namespace VK {
 
-bool newShader(const char *ShaderName, const char *filepath, ShaderLoader *Loader, const VulkanContext vkContext)
-{
+bool newShader(const char *ShaderName, const char *filepath, ShaderLoader *Loader, const VulkanContext vkContext) {
     ShaderData *Data = (ShaderData *)malloc(sizeof(ShaderData));
     memset(Data, 0, sizeof(ShaderData));
     int fd = open(filepath, O_RDONLY);
     struct stat st;
 
-    if (fd == -1)
-        return false;
-    if (fstat(fd, &st) == -1)
-        return false;
+    if (fd == -1) return false;
+    if (fstat(fd, &st) == -1) return false;
     size_t size = st.st_size;
 
     unsigned char *array = (unsigned char *)malloc(sizeof(unsigned char) * size);
@@ -33,8 +30,7 @@ bool newShader(const char *ShaderName, const char *filepath, ShaderLoader *Loade
     createInfo.codeSize = size;
     createInfo.pCode = (uint32_t *)array;
 
-    if (vkCreateShaderModule(vkContext.Device, &createInfo, 0, &Data->ShaderModule))
-        return false;
+    if (vkCreateShaderModule(vkContext.Device, &createInfo, 0, &Data->ShaderModule)) return false;
     Data->ShaderName = strdup(ShaderName);
     if (Loader->ShaderList == 0) {
         Loader->ShaderList = Data;
@@ -46,13 +42,11 @@ bool newShader(const char *ShaderName, const char *filepath, ShaderLoader *Loade
     return true;
 }
 
-void destroyShader(ShaderData *Data, const VulkanContext vkContext)
-{
+void destroyShader(ShaderData *Data, const VulkanContext vkContext) {
     vkDestroyShaderModule(vkContext.Device, Data->ShaderModule, 0);
 }
 
-VkShaderModule searchShader(const char *Name, const ShaderLoader Loader)
-{
+VkShaderModule searchShader(const char *Name, const ShaderLoader Loader) {
     if (Loader.ShaderList == 0)
         return VK_NULL_HANDLE;
     else {
@@ -67,10 +61,8 @@ VkShaderModule searchShader(const char *Name, const ShaderLoader Loader)
     return VK_NULL_HANDLE;
 }
 
-void destroyShaderLoader(ShaderLoader Loader, const VulkanContext vkContext)
-{
-    if (Loader.ShaderList == 0)
-        return;
+void destroyShaderLoader(ShaderLoader Loader, const VulkanContext vkContext) {
+    if (Loader.ShaderList == 0) return;
 
     ShaderData *current = Loader.ShaderList;
     ShaderData *next = 0;
@@ -82,5 +74,5 @@ void destroyShaderLoader(ShaderLoader Loader, const VulkanContext vkContext)
     }
 }
 
-} // namespace VK
-} // namespace FEM
+}    // namespace VK
+}    // namespace FEM

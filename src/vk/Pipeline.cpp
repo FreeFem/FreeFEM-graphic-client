@@ -1,16 +1,13 @@
+#include "Pipeline.h"
 #include <cstdlib>
 #include <glm/mat4x4.hpp>
 #include "../core/Window.h"
 #include "VulkanContext.h"
-#include "Pipeline.h"
 
-namespace FEM
-{
-namespace VK
-{
+namespace FEM {
+namespace VK {
 
-bool newPipeline(Pipeline *Handle, const VulkanContext vkContext, const Window Win)
-{
+bool newPipeline(Pipeline *Handle, const VulkanContext vkContext, const Window Win) {
     Handle->SubPipelineCount = 0;
     Handle->SubPipelines = 0;
 
@@ -68,8 +65,7 @@ bool newPipeline(Pipeline *Handle, const VulkanContext vkContext, const Window W
     createInfo.dependencyCount = 0;
     createInfo.pDependencies = 0;
 
-    if (vkCreateRenderPass(vkContext.Device, &createInfo, 0, &Handle->RenderPass))
-        return false;
+    if (vkCreateRenderPass(vkContext.Device, &createInfo, 0, &Handle->RenderPass)) return false;
 
     Handle->FramebufferCount = vkContext.SwapchainImageCount;
     Handle->Framebuffers = (VkFramebuffer *)malloc(sizeof(VkFramebuffer) * vkContext.SwapchainImageCount);
@@ -89,15 +85,15 @@ bool newPipeline(Pipeline *Handle, const VulkanContext vkContext, const Window W
     return true;
 }
 
-void destroySubPipeline(PipelineSubResources *SubPipeline, const VulkanContext vkContext, const Pipeline MotherPipeline)
-{
+void destroySubPipeline(PipelineSubResources *SubPipeline, const VulkanContext vkContext,
+                        const Pipeline MotherPipeline) {
     vkDestroyPipelineLayout(vkContext.Device, SubPipeline->Layout, 0);
     vkDestroyPipeline(vkContext.Device, SubPipeline->Handle, 0);
-    vmaDestroyBuffer(vkContext.Allocator, SubPipeline->VBuffer.VulkanData.Handle, SubPipeline->VBuffer.VulkanData.Memory);
+    vmaDestroyBuffer(vkContext.Allocator, SubPipeline->VBuffer.VulkanData.Handle,
+                     SubPipeline->VBuffer.VulkanData.Memory);
 }
 
-void destroyPipeline(Pipeline Handle, const VulkanContext vkContext)
-{
+void destroyPipeline(Pipeline Handle, const VulkanContext vkContext) {
     PipelineSubResources *current = Handle.SubPipelines;
     PipelineSubResources *next = 0;
     while (current != 0) {
@@ -112,10 +108,8 @@ void destroyPipeline(Pipeline Handle, const VulkanContext vkContext)
     free(Handle.Cam);
 }
 
-bool addSubPipeline(PipelineSubResources *SubPipeline, const VulkanContext vkContext, Pipeline *MotherPipeline)
-{
-    if (SubPipeline->VertexShader == 0 || SubPipeline->FragmentShader == 0)
-        return false;
+bool addSubPipeline(PipelineSubResources *SubPipeline, const VulkanContext vkContext, Pipeline *MotherPipeline) {
+    if (SubPipeline->VertexShader == 0 || SubPipeline->FragmentShader == 0) return false;
     VkPushConstantRange pushRange;
     pushRange.offset = 0;
     pushRange.size = sizeof(glm::mat4);
@@ -195,7 +189,8 @@ bool addSubPipeline(PipelineSubResources *SubPipeline, const VulkanContext vkCon
     colorBlendAttachementState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
     colorBlendAttachementState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
     colorBlendAttachementState.alphaBlendOp = VK_BLEND_OP_ADD;
-    colorBlendAttachementState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+    colorBlendAttachementState.colorWriteMask =
+        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 
     VkPipelineColorBlendStateCreateInfo colorBlendStateCreateInfo = {};
     colorBlendStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -256,5 +251,5 @@ bool addSubPipeline(PipelineSubResources *SubPipeline, const VulkanContext vkCon
     return true;
 }
 
-} // namespace VK
-} // namespace FEM
+}    // namespace VK
+}    // namespace FEM

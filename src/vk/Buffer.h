@@ -7,12 +7,7 @@
 namespace FEM {
 namespace VK {
 
-enum BufferType {
-    Unknow,
-    PBuffer,
-    VBuffer,
-    IBuffer
-};
+enum BufferType { Unknow, PBuffer, VBuffer, IBuffer };
 
 struct BufferInfos {
     VkDeviceSize ElementCount;
@@ -44,7 +39,8 @@ bool newBuffer(const VmaAllocator Allocator, Buffer *Buff, const BufferInfos Inf
 
 bool newIndexBuffer(const VmaAllocator Allocator, IndexBuffer *Buff, const BufferInfos Infos, VkIndexType IndexType);
 
-bool newVertexBuffer(const VmaAllocator Allocator, VertexBuffer *Buff, const BufferInfos Infos, uint32_t AttributeCount, VkVertexInputAttributeDescription *Attributes);
+bool newVertexBuffer(const VmaAllocator Allocator, VertexBuffer *Buff, const BufferInfos Infos, uint32_t AttributeCount,
+                     VkVertexInputAttributeDescription *Attributes);
 
 void mapBufferMemory(Buffer *Buff, void *data);
 
@@ -54,7 +50,7 @@ void destroyVertexBuffer(const VmaAllocator Allocator, Buffer Buff);
 
 void destroyIndexBuffer(const VmaAllocator Allocator, Buffer Buff);
 
-}
-}
+}    // namespace VK
+}    // namespace FEM
 
-#endif // BUFFER_H_
+#endif    // BUFFER_H_

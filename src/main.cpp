@@ -5,8 +5,7 @@ int main(int ac, char **av) {
     FEM::Application App;
     FEM::ApplicationCreateInfo AppCreateInfos = FEM::getApplicationInfos(ac, av);
 
-    if (!FEM::newGLFWContext())
-        return EXIT_FAILURE;
+    if (!FEM::newGLFWContext( )) return EXIT_FAILURE;
 
     if (!FEM::newApplication(&App, AppCreateInfos)) {
         LOGE("main", "Failed to initialize Application.");

@@ -9,8 +9,7 @@
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
-namespace FEM
-{
+namespace FEM {
 
 struct CameraUniform {
     glm::mat4 Projection;
@@ -19,7 +18,6 @@ struct CameraUniform {
 };
 
 struct Camera {
-
     float left, right, bottom, top;
     glm::mat4 Projection;
     glm::mat4 View;
@@ -31,6 +29,6 @@ glm::mat4 setProjectionOrtho(Camera *Cam, float left, float right, float bottom,
 glm::mat4 updateCamera(Camera *Cam, glm::vec2 translation);
 void computeCamera(Camera *Cam);
 
-} // namespace FEM
+}    // namespace FEM
 
-#endif // CAMERA_H_
+#endif    // CAMERA_H_

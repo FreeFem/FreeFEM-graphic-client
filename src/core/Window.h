@@ -7,22 +7,22 @@
 
 namespace FEM {
 
-    struct Window {
-        GLFWwindow *Handle;
-        uint32_t ScreenWidth;
-        uint32_t ScreenHeight;
-        uint32_t VulkanExtensionsCount;
-        char **VulkanExtensions;
-    };
+struct Window {
+    GLFWwindow *Handle;
+    uint32_t ScreenWidth;
+    uint32_t ScreenHeight;
+    uint32_t VulkanExtensionsCount;
+    char **VulkanExtensions;
+};
 
-    bool newWindow(Window *Win, uint32_t width, uint32_t height, const char *title);
+bool newWindow(Window *Win, uint32_t width, uint32_t height, const char *title);
 
-    void destroyWindow(Window *Win);
+void destroyWindow(Window *Win);
 
-    bool setWindowSize(Window *Win, uint32_t width, uint32_t height);
+bool setWindowSize(Window *Win, uint32_t width, uint32_t height);
 
-    bool newGLFWContext(void);
+bool newGLFWContext(void);
 
-} // namespace FEM
+}    // namespace FEM
 
-#endif // WINDOW_H_
+#endif    // WINDOW_H_

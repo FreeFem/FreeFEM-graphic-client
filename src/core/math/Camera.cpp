@@ -2,8 +2,7 @@
 
 namespace FEM {
 
-glm::mat4 setProjectionOrtho(Camera *Cam, float left, float right, float bottom, float top)
-{
+glm::mat4 setProjectionOrtho(Camera *Cam, float left, float right, float bottom, float top) {
     Cam->left = left;
     Cam->right = right;
     Cam->bottom = bottom;
@@ -14,8 +13,7 @@ glm::mat4 setProjectionOrtho(Camera *Cam, float left, float right, float bottom,
     return Cam->Projection;
 }
 
-glm::mat4 updateCamera(Camera *Cam, glm::vec2 translation)
-{
+glm::mat4 updateCamera(Camera *Cam, glm::vec2 translation) {
     Cam->left -= translation.x;
     Cam->right += translation.x;
 
@@ -27,10 +25,9 @@ glm::mat4 updateCamera(Camera *Cam, glm::vec2 translation)
     return Cam->Projection;
 }
 
-void computeCamera(Camera *Cam)
-{
+void computeCamera(Camera *Cam) {
     Cam->finalCamera = Cam->Projection * Cam->View;
     Cam->finalCamera = glm::scale(Cam->finalCamera, glm::vec3(1, -1, 1));
 }
 
-}
+}    // namespace FEM

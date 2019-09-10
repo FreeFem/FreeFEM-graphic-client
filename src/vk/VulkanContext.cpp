@@ -1,20 +1,18 @@
-#include "../core/Window.h"
 #include "VulkanContext.h"
+#include <cstdlib>
+#include "../core/Window.h"
 #include "../util/Logger.h"
 #include "../util/utils.h"
-#include <cstdlib>
 
-namespace FEM
-{
-namespace VK
-{
+namespace FEM {
+namespace VK {
 
 #ifdef _DEBUG
 
-VKAPI_ATTR VkBool32 VKAPI_CALL debugMessengerCallback(UNUSED_PARAM VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-                                             UNUSED_PARAM VkDebugUtilsMessageTypeFlagsEXT messageType,
-                                             const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-                                             UNUSED_PARAM void* pUserData) {
+VKAPI_ATTR VkBool32 VKAPI_CALL
+debugMessengerCallback(UNUSED_PARAM VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                       UNUSED_PARAM VkDebugUtilsMessageTypeFlagsEXT messageType,
+                       const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, UNUSED_PARAM void *pUserData) {
     if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
         std::string message(pCallbackData->pMessageIdName);
         message.append(" > ");
@@ -38,17 +36,15 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugReportCallbackEXT(UNUSED_PARAM VkDebugReport
                                                       UNUSED_PARAM VkDebugReportObjectTypeEXT objectType,
                                                       UNUSED_PARAM uint64_t object, UNUSED_PARAM size_t location,
                                                       UNUSED_PARAM int32_t messageCode,
-                                                      UNUSED_PARAM const char* pLayerPrefix, const char* pMessage,
-                                                      UNUSED_PARAM void* pUserData) {
+                                                      UNUSED_PARAM const char *pLayerPrefix, const char *pMessage,
+                                                      UNUSED_PARAM void *pUserData) {
     dprintf(2, "Validation Layers CallBack : %s.\n", pMessage);
     return VK_FALSE;
 }
 
-
 #endif
 
-static bool newVkInstance(VulkanContext *vkContext, const Window *Win)
-{
+static bool newVkInstance(VulkanContext *vkContext, const Window *Win) {
     VkApplicationInfo appInfo = {};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pApplicationName = "FreeFEM++";
@@ -89,8 +85,7 @@ static bool newVkInstance(VulkanContext *vkContext, const Window *Win)
     createInfo.enabledExtensionCount = vkContext->InstanceExtensionsCount;
     createInfo.ppEnabledExtensionNames = vkContext->InstanceExtensions;
 
-    if (vkCreateInstance(&createInfo, 0, &vkContext->Instance))
-        return false;
+    if (vkCreateInstance(&createInfo, 0, &vkContext->Instance)) return false;
 #ifdef _DEBUG
     VkDebugReportCallbackCreateInfoEXT createInfoDebug = {};
     createInfoDebug.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
@@ -105,52 +100,47 @@ static bool newVkInstance(VulkanContext *vkContext, const Window *Win)
     if (!vkCreateDebugReportCallbackEXT) return false;
     vkCreateDebugReportCallbackEXT(vkContext->Instance, &createInfoDebug, 0, &vkContext->DebugReportCallback);
 
-    vkContext->CreateDebugUtilsMessengerEXT_PFN = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(vkContext->Instance, "vkCreateDebugUtilsMessengerEXT"));
+    vkContext->CreateDebugUtilsMessengerEXT_PFN = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
+        vkGetInstanceProcAddr(vkContext->Instance, "vkCreateDebugUtilsMessengerEXT"));
     if (vkContext->CreateDebugUtilsMessengerEXT_PFN) {
-        vkContext->CreateDebugUtilsMessengerEXT_PFN(vkContext->Instance, &MessengerCreateInfo, 0, &vkContext->DebugMessenger);
+        vkContext->CreateDebugUtilsMessengerEXT_PFN(vkContext->Instance, &MessengerCreateInfo, 0,
+                                                    &vkContext->DebugMessenger);
     }
 #endif
     return true;
 }
 
-static uint32_t getGraphicsFamilyIndex(VkPhysicalDevice PhysicalDevice, VkSurfaceKHR Surface)
-{
+static uint32_t getGraphicsFamilyIndex(VkPhysicalDevice PhysicalDevice, VkSurfaceKHR Surface) {
     uint32_t queueCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(PhysicalDevice, &queueCount, 0);
 
-    VkQueueFamilyProperties *QueueFamilyPropertiesArray = (VkQueueFamilyProperties *)malloc(sizeof(VkQueueFamilyProperties) * queueCount);
+    VkQueueFamilyProperties *QueueFamilyPropertiesArray =
+        (VkQueueFamilyProperties *)malloc(sizeof(VkQueueFamilyProperties) * queueCount);
     vkGetPhysicalDeviceQueueFamilyProperties(PhysicalDevice, &queueCount, QueueFamilyPropertiesArray);
 
     VkBool32 SurfaceSupported = false;
     for (uint32_t i = 0; i < queueCount; i += 1) {
         vkGetPhysicalDeviceSurfaceSupportKHR(PhysicalDevice, i, Surface, &SurfaceSupported);
-        if (SurfaceSupported
-        && QueueFamilyPropertiesArray[i].queueFlags & VK_QUEUE_GRAPHICS_BIT
-        && QueueFamilyPropertiesArray[i].queueFlags & VK_QUEUE_TRANSFER_BIT)
+        if (SurfaceSupported && QueueFamilyPropertiesArray[i].queueFlags & VK_QUEUE_GRAPHICS_BIT &&
+            QueueFamilyPropertiesArray[i].queueFlags & VK_QUEUE_TRANSFER_BIT)
             return i;
         SurfaceSupported = false;
     }
     return VK_QUEUE_FAMILY_IGNORED;
 }
 
-static bool newVkSurfaceKHR(VulkanContext *vkContext, const Window *Win)
-{
-    if (glfwCreateWindowSurface(vkContext->Instance, Win->Handle, 0, &vkContext->Surface))
-        return false;
+static bool newVkSurfaceKHR(VulkanContext *vkContext, const Window *Win) {
+    if (glfwCreateWindowSurface(vkContext->Instance, Win->Handle, 0, &vkContext->Surface)) return false;
     return true;
 }
 
-static bool newVkPhysicalDevice(VulkanContext *vkContext)
-{
+static bool newVkPhysicalDevice(VulkanContext *vkContext) {
     uint32_t PhysicalDeviceCount = 0;
-    if (vkEnumeratePhysicalDevices(vkContext->Instance, &PhysicalDeviceCount, 0))
-        return false;
-    if (PhysicalDeviceCount < 1)
-        return false;
+    if (vkEnumeratePhysicalDevices(vkContext->Instance, &PhysicalDeviceCount, 0)) return false;
+    if (PhysicalDeviceCount < 1) return false;
 
     VkPhysicalDevice *PhysicalDeviceArray = (VkPhysicalDevice *)malloc(sizeof(VkPhysicalDevice) * PhysicalDeviceCount);
-    if (vkEnumeratePhysicalDevices(vkContext->Instance, &PhysicalDeviceCount, PhysicalDeviceArray))
-        return false;
+    if (vkEnumeratePhysicalDevices(vkContext->Instance, &PhysicalDeviceCount, PhysicalDeviceArray)) return false;
 
     uint32_t preferred = 0;
     uint32_t fallback = 0;
@@ -158,12 +148,9 @@ static bool newVkPhysicalDevice(VulkanContext *vkContext)
         VkPhysicalDeviceProperties props;
         vkGetPhysicalDeviceProperties(PhysicalDeviceArray[i], &props);
 
-        if (getGraphicsFamilyIndex(PhysicalDeviceArray[i], vkContext->Surface) == VK_QUEUE_FAMILY_IGNORED)
-            continue;
-        if (!preferred && props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
-            preferred = i;
-        if (!fallback)
-            fallback = i;
+        if (getGraphicsFamilyIndex(PhysicalDeviceArray[i], vkContext->Surface) == VK_QUEUE_FAMILY_IGNORED) continue;
+        if (!preferred && props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) preferred = i;
+        if (!fallback) fallback = i;
     }
     uint32_t result = preferred ? preferred : fallback;
 
@@ -175,29 +162,30 @@ static bool newVkPhysicalDevice(VulkanContext *vkContext)
     free(PhysicalDeviceArray);
 
     VkFormat format;
-	uint32_t formatCount = 0;
+    uint32_t formatCount = 0;
     vkGetPhysicalDeviceSurfaceFormatsKHR(vkContext->PhysicalDevice, vkContext->Surface, &formatCount, 0);
-	VkSurfaceFormatKHR *SurfaceFormatArray = (VkSurfaceFormatKHR *)malloc(sizeof(VkSurfaceFormatKHR) * formatCount);
-	vkGetPhysicalDeviceSurfaceFormatsKHR(vkContext->PhysicalDevice, vkContext->Surface, &formatCount, SurfaceFormatArray);
+    VkSurfaceFormatKHR *SurfaceFormatArray = (VkSurfaceFormatKHR *)malloc(sizeof(VkSurfaceFormatKHR) * formatCount);
+    vkGetPhysicalDeviceSurfaceFormatsKHR(vkContext->PhysicalDevice, vkContext->Surface, &formatCount,
+                                         SurfaceFormatArray);
 
-	if (formatCount == 1 && SurfaceFormatArray[0].format == VK_FORMAT_UNDEFINED) {
-		format = VK_FORMAT_R8G8B8A8_UNORM;
+    if (formatCount == 1 && SurfaceFormatArray[0].format == VK_FORMAT_UNDEFINED) {
+        format = VK_FORMAT_R8G8B8A8_UNORM;
     }
 
-	for (uint32_t i = 0; i < formatCount; i += 1)
-		if (SurfaceFormatArray[i].format == VK_FORMAT_R8G8B8A8_UNORM || SurfaceFormatArray[i].format == VK_FORMAT_B8G8R8A8_UNORM)
-			format = SurfaceFormatArray[i].format;
+    for (uint32_t i = 0; i < formatCount; i += 1)
+        if (SurfaceFormatArray[i].format == VK_FORMAT_R8G8B8A8_UNORM ||
+            SurfaceFormatArray[i].format == VK_FORMAT_B8G8R8A8_UNORM)
+            format = SurfaceFormatArray[i].format;
 
     VkSurfaceFormatKHR finalSurfaceformat;
     finalSurfaceformat.format = format;
     finalSurfaceformat.colorSpace = SurfaceFormatArray[0].colorSpace;
-	vkContext->SurfaceFormat = finalSurfaceformat;
+    vkContext->SurfaceFormat = finalSurfaceformat;
     free(SurfaceFormatArray);
     return true;
 }
 
-static bool newVkDevice(VulkanContext *vkContext)
-{
+static bool newVkDevice(VulkanContext *vkContext) {
     uint32_t DesiredQueue = getGraphicsFamilyIndex(vkContext->PhysicalDevice, vkContext->Surface);
 
     vkContext->QueueInfos.Index = DesiredQueue;
@@ -230,25 +218,21 @@ static bool newVkDevice(VulkanContext *vkContext)
     deviceCreateInfo.enabledLayerCount = LayerCount;
     deviceCreateInfo.ppEnabledLayerNames = Layers;
 #endif
-    if (vkCreateDevice(vkContext->PhysicalDevice, &deviceCreateInfo, 0, &vkContext->Device))
-        return false;
+    if (vkCreateDevice(vkContext->PhysicalDevice, &deviceCreateInfo, 0, &vkContext->Device)) return false;
     vkGetDeviceQueue(vkContext->Device, vkContext->QueueInfos.Index, 0, &vkContext->Queue);
     return true;
 }
 
-static bool newVmaAllocator(VulkanContext *vkContext)
-{
+static bool newVmaAllocator(VulkanContext *vkContext) {
     VmaAllocatorCreateInfo createInfo = {};
     createInfo.device = vkContext->Device;
     createInfo.physicalDevice = vkContext->PhysicalDevice;
 
-    if (vmaCreateAllocator(&createInfo, &vkContext->Allocator))
-        return false;
+    if (vmaCreateAllocator(&createInfo, &vkContext->Allocator)) return false;
     return true;
 }
 
-static bool newVkSwapchainKHR(VulkanContext *vkContext, const Window *Win)
-{
+static bool newVkSwapchainKHR(VulkanContext *vkContext, const Window *Win) {
     VkColorSpaceKHR SurfaceColorSpace = vkContext->SurfaceFormat.colorSpace;
 
     VkSurfaceCapabilitiesKHR SurfaceCapabilities;
@@ -257,10 +241,10 @@ static bool newVkSwapchainKHR(VulkanContext *vkContext, const Window *Win)
     uint32_t presentModeCount = 0;
     if (vkGetPhysicalDeviceSurfacePresentModesKHR(vkContext->PhysicalDevice, vkContext->Surface, &presentModeCount, 0))
         return false;
-    if (presentModeCount < 1)
-        return false;
+    if (presentModeCount < 1) return false;
     VkPresentModeKHR *PresentModeArray = (VkPresentModeKHR *)malloc(sizeof(VkPresentModeKHR) * presentModeCount);
-    if (vkGetPhysicalDeviceSurfacePresentModesKHR(vkContext->PhysicalDevice, vkContext->Surface, &presentModeCount, PresentModeArray))
+    if (vkGetPhysicalDeviceSurfacePresentModesKHR(vkContext->PhysicalDevice, vkContext->Surface, &presentModeCount,
+                                                  PresentModeArray))
         return false;
     VkExtent2D swapchainExtent = SurfaceCapabilities.currentExtent;
 
@@ -297,16 +281,15 @@ static bool newVkSwapchainKHR(VulkanContext *vkContext, const Window *Win)
     createInfo.oldSwapchain = VK_NULL_HANDLE;
     createInfo.clipped = VK_TRUE;
 
-    if (vkCreateSwapchainKHR(vkContext->Device, &createInfo, 0, &vkContext->Swapchain))
-        return false;
+    if (vkCreateSwapchainKHR(vkContext->Device, &createInfo, 0, &vkContext->Swapchain)) return false;
 
     if (vkGetSwapchainImagesKHR(vkContext->Device, vkContext->Swapchain, &vkContext->SwapchainImageCount, 0))
         return false;
-    if (vkContext->SwapchainImageCount < 1)
-        return false;
+    if (vkContext->SwapchainImageCount < 1) return false;
     vkContext->SwapchainImages = (VkImage *)malloc(sizeof(VkImage) * vkContext->SwapchainImageCount);
     vkContext->SwapchainImageViews = (VkImageView *)malloc(sizeof(VkImageView) * vkContext->SwapchainImageCount);
-    if (vkGetSwapchainImagesKHR(vkContext->Device, vkContext->Swapchain, &vkContext->SwapchainImageCount, vkContext->SwapchainImages))
+    if (vkGetSwapchainImagesKHR(vkContext->Device, vkContext->Swapchain, &vkContext->SwapchainImageCount,
+                                vkContext->SwapchainImages))
         return false;
 
     for (uint32_t i = 0; i < vkContext->SwapchainImageCount; i += 1) {
@@ -331,8 +314,8 @@ static bool newVkSwapchainKHR(VulkanContext *vkContext, const Window *Win)
     return true;
 }
 
-static bool newVkCommandBuffer(const VkDevice Device, const VkCommandPool CommandPool, uint32_t Count, const VkCommandBufferLevel CmdBufferLevels, VkCommandBuffer *CommandBuffers)
-{
+static bool newVkCommandBuffer(const VkDevice Device, const VkCommandPool CommandPool, uint32_t Count,
+                               const VkCommandBufferLevel CmdBufferLevels, VkCommandBuffer *CommandBuffers) {
     VkResult res;
 
     VkCommandBufferAllocateInfo allocInfo = {};
@@ -341,27 +324,24 @@ static bool newVkCommandBuffer(const VkDevice Device, const VkCommandPool Comman
     allocInfo.level = CmdBufferLevels;
     allocInfo.commandBufferCount = Count;
 
-    if (vkAllocateCommandBuffers(Device, &allocInfo, CommandBuffers))
-        return false;
+    if (vkAllocateCommandBuffers(Device, &allocInfo, CommandBuffers)) return false;
     return true;
 }
 
-static bool newVkFence(const VkDevice Device, VkFence *Fence)
-{
+static bool newVkFence(const VkDevice Device, VkFence *Fence) {
     VkFenceCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     return vkCreateFence(Device, &createInfo, 0, Fence);
 }
 
-static bool newVkSemaphore(const VkDevice Device, VkSemaphore *Semaphore)
-{
+static bool newVkSemaphore(const VkDevice Device, VkSemaphore *Semaphore) {
     VkSemaphoreCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
     return vkCreateSemaphore(Device, &createInfo, 0, Semaphore);
 }
 
-static bool pushInitCmdBuffer(const VkDevice Device, const VkQueue Queue, const Image DepthImage, VkCommandBuffer cmdBuffer)
-{
+static bool pushInitCmdBuffer(const VkDevice Device, const VkQueue Queue, const Image DepthImage,
+                              VkCommandBuffer cmdBuffer) {
     VkImageMemoryBarrier memBarrier = {};
 
     memBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -375,9 +355,9 @@ static bool pushInitCmdBuffer(const VkDevice Device, const VkQueue Queue, const 
     VkCommandBufferBeginInfo BeginInfo = {};
     BeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-    if (vkBeginCommandBuffer(cmdBuffer, &BeginInfo))
-        return false;
-    vkCmdPipelineBarrier(cmdBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, 0, 0, 0, 0, 0, 1, &memBarrier);
+    if (vkBeginCommandBuffer(cmdBuffer, &BeginInfo)) return false;
+    vkCmdPipelineBarrier(cmdBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, 0, 0, 0, 0, 0,
+                         1, &memBarrier);
 
     vkEndCommandBuffer(cmdBuffer);
 
@@ -392,27 +372,26 @@ static bool pushInitCmdBuffer(const VkDevice Device, const VkQueue Queue, const 
     return true;
 }
 
-bool newVulkanContext(VulkanContext *vkContext, const Window *Win)
-{
+bool newVulkanContext(VulkanContext *vkContext, const Window *Win) {
     memset(vkContext, 0, sizeof(VulkanContext));
     if (!newVkInstance(vkContext, Win)) {
-        LOGE(FILE_LOCATION(), "Failed to create VkInstance.");
+        LOGE(FILE_LOCATION( ), "Failed to create VkInstance.");
         return false;
     }
     if (!newVkSurfaceKHR(vkContext, Win)) {
-        LOGE(FILE_LOCATION(), "Failed to create VkSurfaceKHR.");
+        LOGE(FILE_LOCATION( ), "Failed to create VkSurfaceKHR.");
         return false;
     }
     if (!newVkPhysicalDevice(vkContext)) {
-        LOGE(FILE_LOCATION(), "Failed to create VkPhysicalDevice.");
+        LOGE(FILE_LOCATION( ), "Failed to create VkPhysicalDevice.");
         return false;
     }
     if (!newVkDevice(vkContext)) {
-        LOGE(FILE_LOCATION(), "Failed to create VkDevice.");
+        LOGE(FILE_LOCATION( ), "Failed to create VkDevice.");
         return false;
     }
     if (!newVmaAllocator(vkContext)) {
-        LOGE(FILE_LOCATION(), "Failed to create VmaAllocator.");
+        LOGE(FILE_LOCATION( ), "Failed to create VmaAllocator.");
         return false;
     }
 
@@ -437,7 +416,8 @@ bool newVulkanContext(VulkanContext *vkContext, const Window *Win)
         LOGE("newVulkanContext", "Failed to initialize CommandPool.");
         return false;
     }
-    if (!newVkCommandBuffer(vkContext->Device, vkContext->CommandPool, SCREENBUFFER_NB + 1, VK_COMMAND_BUFFER_LEVEL_PRIMARY, vkContext->CommandBuffers)) {
+    if (!newVkCommandBuffer(vkContext->Device, vkContext->CommandPool, SCREENBUFFER_NB + 1,
+                            VK_COMMAND_BUFFER_LEVEL_PRIMARY, vkContext->CommandBuffers)) {
         LOGE("newVulkanContext", "Failed to initialize CommandBuffers");
         return false;
     }
@@ -447,20 +427,20 @@ bool newVulkanContext(VulkanContext *vkContext, const Window *Win)
         newVkSemaphore(vkContext->Device, &vkContext->FrameInfos[i].Semaphores[1]);
         vkContext->FrameInfos[i].initialize = false;
     }
-    if (!pushInitCmdBuffer(vkContext->Device, vkContext->Queue, vkContext->DepthImage, vkContext->CommandBuffers[SCREENBUFFER_NB])) {
+    if (!pushInitCmdBuffer(vkContext->Device, vkContext->Queue, vkContext->DepthImage,
+                           vkContext->CommandBuffers[SCREENBUFFER_NB])) {
         LOGE("newVulkanContext", "Failed to push initialization infos on Queue.");
         return false;
     }
     if (!newVkSwapchainKHR(vkContext, Win)) {
-        LOGE(FILE_LOCATION(), "Failed to create VkSwapchainKHR.");
+        LOGE(FILE_LOCATION( ), "Failed to create VkSwapchainKHR.");
         return false;
     }
     return true;
 }
 
-void destroyVulkanContext(VulkanContext *vkContext)
-{
-    //vkDestroySwapchainKHR(vkContext->Device, vkContext->Swapchain, 0);
+void destroyVulkanContext(VulkanContext *vkContext) {
+    // vkDestroySwapchainKHR(vkContext->Device, vkContext->Swapchain, 0);
 
     for (uint32_t i = 0; i < vkContext->SwapchainImageCount; i += 1) {
         vkDestroyImageView(vkContext->Device, vkContext->SwapchainImageViews[i], 0);
@@ -481,10 +461,11 @@ void destroyVulkanContext(VulkanContext *vkContext)
     free(vkContext->SwapchainImages);
 
 #ifdef _DEBUG
-    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(vkContext->Instance, "vkDestroyDebugUtilsMessengerEXT");
+    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(vkContext->Instance,
+                                                                           "vkDestroyDebugUtilsMessengerEXT");
     if (func) func(vkContext->Instance, vkContext->DebugMessenger, 0);
-    auto func1 =
-        (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(vkContext->Instance, "vkDestroyDebugReportCallbackEXT");
+    auto func1 = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(vkContext->Instance,
+                                                                            "vkDestroyDebugReportCallbackEXT");
     if (func1) func1(vkContext->Instance, vkContext->DebugReportCallback, 0);
 #endif
     vkDestroySurfaceKHR(vkContext->Instance, vkContext->Surface, 0);
@@ -493,5 +474,5 @@ void destroyVulkanContext(VulkanContext *vkContext)
     free(vkContext->InstanceExtensions);
 }
 
-} // namespace VK
-} // namespace FEM
+}    // namespace VK
+}    // namespace FEM

@@ -3,8 +3,7 @@
 namespace FEM {
 namespace VK {
 
-bool newImage(const ImageFactory ImgFactory, Image *Img, bool CreateWithView, const ImageInfos Infos)
-{
+bool newImage(const ImageFactory ImgFactory, Image *Img, bool CreateWithView, const ImageInfos Infos) {
     VkImageCreateInfo imageCreateInfo = {};
     imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     imageCreateInfo.pNext = 0;
@@ -23,7 +22,8 @@ bool newImage(const ImageFactory ImgFactory, Image *Img, bool CreateWithView, co
     imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
     Img->ImgInfos = Infos;
-    if (vmaCreateImage(*ImgFactory.AllocatorREF, &imageCreateInfo, &Infos.AllocInfos, &Img->Handle, &Img->Memory, &Img->MemoryInfos))
+    if (vmaCreateImage(*ImgFactory.AllocatorREF, &imageCreateInfo, &Infos.AllocInfos, &Img->Handle, &Img->Memory,
+                       &Img->MemoryInfos))
         return false;
     if (CreateWithView) {
         VkImageViewCreateInfo imageViewCreateInfo = {};
@@ -43,19 +43,17 @@ bool newImage(const ImageFactory ImgFactory, Image *Img, bool CreateWithView, co
         imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
         imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 
-        if (vkCreateImageView(*ImgFactory.DeviceREF, &imageViewCreateInfo, 0, &Img->View))
-            return false;
+        if (vkCreateImageView(*ImgFactory.DeviceREF, &imageViewCreateInfo, 0, &Img->View)) return false;
     } else {
         Img->View = VK_NULL_HANDLE;
     }
     return true;
 }
 
-void destroyImage(const ImageFactory ImgFactory, Image Img)
-{
+void destroyImage(const ImageFactory ImgFactory, Image Img) {
     vkDestroyImageView(*ImgFactory.DeviceREF, Img.View, 0);
     vmaDestroyImage(*ImgFactory.AllocatorREF, Img.Handle, Img.Memory);
 }
 
-}
-}
+}    // namespace VK
+}    // namespace FEM

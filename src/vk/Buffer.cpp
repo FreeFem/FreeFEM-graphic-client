@@ -1,13 +1,12 @@
+#include "Buffer.h"
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <cstdio>
-#include "Buffer.h"
 
 namespace FEM {
 namespace VK {
 
-bool newBuffer(const VmaAllocator Allocator, Buffer *Buff, const BufferInfos Infos)
-{
+bool newBuffer(const VmaAllocator Allocator, Buffer *Buff, const BufferInfos Infos) {
     VkBufferCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     createInfo.size = Infos.ElementSize * Infos.ElementCount;
@@ -21,48 +20,36 @@ bool newBuffer(const VmaAllocator Allocator, Buffer *Buff, const BufferInfos Inf
     return true;
 }
 
-bool newVertexBuffer(const VmaAllocator Allocator, VertexBuffer *Buff, const BufferInfos Infos, uint32_t AttributeCount, VkVertexInputAttributeDescription *Attributes)
-{
-    if (!newBuffer(Allocator, &Buff->VulkanData, Infos))
-        return false;
+bool newVertexBuffer(const VmaAllocator Allocator, VertexBuffer *Buff, const BufferInfos Infos, uint32_t AttributeCount,
+                     VkVertexInputAttributeDescription *Attributes) {
+    if (!newBuffer(Allocator, &Buff->VulkanData, Infos)) return false;
 
     Buff->VulkanData.Type = BufferType::VBuffer;
     Buff->AttributeCount = AttributeCount;
-    Buff->Attributes = (VkVertexInputAttributeDescription *)malloc(sizeof(VkVertexInputAttributeDescription) * AttributeCount);
+    Buff->Attributes =
+        (VkVertexInputAttributeDescription *)malloc(sizeof(VkVertexInputAttributeDescription) * AttributeCount);
     memcpy(Buff->Attributes, Attributes, sizeof(VkVertexInputAttributeDescription) * AttributeCount);
     return true;
 }
 
-bool newIndexBuffer(const VmaAllocator Allocator, IndexBuffer *Buff, const BufferInfos Infos, VkIndexType IndexType)
-{
-    if (!newBuffer(Allocator, &Buff->VulkanData, Infos))
-        return false;
+bool newIndexBuffer(const VmaAllocator Allocator, IndexBuffer *Buff, const BufferInfos Infos, VkIndexType IndexType) {
+    if (!newBuffer(Allocator, &Buff->VulkanData, Infos)) return false;
 
     Buff->VulkanData.Type = BufferType::IBuffer;
     Buff->IndexType = IndexType;
     return true;
 }
 
-void mapBufferMemory(Buffer *Buff, void *data)
-{
-    memcpy(Buff->MemoryInfos.pMappedData, data, Buff->MemoryInfos.size);
-}
+void mapBufferMemory(Buffer *Buff, void *data) { memcpy(Buff->MemoryInfos.pMappedData, data, Buff->MemoryInfos.size); }
 
-void destroyBuffer(const VmaAllocator Allocator, Buffer Buff)
-{
-    vmaDestroyBuffer(Allocator, Buff.Handle, Buff.Memory);
-}
+void destroyBuffer(const VmaAllocator Allocator, Buffer Buff) { vmaDestroyBuffer(Allocator, Buff.Handle, Buff.Memory); }
 
-void destroyVertexBuffer(const VmaAllocator Allocator, VertexBuffer Buff)
-{
+void destroyVertexBuffer(const VmaAllocator Allocator, VertexBuffer Buff) {
     destroyBuffer(Allocator, Buff.VulkanData);
     free(Buff.Attributes);
 }
 
-void destroyIndexBuffer(const VmaAllocator Allocator, IndexBuffer Buff)
-{
-    destroyBuffer(Allocator, Buff.VulkanData);
-}
+void destroyIndexBuffer(const VmaAllocator Allocator, IndexBuffer Buff) { destroyBuffer(Allocator, Buff.VulkanData); }
 
-}
-}
+}    // namespace VK
+}    // namespace FEM

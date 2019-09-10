@@ -32,7 +32,7 @@ bool newImage(const ImageFactory ImgFactory, Image *Img, bool CreateWithView, co
 
 void destroyImage(const ImageFactory ImgFactory, Image Img);
 
-}
-}
+}    // namespace VK
+}    // namespace FEM
 
-#endif // IMAGE_H_
+#endif    // IMAGE_H_

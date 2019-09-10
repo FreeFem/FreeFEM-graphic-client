@@ -26,7 +26,7 @@ void destroyShader(ShaderData *Data, const VulkanContext vkContext);
 
 VkShaderModule searchShader(const char *Name, const ShaderLoader Loader);
 
-} // namespace VK
-} // namespace FEM
+}    // namespace VK
+}    // namespace FEM
 
-#endif // SHADER_LOADER_H_
+#endif    // SHADER_LOADER_H_

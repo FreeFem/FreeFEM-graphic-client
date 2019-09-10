@@ -1,10 +1,10 @@
 #ifndef APPLICATION_H_
 #define APPLICATION_H_
 
-#include "../vk/Pipeline.h"
-#include "../vk/ShaderLoader.h"
-#include "../vk/VulkanContext.h"
 #include "Window.h"
+#include "../vk/VulkanContext.h"
+#include "../vk/ShaderLoader.h"
+#include "../vk/Pipeline.h"
 
 namespace FEM {
 
@@ -19,6 +19,7 @@ struct Application {
     VK::VulkanContext vkContext;
     VK::Pipeline Renderer;
     VK::ShaderLoader Shaders;
+    VK::BufferStorage Buffers;
 };
 
 ApplicationCreateInfo getApplicationInfos(int ac, char **av);

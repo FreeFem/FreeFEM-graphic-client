@@ -110,18 +110,18 @@ struct ErrorValues {
 }    // namespace FEM
 
 // Axes
-// static constexpr int NUM_DEMO_VERTICES = 6;
-// static constexpr int SIZE_DEMO_VERTEX = sizeof(float) * 6;
-// static const float vertices[] = {
-//     0.f, 0.f, 0.f, 1.f, 0.f, 0.f, // RED
-//     1.f, 0.f, 0.f, 1.f, 0.f, 0.f, // RED
+static constexpr int NUM_DEMO_VERTICES2 = 6;
+static constexpr int SIZE_DEMO_VERTEX2 = sizeof(float) * 6;
+static const float vertices2[] = {
+    0.f, 0.f, 0.f, 1.f, 0.f, 0.f, // RED
+    1.f, 0.f, 0.f, 1.f, 0.f, 0.f, // RED
 
-//     0.f, 0.f, 0.f, 0.f, 1.f, 0.f, // GREEN
-//     0.f, 1.f, 0.f, 0.f, 1.f, 0.f, // GREEN
+    0.f, 0.f, 0.f, 0.f, 1.f, 0.f, // GREEN
+    0.f, 1.f, 0.f, 0.f, 1.f, 0.f, // GREEN
 
-//     0.f, 0.f, 0.f, 0.f, 0.f, 1.f, // BLUE
-//     0.f, 0.f, 1.f, 0.f, 0.f, 1.f  // BLUE
-// };
+    0.f, 0.f, 0.f, 0.f, 0.f, 1.f, // BLUE
+    0.f, 0.f, 1.f, 0.f, 0.f, 1.f  // BLUE
+};
 
 // Curve
 static constexpr int NUM_DEMO_VERTICES = 200;

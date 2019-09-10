@@ -2,6 +2,7 @@
 #define SHADER_LOADER_H_
 
 #include <vulkan/vulkan.h>
+
 namespace FEM {
 namespace VK {
 

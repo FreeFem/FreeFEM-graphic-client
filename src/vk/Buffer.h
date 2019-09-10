@@ -2,12 +2,11 @@
 #define BUFFER_H_
 
 #include <vulkan/vulkan.h>
+#include <vector>
 #include "vk_mem_alloc.h"
 
 namespace FEM {
 namespace VK {
-
-enum BufferType { Unknow, PBuffer, VBuffer, IBuffer };
 
 struct BufferInfos {
     VkDeviceSize ElementCount;
@@ -17,12 +16,14 @@ struct BufferInfos {
 };
 
 struct Buffer {
-    uint8_t Type;
+    char *BufferName;
     VkBuffer Handle;
     VmaAllocation Memory;
     VmaAllocationInfo MemoryInfos;
     BufferInfos CreationInfos;
 };
+
+typedef std::vector<Buffer> BufferStorage;
 
 struct VertexBuffer {
     Buffer VulkanData;
@@ -35,20 +36,22 @@ struct IndexBuffer {
     VkIndexType IndexType;
 };
 
-bool newBuffer(const VmaAllocator Allocator, Buffer *Buff, const BufferInfos Infos);
+bool newBuffer(const VmaAllocator Allocator, BufferStorage *Storage, Buffer *Buff, const BufferInfos Infos);
 
-bool newIndexBuffer(const VmaAllocator Allocator, IndexBuffer *Buff, const BufferInfos Infos, VkIndexType IndexType);
+bool newIndexBuffer(const VmaAllocator Allocator, BufferStorage *Storage, IndexBuffer *Buff, const BufferInfos Infos, VkIndexType IndexType);
 
-bool newVertexBuffer(const VmaAllocator Allocator, VertexBuffer *Buff, const BufferInfos Infos, uint32_t AttributeCount,
+bool newVertexBuffer(const VmaAllocator Allocator, BufferStorage *Storage, VertexBuffer *Buff, const BufferInfos Infos, uint32_t AttributeCount,
                      VkVertexInputAttributeDescription *Attributes);
 
 void mapBufferMemory(Buffer *Buff, void *data);
 
 void destroyBuffer(const VmaAllocator Allocator, Buffer Buff);
 
-void destroyVertexBuffer(const VmaAllocator Allocator, Buffer Buff);
+void destroyVertexBuffer(const VmaAllocator Allocator, VertexBuffer Buff);
 
 void destroyIndexBuffer(const VmaAllocator Allocator, Buffer Buff);
+
+void destroyBufferStorage(const VmaAllocator Allocator, BufferStorage Storage);
 
 }    // namespace VK
 }    // namespace FEM

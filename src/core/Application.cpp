@@ -56,8 +56,9 @@ bool newApplication(Application *App, const ApplicationCreateInfo AppCreateInfos
 
 void destroyApplication(Application *App) {
     destroyWindow(&App->Screen);
+    vkQueueWaitIdle(App->vkContext.Queue);
     VK::destroyShaderLoader(App->Shaders, App->vkContext);
-    vkDeviceWaitIdle(App->vkContext.Device);
+    VK::destroyBufferStorage(App->vkContext.Allocator, App->Buffers);
     VK::destroyPipeline(App->Renderer, App->vkContext);
     VK::destroyVulkanContext(&App->vkContext);
 }
@@ -65,41 +66,6 @@ void destroyApplication(Application *App) {
 void runApplication(Application *App) {
     LOGI("Application", "Running !");
     bool Quit = false;
-
-    VK::newShader("Vertex", "./shaders/geometry.vert.spirv", &App->Shaders, App->vkContext);
-    VK::newShader("Fragment", "./shaders/geometry.frag.spirv", &App->Shaders, App->vkContext);
-
-    VK::PipelineSubResources *my_pipeline = (VK::PipelineSubResources *)malloc(sizeof(VK::PipelineSubResources));
-    my_pipeline->VertexShader = VK::searchShader("Vertex", App->Shaders);
-    my_pipeline->FragmentShader = VK::searchShader("Fragment", App->Shaders);
-
-    VK::BufferInfos BInfos = {};
-    BInfos.ElementCount = NUM_DEMO_VERTICES;
-    BInfos.ElementSize = SIZE_DEMO_VERTEX;
-    BInfos.Usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-    BInfos.AllocInfos.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
-    BInfos.AllocInfos.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
-    BInfos.AllocInfos.requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
-    BInfos.AllocInfos.preferredFlags = VK_MEMORY_PROPERTY_HOST_CACHED_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-
-    VkVertexInputAttributeDescription InputAttrib[2] = {};
-    InputAttrib[0].binding = 0;
-    InputAttrib[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-    InputAttrib[0].location = 0;
-    InputAttrib[0].offset = 0;
-
-    InputAttrib[1].binding = 0;
-    InputAttrib[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-    InputAttrib[1].location = 1;
-    InputAttrib[1].offset = sizeof(float) * 3;
-    if (!VK::newVertexBuffer(App->vkContext.Allocator, &my_pipeline->VBuffer, BInfos, 2, InputAttrib)) {
-        LOGI("Loop", "Failed to create tmp vertexBuffer");
-        return;
-    }
-    memcpy(my_pipeline->VBuffer.VulkanData.MemoryInfos.pMappedData, vertices,
-           my_pipeline->VBuffer.VulkanData.MemoryInfos.size);
-    computeCamera(App->Renderer.Cam);
-    VK::addSubPipeline(my_pipeline, App->vkContext, &App->Renderer);
 
     while (!Quit) {
         glfwPollEvents( );
@@ -117,6 +83,8 @@ void runApplication(Application *App) {
 
 bool renderCurrent(VK::VulkanContext &vkContext, const VK::Pipeline Renderer, const Window Win) {
     VkResult res;
+    if (Renderer.SubPipelineCount == 0)
+        return true;
     if (vkContext.FrameInfos[vkContext.CurrentFrame].initialize == true) {
         vkWaitForFences(vkContext.Device, 1, &vkContext.FrameInfos[vkContext.CurrentFrame].Fence, VK_TRUE, UINT64_MAX);
         vkResetFences(vkContext.Device, 1, &vkContext.FrameInfos[vkContext.CurrentFrame].Fence);
@@ -142,26 +110,26 @@ bool renderCurrent(VK::VulkanContext &vkContext, const VK::Pipeline Renderer, co
 
     if (vkBeginCommandBuffer(vkContext.CommandBuffers[vkContext.CurrentFrame], &BeginInfos)) return false;
 
+    VkClearValue clearValue[3] =
+    {
+        {1.0f, 1.0f, 1.0f, 1.0f},
+        {1.0f, 1.0f, 1.0f, 0.0f},
+        {1.0f, 0.f},
+    };
+
+    VkRenderPassBeginInfo renderPassBeginInfo = {};
+    renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassBeginInfo.renderPass = Renderer.RenderPass;
+    renderPassBeginInfo.framebuffer = Renderer.Framebuffers[imageIndex];
+    renderPassBeginInfo.renderArea.offset = {0, 0};
+    renderPassBeginInfo.renderArea.extent = {Win.ScreenWidth, Win.ScreenHeight};
+    renderPassBeginInfo.clearValueCount = 3;
+    renderPassBeginInfo.pClearValues = clearValue;
+
+    vkCmdBeginRenderPass(vkContext.CommandBuffers[vkContext.CurrentFrame], &renderPassBeginInfo,
+                         VK_SUBPASS_CONTENTS_INLINE);
+
     while (SubPipeline != 0) {
-        VkClearValue clearValue[2];
-        clearValue[0].color.float32[0] = 1.0f;
-        clearValue[0].color.float32[1] = 1.0f;
-        clearValue[0].color.float32[2] = 1.0f;
-        clearValue[0].color.float32[3] = 0.0f;
-        clearValue[1].depthStencil.depth = 1.0f;
-        clearValue[1].depthStencil.stencil = 0.0f;
-
-        VkRenderPassBeginInfo renderPassBeginInfo = {};
-        renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassBeginInfo.renderPass = Renderer.RenderPass;
-        renderPassBeginInfo.framebuffer = Renderer.Framebuffers[imageIndex];
-        renderPassBeginInfo.renderArea.offset = {0, 0};
-        renderPassBeginInfo.renderArea.extent = {Win.ScreenWidth, Win.ScreenHeight};
-        renderPassBeginInfo.clearValueCount = 2;
-        renderPassBeginInfo.pClearValues = clearValue;
-
-        vkCmdBeginRenderPass(vkContext.CommandBuffers[vkContext.CurrentFrame], &renderPassBeginInfo,
-                             VK_SUBPASS_CONTENTS_INLINE);
 
         vkCmdBindPipeline(vkContext.CommandBuffers[vkContext.CurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS,
                           SubPipeline->Handle);
@@ -185,17 +153,26 @@ bool renderCurrent(VK::VulkanContext &vkContext, const VK::Pipeline Renderer, co
         vkCmdSetScissor(vkContext.CommandBuffers[vkContext.CurrentFrame], 0, 1, &scissor);
 
         VkDeviceSize bufferOffsets = 0;
-        vkCmdBindVertexBuffers(vkContext.CommandBuffers[vkContext.CurrentFrame], 0, 1,
-                               &SubPipeline->VBuffer.VulkanData.Handle, &bufferOffsets);
+        for (auto vBuffer : SubPipeline->VBuffers) {
+            vkCmdBindVertexBuffers(vkContext.CommandBuffers[vkContext.CurrentFrame], 0, 1,
+                               &vBuffer.VulkanData.Handle, &bufferOffsets);
+        }
 
         vkCmdPushConstants(vkContext.CommandBuffers[vkContext.CurrentFrame], SubPipeline->Layout,
                            VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &Renderer.Cam->finalCamera);
 
         vkCmdDraw(vkContext.CommandBuffers[vkContext.CurrentFrame],
-                  SubPipeline->VBuffer.VulkanData.CreationInfos.ElementCount, 1, 0, 0);
+                  VK::CountNbOfVerticesInSubPipeline(*SubPipeline), 1, 0, 0);
 
-        vkCmdEndRenderPass(vkContext.CommandBuffers[vkContext.CurrentFrame]);
+        if (SubPipeline->next != 0)
+            vkCmdNextSubpass(vkContext.CommandBuffers[vkContext.CurrentFrame], VK_SUBPASS_CONTENTS_INLINE);
+
+        SubPipeline = SubPipeline->next;
     }
+
+    vkCmdEndRenderPass(vkContext.CommandBuffers[vkContext.CurrentFrame]);
+
+
     vkEndCommandBuffer(vkContext.CommandBuffers[vkContext.CurrentFrame]);
 
     VkPipelineStageFlags pipelineStageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;

@@ -1,4 +1,3 @@
-#include "ShaderLoader.h"
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -8,6 +7,7 @@
 #include <cstring>
 #include "../core/Window.h"
 #include "VulkanContext.h"
+#include "ShaderLoader.h"
 
 namespace FEM {
 namespace VK {

@@ -2,6 +2,7 @@
 #define PIPELINE_H_
 
 #include <vulkan/vulkan.h>
+#include <vector>
 #include "../core/math/Camera.h"
 #include "Buffer.h"
 
@@ -12,7 +13,9 @@ struct PipelineSubResources {
     VkPipeline Handle;
     VkPipelineLayout Layout;
 
-    VertexBuffer VBuffer;
+    VkPrimitiveTopology Topology;
+    VkClearValue ClearValue;
+    std::vector<VertexBuffer> VBuffers;
 
     VkShaderModule VertexShader;
     VkShaderModule FragmentShader;
@@ -42,6 +45,12 @@ bool addSubPipeline(PipelineSubResources *SubPipeline, const VulkanContext vkCon
 
 void destroySubPipeline(PipelineSubResources *SubPipeline, const VulkanContext vkContext,
                         const Pipeline MotherPipeline);
+
+PipelineSubResources *newSubPipeline();
+bool addShadersToSubPipeline(PipelineSubResources *SubPipeline, VkShaderModule VertexShader, VkShaderModule FragmentShader);
+bool addVertexBuffersToSubPipeline(PipelineSubResources *SubPipeline, VkPrimitiveTopology Topology, uint32_t Count, VertexBuffer *VBuffers);
+void addClearValueToSubPipeline(PipelineSubResources *SubPipeline, VkClearValue ClearValue);
+uint32_t CountNbOfVerticesInSubPipeline(PipelineSubResources SubPipeline);
 
 }    // namespace VK
 }    // namespace FEM

@@ -110,10 +110,9 @@ bool renderCurrent(VK::VulkanContext &vkContext, const VK::Pipeline Renderer, co
 
     if (vkBeginCommandBuffer(vkContext.CommandBuffers[vkContext.CurrentFrame], &BeginInfos)) return false;
 
-    VkClearValue clearValue[3] =
+    VkClearValue clearValue[2] =
     {
         {1.0f, 1.0f, 1.0f, 1.0f},
-        {1.0f, 1.0f, 1.0f, 0.0f},
         {1.0f, 0.f},
     };
 
@@ -123,9 +122,12 @@ bool renderCurrent(VK::VulkanContext &vkContext, const VK::Pipeline Renderer, co
     renderPassBeginInfo.framebuffer = Renderer.Framebuffers[imageIndex];
     renderPassBeginInfo.renderArea.offset = {0, 0};
     renderPassBeginInfo.renderArea.extent = {Win.ScreenWidth, Win.ScreenHeight};
-    renderPassBeginInfo.clearValueCount = 3;
+    renderPassBeginInfo.clearValueCount = 2;
     renderPassBeginInfo.pClearValues = clearValue;
 
+#ifdef _DEBUG
+    VK::DebugMakerBegin(vkContext.CommandBuffers[vkContext.CurrentFrame], "Frame rendering buffer", vkContext.CmdDebugMarkerBeginEXT_PFN);
+#endif
     vkCmdBeginRenderPass(vkContext.CommandBuffers[vkContext.CurrentFrame], &renderPassBeginInfo,
                          VK_SUBPASS_CONTENTS_INLINE);
 
@@ -152,10 +154,12 @@ bool renderCurrent(VK::VulkanContext &vkContext, const VK::Pipeline Renderer, co
 
         vkCmdSetScissor(vkContext.CommandBuffers[vkContext.CurrentFrame], 0, 1, &scissor);
 
-        VkDeviceSize bufferOffsets = 0;
-        for (auto vBuffer : SubPipeline->VBuffers) {
-            vkCmdBindVertexBuffers(vkContext.CommandBuffers[vkContext.CurrentFrame], 0, 1,
-                               &vBuffer.VulkanData.Handle, &bufferOffsets);
+        if (SubPipeline->VBuffers.size() > 0) {
+            VkDeviceSize bufferOffsets = 0;
+            for (auto vBuffer : SubPipeline->VBuffers) {
+                vkCmdBindVertexBuffers(vkContext.CommandBuffers[vkContext.CurrentFrame], 0, 1,
+                                &vBuffer.VulkanData.Handle, &bufferOffsets);
+            }
         }
 
         vkCmdPushConstants(vkContext.CommandBuffers[vkContext.CurrentFrame], SubPipeline->Layout,
@@ -164,14 +168,13 @@ bool renderCurrent(VK::VulkanContext &vkContext, const VK::Pipeline Renderer, co
         vkCmdDraw(vkContext.CommandBuffers[vkContext.CurrentFrame],
                   VK::CountNbOfVerticesInSubPipeline(*SubPipeline), 1, 0, 0);
 
-        if (SubPipeline->next != 0)
-            vkCmdNextSubpass(vkContext.CommandBuffers[vkContext.CurrentFrame], VK_SUBPASS_CONTENTS_INLINE);
-
         SubPipeline = SubPipeline->next;
     }
 
     vkCmdEndRenderPass(vkContext.CommandBuffers[vkContext.CurrentFrame]);
-
+#ifdef _DEBUG
+    VK::DebugMakerEnd(vkContext.CommandBuffers[vkContext.CurrentFrame], vkContext.CmdDebugMarkerEndEXT_PFN);
+#endif
 
     vkEndCommandBuffer(vkContext.CommandBuffers[vkContext.CurrentFrame]);
 

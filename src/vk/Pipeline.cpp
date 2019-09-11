@@ -1,8 +1,8 @@
-#include "Pipeline.h"
 #include <cstdlib>
 #include <glm/mat4x4.hpp>
 #include "../core/Window.h"
 #include "VulkanContext.h"
+#include "Pipeline.h"
 
 namespace FEM {
 namespace VK {
@@ -12,7 +12,10 @@ bool newPipeline(Pipeline *Handle, const VulkanContext vkContext, const Window W
     Handle->SubPipelines = 0;
 
     Handle->Cam = (Camera *)malloc(sizeof(Camera));
-    setProjectionOrtho(Handle->Cam, -1, 11, -5, 5);
+    Handle->Cam->Projection = glm::mat4(1.0f);
+    glm::scale(glm::mat4(1.0f), glm::vec3(0.1, 0.1, 1));
+    Handle->Cam->View = glm::mat4(1.0f);
+    //setProjectionOrtho(Handle->Cam, -5, 5, -5, 5);
 
     VkAttachmentDescription attachmentDescription[2] = {{}, {}};
     attachmentDescription[0].flags = 0;
@@ -89,8 +92,8 @@ void destroySubPipeline(PipelineSubResources *SubPipeline, const VulkanContext v
                         const Pipeline MotherPipeline) {
     vkDestroyPipelineLayout(vkContext.Device, SubPipeline->Layout, 0);
     vkDestroyPipeline(vkContext.Device, SubPipeline->Handle, 0);
-    vmaDestroyBuffer(vkContext.Allocator, SubPipeline->VBuffer.VulkanData.Handle,
-                     SubPipeline->VBuffer.VulkanData.Memory);
+    for (auto vBuffer : SubPipeline->VBuffers)
+        destroyVertexBuffer(vkContext.Allocator, vBuffer);
 }
 
 void destroyPipeline(Pipeline Handle, const VulkanContext vkContext) {
@@ -134,29 +137,36 @@ bool addSubPipeline(PipelineSubResources *SubPipeline, const VulkanContext vkCon
     ShaderStageCreateInfo[1].pName = "main";
 
     uint32_t BindingPoint = 0;
-    VkVertexInputBindingDescription inputBindigDescription = {};
-    inputBindigDescription.binding = BindingPoint;
-    inputBindigDescription.stride = SubPipeline->VBuffer.VulkanData.CreationInfos.ElementSize;
-    inputBindigDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    std::vector<VkVertexInputBindingDescription> vInputBinding = {};
+    std::vector<VkVertexInputAttributeDescription> vInputAttrib = {};
+    for (auto vBuffer : SubPipeline->VBuffers) {
+        VkVertexInputBindingDescription inputBindigDescription = {};
+        inputBindigDescription.binding = BindingPoint;
+        inputBindigDescription.stride = vBuffer.VulkanData.CreationInfos.ElementSize;
+        inputBindigDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+        vInputBinding.push_back(inputBindigDescription);
 
-    VkVertexInputAttributeDescription AttributeArray[SubPipeline->VBuffer.AttributeCount];
-    for (uint32_t i = 0; i < SubPipeline->VBuffer.AttributeCount; i += 1) {
-        AttributeArray[i].binding = BindingPoint;
-        AttributeArray[i].location = i;
-        AttributeArray[i].offset = SubPipeline->VBuffer.Attributes[i].offset;
-        AttributeArray[i].format = SubPipeline->VBuffer.Attributes[i].format;
+        for (uint32_t i = 0; i < vBuffer.AttributeCount; i += 1) {
+            VkVertexInputAttributeDescription inputAttributeDescription = {};
+            inputAttributeDescription.binding = BindingPoint;
+            inputAttributeDescription.location = i;
+            inputAttributeDescription.offset = vBuffer.Attributes[i].offset;
+            inputAttributeDescription.format = vBuffer.Attributes[i].format;
+            vInputAttrib.push_back(inputAttributeDescription);
+        }
+        BindingPoint += 1;
     }
 
     VkPipelineVertexInputStateCreateInfo vertexInputStateCreateInfos = {};
     vertexInputStateCreateInfos.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertexInputStateCreateInfos.vertexBindingDescriptionCount = 1;
-    vertexInputStateCreateInfos.pVertexBindingDescriptions = &inputBindigDescription;
-    vertexInputStateCreateInfos.vertexAttributeDescriptionCount = SubPipeline->VBuffer.AttributeCount;
-    vertexInputStateCreateInfos.pVertexAttributeDescriptions = AttributeArray;
+    vertexInputStateCreateInfos.vertexBindingDescriptionCount = vInputBinding.size();
+    vertexInputStateCreateInfos.pVertexBindingDescriptions = vInputBinding.data();
+    vertexInputStateCreateInfos.vertexAttributeDescriptionCount = vInputAttrib.size();
+    vertexInputStateCreateInfos.pVertexAttributeDescriptions = vInputAttrib.data();
 
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo = {};
     inputAssemblyCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-    inputAssemblyCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+    inputAssemblyCreateInfo.topology = SubPipeline->Topology;
     inputAssemblyCreateInfo.primitiveRestartEnable = VK_FALSE;
 
     VkDynamicState dynamicStateEnables[2] = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
@@ -246,9 +256,49 @@ bool addSubPipeline(PipelineSubResources *SubPipeline, const VulkanContext vkCon
         MotherPipeline->SubPipelines = SubPipeline;
     } else {
         SubPipeline->next = MotherPipeline->SubPipelines;
-        MotherPipeline->SubPipelines = SubPipeline->next;
+        MotherPipeline->SubPipelines = SubPipeline;
     }
     return true;
+}
+
+PipelineSubResources *newSubPipeline()
+{
+    PipelineSubResources *n = (PipelineSubResources *)malloc(sizeof(PipelineSubResources));
+    memset(n, 0, sizeof(PipelineSubResources));
+    n->VBuffers = std::vector<VertexBuffer>();
+    return n;
+}
+
+bool addShadersToSubPipeline(PipelineSubResources *SubPipeline, VkShaderModule VertexShader, VkShaderModule FragmentShader)
+{
+    if (SubPipeline == 0)
+        return false;
+    if (VertexShader == 0 || FragmentShader == 0)
+        return false;
+    SubPipeline->VertexShader = VertexShader;
+    SubPipeline->FragmentShader = FragmentShader;
+    return true;
+}
+
+bool addVertexBuffersToSubPipeline(PipelineSubResources *SubPipeline, VkPrimitiveTopology Topology, uint32_t Count, VertexBuffer *VBuffers)
+{
+    if (SubPipeline == 0)
+        return false;
+    SubPipeline->Topology = Topology;
+    for (uint32_t i = 0; i < Count; i += 1) {
+        SubPipeline->VBuffers.push_back(VBuffers[i]);
+    }
+    return true;
+}
+
+uint32_t CountNbOfVerticesInSubPipeline(PipelineSubResources SubPipeline)
+{
+    size_t count = 0;
+
+    for (auto vBuffer : SubPipeline.VBuffers) {
+        count += vBuffer.VulkanData.CreationInfos.ElementCount;
+    }
+    return count;
 }
 
 }    // namespace VK

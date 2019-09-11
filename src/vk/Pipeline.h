@@ -49,7 +49,6 @@ void destroySubPipeline(PipelineSubResources *SubPipeline, const VulkanContext v
 PipelineSubResources *newSubPipeline();
 bool addShadersToSubPipeline(PipelineSubResources *SubPipeline, VkShaderModule VertexShader, VkShaderModule FragmentShader);
 bool addVertexBuffersToSubPipeline(PipelineSubResources *SubPipeline, VkPrimitiveTopology Topology, uint32_t Count, VertexBuffer *VBuffers);
-void addClearValueToSubPipeline(PipelineSubResources *SubPipeline, VkClearValue ClearValue);
 uint32_t CountNbOfVerticesInSubPipeline(PipelineSubResources SubPipeline);
 
 }    // namespace VK

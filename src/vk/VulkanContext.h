@@ -51,6 +51,7 @@ struct VulkanContext {
     VkImageView *SwapchainImageViews;
 
     Image DepthImage;
+    Image ColorImage;
     VkCommandPool CommandPool;
 
     uint8_t CurrentFrame;
@@ -76,6 +77,9 @@ VKAPI_ATTR VkBool32 VKAPI_CALL
 debugMessengerCallback(UNUSED_PARAM VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
                        UNUSED_PARAM VkDebugUtilsMessageTypeFlagsEXT messageType,
                        const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, UNUSED_PARAM void *pUserData);
+
+void DebugMakerBegin(VkCommandBuffer cmdBuffer, const char *name, PFN_vkCmdDebugMarkerBeginEXT CmdDebugMarkerBeginEXT_PFN);
+void DebugMakerEnd(VkCommandBuffer cmdBuffer, PFN_vkCmdDebugMarkerEndEXT CmdDebugMarkerEndEXT_PFN);
 
 VKAPI_ATTR VkBool32 VKAPI_CALL debugReportCallbackEXT(UNUSED_PARAM VkDebugReportFlagsEXT flags,
                                                       UNUSED_PARAM VkDebugReportObjectTypeEXT objectType,

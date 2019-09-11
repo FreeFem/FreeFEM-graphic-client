@@ -1,8 +1,8 @@
-#include "VulkanContext.h"
 #include <cstdlib>
 #include "../core/Window.h"
 #include "../util/Logger.h"
 #include "../util/utils.h"
+#include "VulkanContext.h"
 
 namespace FEM {
 namespace VK {
@@ -40,6 +40,23 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugReportCallbackEXT(UNUSED_PARAM VkDebugReport
                                                       UNUSED_PARAM void *pUserData) {
     dprintf(2, "Validation Layers CallBack : %s.\n", pMessage);
     return VK_FALSE;
+}
+
+void DebugMakerBegin(VkCommandBuffer cmdBuffer, const char *name, PFN_vkCmdDebugMarkerBeginEXT CmdDebugMarkerBeginEXT_PFN)
+{
+    if (CmdDebugMarkerBeginEXT_PFN) {
+        VkDebugMarkerMarkerInfoEXT markerInfo = {};
+        markerInfo.sType = VK_STRUCTURE_TYPE_DEBUG_MARKER_MARKER_INFO_EXT;
+        markerInfo.color[0] = 1.0f;
+        markerInfo.pMarkerName = (name == 0 || strlen(name) == 0) ? name : "Unnamed";
+        CmdDebugMarkerBeginEXT_PFN(cmdBuffer, &markerInfo);
+    }
+}
+
+void DebugMakerEnd(VkCommandBuffer cmdBuffer, PFN_vkCmdDebugMarkerEndEXT CmdDebugMarkerEndEXT_PFN)
+{
+    if (CmdDebugMarkerEndEXT_PFN)
+        CmdDebugMarkerEndEXT_PFN(cmdBuffer);
 }
 
 #endif
@@ -398,12 +415,24 @@ bool newVulkanContext(VulkanContext *vkContext, const Window *Win) {
     ImageInfos DepthImageInfos = {};
     DepthImageInfos.Width = Win->ScreenWidth;
     DepthImageInfos.Height = Win->ScreenHeight;
-    DepthImageInfos.Usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+    DepthImageInfos.Usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
     DepthImageInfos.AspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
     DepthImageInfos.AllocInfos.usage = VMA_MEMORY_USAGE_GPU_ONLY;
     DepthImageInfos.Format = VK_FORMAT_D16_UNORM;
     if (!newImage({&vkContext->Device, &vkContext->Allocator}, &vkContext->DepthImage, true, DepthImageInfos)) {
         LOGE("newVulkanContext", "Failed to initialize DepthImage.");
+        return false;
+    }
+
+    ImageInfos ColorImageInfos = {};
+    ColorImageInfos.Width = Win->ScreenWidth;
+    ColorImageInfos.Height = Win->ScreenHeight;
+    ColorImageInfos.Usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
+    ColorImageInfos.AspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    ColorImageInfos.AllocInfos.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    ColorImageInfos.Format = VK_FORMAT_B8G8R8A8_UNORM;
+    if (!newImage({&vkContext->Device, &vkContext->Allocator}, &vkContext->ColorImage, true, ColorImageInfos)) {
+        LOGE("newVulkanContext", "Failed to initialize ColorImage.");
         return false;
     }
 
@@ -427,35 +456,36 @@ bool newVulkanContext(VulkanContext *vkContext, const Window *Win) {
         newVkSemaphore(vkContext->Device, &vkContext->FrameInfos[i].Semaphores[1]);
         vkContext->FrameInfos[i].initialize = false;
     }
+    if (!newVkSwapchainKHR(vkContext, Win)) {
+        LOGE(FILE_LOCATION( ), "Failed to create VkSwapchainKHR.");
+        return false;
+    }
     if (!pushInitCmdBuffer(vkContext->Device, vkContext->Queue, vkContext->DepthImage,
                            vkContext->CommandBuffers[SCREENBUFFER_NB])) {
         LOGE("newVulkanContext", "Failed to push initialization infos on Queue.");
-        return false;
-    }
-    if (!newVkSwapchainKHR(vkContext, Win)) {
-        LOGE(FILE_LOCATION( ), "Failed to create VkSwapchainKHR.");
         return false;
     }
     return true;
 }
 
 void destroyVulkanContext(VulkanContext *vkContext) {
-    // vkDestroySwapchainKHR(vkContext->Device, vkContext->Swapchain, 0);
-
+    vkFreeCommandBuffers(vkContext->Device, vkContext->CommandPool, SCREENBUFFER_NB + 1, vkContext->CommandBuffers);
     for (uint32_t i = 0; i < vkContext->SwapchainImageCount; i += 1) {
         vkDestroyImageView(vkContext->Device, vkContext->SwapchainImageViews[i], 0);
     }
     free(vkContext->SwapchainImageViews);
-
-    destroyImage({&vkContext->Device, &vkContext->Allocator}, vkContext->DepthImage);
+    //vkDestroySwapchainKHR(vkContext->Device, vkContext->Swapchain, 0);
 
     for (uint8_t i = 0; i < SCREENBUFFER_NB; i += 1) {
         vkDestroyFence(vkContext->Device, vkContext->FrameInfos[i].Fence, 0);
         vkDestroySemaphore(vkContext->Device, vkContext->FrameInfos[i].Semaphores[0], 0);
         vkDestroySemaphore(vkContext->Device, vkContext->FrameInfos[i].Semaphores[1], 0);
     }
-
     vkDestroyCommandPool(vkContext->Device, vkContext->CommandPool, 0);
+
+    destroyImage({&vkContext->Device, &vkContext->Allocator}, vkContext->DepthImage);
+    destroyImage({&vkContext->Device, &vkContext->Allocator}, vkContext->ColorImage);
+
     vmaDestroyAllocator(vkContext->Allocator);
     vkDestroyDevice(vkContext->Device, 0);
     free(vkContext->SwapchainImages);

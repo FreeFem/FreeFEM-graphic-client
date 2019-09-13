@@ -7,70 +7,41 @@
 #include <ctime>
 #include <iostream>
 #include <string>
-#include "NonCopyable.h"
 
-class Logger : public FEM::NonCopyable {
-   public:
-    Logger( ){};
+namespace ffGraph {
 
-    void loge(std::string location, std::string infos) {
-        std::string data;
-        time_t ti = time(0);
-        char hour[16] = {};
-        memcpy((void *)hour, ctime(&ti) + 11, 8);
-        std::string t(hour);
-        data = "Log [" + t + "]:: ERROR > " + location + " : " + infos + "\n";
-        std::cerr << data;
+inline std::string GetCurrentLogLocation_internal(const char *file, int line) { std::string ret(file); ret.append(" at line "); ret.append(std::to_string(line)); return ret; }
+#define GetCurrentLogLocation() GetCurrentLogLocation_internal(__FILE__, __LINE__)
+
+inline void LogError(std::string Location, const char *Format, ...) {
+    va_list list;
+    va_start(list, Format);
+    printf("ERROR :: Location -> %s | Message :\n", Location.data());
+    vprintf(Format, list);
+    printf("\n");
+    va_end(list);
 #ifdef _DEBUG
-        assert(0);
+    assert(0);
 #endif
-    }
+}
+inline void LogWarning(std::string Location, const char *Format, ...) {
+    va_list list;
+    va_start(list, Format);
+    printf("WARNING :: Location -> %s | Message :\n", Location.data());
+    vprintf(Format, list);
+    printf("\n");
+    va_end(list);
+}
 
-    void logw(std::string location, std::string infos) {
-        std::string data;
-        time_t ti = time(0);
-        char hour[16] = {};
-        memcpy((void *)hour, ctime(&ti) + 11, 8);
-        std::string t(hour);
-        data = "Log [" + t + "] :: WARNING > " + location + " : " + infos + "\n";
-        std::cerr << data;
-    }
+inline void LogInfo(std::string Location, const char *Format, ...) {
+    va_list list;
+    va_start(list, Format);
+    printf("INFORMATION :: Location -> %s | Message :\n", Location.data());
+    vprintf(Format, list);
+    printf("\n");
+    va_end(list);
+}
 
-    void logi(std::string location, std::string infos) {
-        std::string data;
-        time_t ti = time(0);
-        char hour[16] = {};
-        memcpy((void *)hour, ctime(&ti) + 11, 8);
-        std::string t(hour);
-        data = "Log [" + t + "] :: INFO > " + location + " : " + infos + "\n";
-        std::cerr << data;
-    }
-
-    std::string getLocation( ) {
-        std::string location(__FILE__);
-        location.append(" at ligne ");
-        location.append(std::to_string(__LINE__));
-        return location;
-    }
-};
-
-static Logger LoggerSingleton;
-
-#define FILE_LOCATION( ) LoggerSingleton.getLocation( )
-
-#define LOGE(Location, Infos)                  \
-    do {                                       \
-        LoggerSingleton.loge(Location, Infos); \
-    } while (0)
-
-#define LOGW(Location, Infos)                  \
-    do {                                       \
-        LoggerSingleton.logw(Location, Infos); \
-    } while (0)
-
-#define LOGI(Location, Infos)                  \
-    do {                                       \
-        LoggerSingleton.logi(Location, Infos); \
-    } while (0)
+} // namespace ffGraph
 
 #endif    // LOGGER_H_

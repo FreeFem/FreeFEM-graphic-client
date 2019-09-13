@@ -474,7 +474,7 @@ void destroyVulkanContext(VulkanContext *vkContext) {
         vkDestroyImageView(vkContext->Device, vkContext->SwapchainImageViews[i], 0);
     }
     free(vkContext->SwapchainImageViews);
-    //vkDestroySwapchainKHR(vkContext->Device, vkContext->Swapchain, 0);
+    vkDestroySwapchainKHR(vkContext->Device, vkContext->Swapchain, 0);
 
     for (uint8_t i = 0; i < SCREENBUFFER_NB; i += 1) {
         vkDestroyFence(vkContext->Device, vkContext->FrameInfos[i].Fence, 0);

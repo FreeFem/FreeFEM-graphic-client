@@ -1,7 +1,10 @@
+#include <cstring>
 #include "ffMesh.h"
-#include "util/Logger.h"
+#include "Logger.h"
 
 namespace ffGraph {
+
+static ffMesh ffNewEmptyMesh() { ffMesh empty; memset(&empty, 0, sizeof(ffMesh)); return empty; }
 
 ffMesh ffCreateMesh(const VmaAllocator Allocator, Array Vertices, Array Indices, uint32_t LayoutCount, Vulkan::BufferLayout *Layouts, Vulkan::IndicesType IndexType)
 {
@@ -70,6 +73,50 @@ void ffDestroyMesh(const VmaAllocator Allocator, ffMesh Mesh, bool DestroyArrays
         ffDestroyArray(Mesh.Indices);
     }
     Mesh.ModelMatrix = glm::mat4(1.0f);
+}
+
+static ffMesh ffCreateMeshCurve(const VmaAllocator Allocator, json ObjectJSON)
+{
+    std::cout << "Curve\n";
+    ffMesh mesh = ffNewEmptyMesh();
+    mesh.IndexType = VK_INDEX_TYPE_UINT16;
+    mesh.Layout.push_back({VK_FORMAT_R32G32B32_SFLOAT, sizeof(float) * 0});
+    mesh.Layout.push_back({VK_FORMAT_R32G32B32A32_SFLOAT, sizeof(float) * 3});
+
+    std::vector<float> vertices = ObjectJSON["Vertices"].get<std::vector<float>>();
+    mesh.Vertices = ffNewArray(vertices.size(), sizeof(float));
+    if (isArrayReady(mesh.Vertices) == false)
+        return mesh;
+    ffMemcpyArray(mesh.Vertices, vertices.data());
+
+    std::vector<uint16_t> indices = ObjectJSON["Indices"].get<std::vector<uint16_t>>();
+    mesh.Indices = ffNewArray(indices.size(), sizeof(uint16_t));
+    if (isArrayReady(mesh.Indices) == false)
+        return mesh;
+    ffMemcpyArray(mesh.Indices, indices.data());
+    return mesh;
+}
+
+ffMesh ffCreateMesh(const VmaAllocator Allocator, json ObjectJSON)
+{
+    std::string Type = ObjectJSON.at("Type");
+
+    if (Type.compare("Curve") == 0)
+        return ffCreateMeshCurve(Allocator, ObjectJSON);
+    return ffNewEmptyMesh();
+}
+
+ffMesh ffCreateMeshFromString(const VmaAllocator Allocator, std::string JSON_string)
+{
+    using json = nlohmann::json;
+    ffMesh mesh = ffNewEmptyMesh();
+    json ObjectJSON = json::from_cbor(JSON_string);
+
+    json Object = ObjectJSON["Geometry"].at(0);
+    std::string Type = Object.at("Type");
+    if (strcmp(Type.data(), "Curve") == 0)
+        return ffCreateMeshCurve(Allocator, Object);
+    return mesh;
 }
 
 }

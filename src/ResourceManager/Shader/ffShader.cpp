@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include "ffShader.h"
-#include "util/Logger.h"
+#include "Logger.h"
 
 namespace ffGraph
 {

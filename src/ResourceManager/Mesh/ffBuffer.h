@@ -1,10 +1,14 @@
+/**
+ * @file ffBuffer.h
+ * @brief Definition of ffBuffer data type and it's related functions.
+ */
 #ifndef FF_BUFFER_H_
 #define FF_BUFFER_H_
 
 #include <vulkan/vulkan.h>
 #include <vector>
 #include "vk_mem_alloc.h"
-#include "util/Array.h"
+#include "Array.h"
 
 namespace ffGraph {
 namespace Vulkan {

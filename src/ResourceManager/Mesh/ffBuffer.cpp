@@ -1,10 +1,8 @@
 #include "ffBuffer.h"
-#include "util/Logger.h"
+#include "Logger.h"
 
-namespace ffGraph
-{
-namespace Vulkan
-{
+namespace ffGraph {
+namespace Vulkan {
 
 ffBuffer ffCreateBuffer(VmaAllocator Allocator, ffBufferCreateInfo pCreateInfo, VmaAllocationCreateInfo pAlloctionInfo)
 {

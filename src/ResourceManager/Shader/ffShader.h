@@ -1,3 +1,7 @@
+/**
+ * @file ffShader.h
+ * @brief Definition of ffShader data type and it's related functions.
+ */
 #ifndef FF_SHADER_H_
 #define FF_SHADER_H_
 
@@ -24,7 +28,7 @@ struct ffShader {
  * @param ffShader [in] - ffShader on which the test is performed.
  * @return bool - Boolean value (true : ffShader is read / false : ffShader isn't ready).
  */
-inline bool isShaderReady(ffShader Shader) { return (Shader.ShaderName == VK_NULL_HANDLE) ? false : true; }
+inline bool ffIsShaderReady(ffShader Shader) { return (Shader.ShaderName == VK_NULL_HANDLE) ? false : true; }
 
 /**
  * @brief Create a new ffShader

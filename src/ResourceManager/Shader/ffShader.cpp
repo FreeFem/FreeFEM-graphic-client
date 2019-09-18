@@ -6,13 +6,10 @@
 #include "ffShader.h"
 #include "Logger.h"
 
-namespace ffGraph
-{
-namespace Vulkan
-{
+namespace ffGraph {
+namespace Vulkan {
 
-ffShader ffCreateShader(const char *Name, const char *FilePath, const VkDevice Device, VkShaderStageFlagBits Stage)
-{
+ffShader ffCreateShader(const char *Name, const char *FilePath, const VkDevice Device, VkShaderStageFlagBits Stage) {
     ffShader n;
 
     memset(&n, 0, sizeof(ffShader));
@@ -31,13 +28,13 @@ ffShader ffCreateShader(const char *Name, const char *FilePath, const VkDevice D
     createInfo.codeSize = size;
     createInfo.pCode = (uint32_t *)bytes;
     if (vkCreateShaderModule(Device, &createInfo, 0, &n.Module)) {
-        LogError(GetCurrentLogLocation(), "Failed to create VkShaderModule for Shader : %s.", Name);
+        LogError(GetCurrentLogLocation( ), "Failed to create VkShaderModule for Shader : %s.", Name);
         return n;
     }
     n.Stage = Stage;
     n.ShaderName = strdup(Name);
     if (n.ShaderName == 0) {
-        LogError(GetCurrentLogLocation(), "Failed to allocate memory for Shader name %s.", Name);
+        LogError(GetCurrentLogLocation( ), "Failed to allocate memory for Shader name %s.", Name);
         vkDestroyShaderModule(Device, n.Module, 0);
         n.Module = VK_NULL_HANDLE;
         return n;
@@ -45,11 +42,10 @@ ffShader ffCreateShader(const char *Name, const char *FilePath, const VkDevice D
     return n;
 }
 
-void ffDestroyShader(const VkDevice Device, ffShader Shader)
-{
+void ffDestroyShader(const VkDevice Device, ffShader Shader) {
     vkDestroyShaderModule(Device, Shader.Module, 0);
     free(Shader.ShaderName);
 }
 
-} // namespace Vulkan
-} // namespace ffGraph
+}    // namespace Vulkan
+}    // namespace ffGraph

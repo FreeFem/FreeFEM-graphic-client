@@ -2,8 +2,7 @@
 
 namespace ffGraph {
 
-bool newResourceManager(ResourceManager *RManager, VkDevice *Device, const VkPhysicalDevice PhysicalDevice)
-{
+bool newResourceManager(ResourceManager* RManager, VkDevice* Device, const VkPhysicalDevice PhysicalDevice) {
     VmaAllocatorCreateInfo createInfo = {};
     createInfo.device = *Device;
     createInfo.physicalDevice = PhysicalDevice;
@@ -13,18 +12,27 @@ bool newResourceManager(ResourceManager *RManager, VkDevice *Device, const VkPhy
     return true;
 }
 
-void destroyResourceManager(ResourceManager RManager)
-{
+void destroyResourceManager(ResourceManager RManager) {
     ffShaderManager_Destroy(RManager.ShaderManager, *RManager.DeviceREF);
     vmaDestroyAllocator(RManager.Allocator);
 }
 
+void ffResourceManager_ReadFromQueue(ResourceManager& RManager) {
+    if (RManager.SharedQueue->empty( )) return;
+    for (auto ite = RManager.SharedQueue->begin( ); ite != RManager.SharedQueue->end( ); ++ite) {
+        json JSONData = json::from_cbor(*ite);
 
-uint16_t ffResourceManager_NewMesh(ResourceManager& Manager, uint16_t UID, json JsonData)
-{
+        json GeometryArray = JSONData.at("Geometry");
+        for (auto i = GeometryArray.begin( ); i != GeometryArray.end( ); ++i) {
+            if (ffResourceManager_NewMesh(RManager, RManager.MeshManager.size( ), *i) == UINT16_MAX) return;
+        }
+    }
+}
+
+uint16_t ffResourceManager_NewMesh(ResourceManager& Manager, uint16_t UID, json JsonData) {
     ffMesh mesh = ffCreateMesh(Manager.Allocator, JsonData);
 
-    if (ffisMeshReady(mesh) == false)
+    if (ffIsMeshReady(mesh) == false)
         return UINT16_MAX;
     else {
         Manager.MeshManager.push_back({UID, mesh});
@@ -33,9 +41,10 @@ uint16_t ffResourceManager_NewMesh(ResourceManager& Manager, uint16_t UID, json 
     return UINT16_MAX;
 }
 
-std::string ffResourceManager_NewShader(ResourceManager& Manager, std::string Filepath, std::string Name, ffShaderStage Stage)
-{
-    Vulkan::ffShader Shader = Vulkan::ffCreateShader(Name.c_str(), Filepath.c_str(), *Manager.DeviceREF, (VkShaderStageFlags)Stage);
+std::string ffResourceManager_NewShader(ResourceManager& Manager, std::string Filepath, std::string Name,
+                                        ffShaderStage Stage) {
+    Vulkan::ffShader Shader =
+        Vulkan::ffCreateShader(Name.c_str( ), Filepath.c_str( ), *Manager.DeviceREF, (VkShaderStageFlags)Stage);
 
     if (ffIsShaderReady(Shader)) {
         Manager.ShaderManager.push_back({Name, Shader});
@@ -44,9 +53,11 @@ std::string ffResourceManager_NewShader(ResourceManager& Manager, std::string Fi
     return "";
 }
 
-std::string ffResourceManager_NewImage(ResourceManager& Manager, std::string Name, Vulkan::ffImageCreateInfo pCreateInfos, VmaAllocationCreateInfo pAllocationInfos)
-{
-    Vulkan::ffImage Image = Vulkan::ffCreateImage(Manager.Allocator, *Manager.DeviceREF, pCreateInfos, pAllocationInfos);
+std::string ffResourceManager_NewImage(ResourceManager& Manager, std::string Name,
+                                       Vulkan::ffImageCreateInfo pCreateInfos,
+                                       VmaAllocationCreateInfo pAllocationInfos) {
+    Vulkan::ffImage Image =
+        Vulkan::ffCreateImage(Manager.Allocator, *Manager.DeviceREF, pCreateInfos, pAllocationInfos);
 
     if (Vulkan::ffIsImageReady(Image)) {
         Manager.ImageManager.push_back({Name, Image});
@@ -55,4 +66,4 @@ std::string ffResourceManager_NewImage(ResourceManager& Manager, std::string Nam
     return "";
 }
 
-}
+}    // namespace ffGraph

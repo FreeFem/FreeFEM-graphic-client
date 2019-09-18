@@ -1,3 +1,7 @@
+/**
+ * @file ffImage.h
+ * @brief Declaration of ffImage data type and it's related functions.
+ */
 #ifndef FF_IMAGE_H_
 #define FF_IMAGE_H_
 
@@ -36,12 +40,31 @@ struct ffImage {
  */
 inline bool ffIsImageReady(ffImage Image) { return (Image.Handle == VK_NULL_HANDLE) ? false : true; }
 
-ffImage ffCreateImage(const VmaAllocator&, const VkDevice&, ffImageCreateInfo, VmaAllocationCreateInfo);
+/**
+ * @brief Create a new ffGraph::Vulkan::ffImage, allocating memory.
+ *
+ * @param Allocator [in] - VmaAllocator used to allocate memory for the ffGraph::Vulkan::ffImage.
+ * @param Device [in] - VkDevice used to create the VkImageView.
+ * @param pCreateInfos [in] - Data needed to create a ffGraph::Vulkan::ffImage.
+ * @param pAllocateInfos [in] - Data used by VulkanMemoryAllocator to allocate memory to ffGraph::Vulkan::ffImage.
+ *
+ * @return ffGraph::Vulkan::ffImage - Use ffGraph::Vulkan::ffisImageReady to check return value.
+ */
+ffImage ffCreateImage(const VmaAllocator& Allocator, const VkDevice& Device, ffImageCreateInfo pCreateInfos,
+                      VmaAllocationCreateInfo pAllocateInfo);
 
+/**
+ * @brief Destroy a ffGraph::Vulkan::ffImage, releasing memory.
+ *
+ * @param Allocator [in] - VmaAllocator used to allocate ffGraph::Vulkan::ffImage's memory.
+ * @param Device [in] - VkDevice used to create ffGraph::Vulkan::ffImage's VkImageView.
+ * @param Image [in] - ffGraph::Vulkan::ffImage to destroy.
+ *
+ * @return void
+ */
 void ffDestroyImage(const VmaAllocator& Allocator, const VkDevice& Device, ffImage Image);
 
-} // namespace Vulkan
-} // namespace ffGraph
+}    // namespace Vulkan
+}    // namespace ffGraph
 
-
-#endif // FF_IMAGE_H_
+#endif    // FF_IMAGE_H_

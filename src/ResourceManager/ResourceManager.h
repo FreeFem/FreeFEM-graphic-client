@@ -1,6 +1,6 @@
 /**
- * \file ResourceManager.h
- * @brief Definition of ResourceManager data type and it's related functions.
+ * @file ResourceManager.h
+ * @brief Declaration of ResourceManager data type and it's related functions.
  */
 #ifndef RESOURCE_MANAGER_H_
 #define RESOURCE_MANAGER_H_
@@ -12,8 +12,7 @@
 #include "Shader/ffShaderManager.h"
 #include "Mesh/ffMeshManager.h"
 
-namespace ffGraph
-{
+namespace ffGraph {
 
 // @brief Quality of life using
 using json = nlohmann::json;
@@ -23,8 +22,9 @@ using json = nlohmann::json;
  */
 struct ResourceManager {
     VmaAllocator Allocator;
-    VkDevice *DeviceREF;
+    VkDevice* DeviceREF;
 
+    std::shared_ptr<std::deque<std::string>> SharedQueue;
     ffShaderManager ShaderManager;
     ffImageManager ImageManager;
     ffMeshManager MeshManager;
@@ -39,21 +39,65 @@ struct ResourceManager {
  *
  * @return bool - false if creation failed.
  */
-bool newResourceManager(ResourceManager *RManager, VkDevice *Device, const VkPhysicalDevice PhysicalDevice);
+bool newResourceManager(ResourceManager* RManager, VkDevice* Device, const VkPhysicalDevice PhysicalDevice);
 
 /**
- * @brief Read data from the SharedQueue.
+ * @brief Read data from ffGraph::ResourceManager::SharedQueue.
+ *
+ * @param RManager [in] - ffGraph::ResourceManager which contain the std::deque.
+ *
+ * @return void
  */
 void ReadFromQueue(ResourceManager RManager);
 
+/**
+ * @brief Destroy a ffGraph::ResourceManager.
+ *
+ * @param RManager [in] - ffGraph::ResourceManager to destroy.
+ *
+ * @return void
+ */
 void destroyResourceManager(ResourceManager RManager);
 
-uint16_t ffResourceManager_NewMesh(ResourceManager& Manager, uint16_t UID, json JsonData);
+/**
+ * @brief Ask the ffGraph::ResourceManager to create a ffGraph::Vulkan::ffMesh from JSON. This function is automaticly
+ * called byt the ffGraph::ResourceManager.
+ *
+ * @param RManager [in] - ffGraph::ResourceManager used to store the new ffGraph::Vulkan::ffMesh.
+ * @param UID [in] - ffGraph::Vulkan::ffMesh's UID used in the ffGraph::ffMeshManager.
+ * @param JsonData [in] - Json object used to create a ffGraph::Vulkan::ffMesh.
+ *
+ * @return uint16_t - UINT16_MAX if the function failed, UID if it succeed.
+ */
+uint16_t ffResourceManager_NewMesh(ResourceManager& RManager, uint16_t UID, json JsonData);
 
-std::string ffResourceManager_NewShader(ResourceManager& Manager, std::string Filepath, std::string Name, ffShaderStage Stage);
+/**
+ * @brief  Ask the ffGraph::ResourceManager to create a ffGraph::Vulkan::ffShader.
+ *
+ * @param RManager [in] - ffGraph::ResourceManager used to store the new ffGraph::Vulkan::ffShader.
+ * @param Filepath [in] - Path to the shader file.
+ * @param Name [in] - Name given to the shader.
+ * @param Stage [in] - Vulkan shader pipeline stage.
+ *
+ * @return std::string - Empty string ("") if the function failed, Name if it succeed.
+ */
+std::string ffResourceManager_NewShader(ResourceManager& RManager, std::string Filepath, std::string Name,
+                                        ffShaderStage Stage);
 
-std::string ffResourceManager_NewImage(ResourceManager& Manager, std::string Name, Vulkan::ffImageCreateInfo pCreateInfos, VmaAllocationCreateInfo pAllocationInfos);
+/**
+ * @brief Ask the ffGraph::ResourceManager to create a ffGraph::Vulkan::ffImage.
+ *
+ * @param RManager [in] - ffGraph::ResourceManager used to store the new ffGraph::Vulkan::ffImage.
+ * @param Name [in] - Name of the new ffGraph::Vulkan::ffImage.
+ * @param pCreateInfos [in] - Data needed to create a ffGraph::Vulkan::ffImage.
+ * @param pAllocateInfos [in] - Data used by VulkanMemoryAllocator to allocate memory to ffGraph::Vulkan::ffImage.
+ *
+ * @return std::string - Empty string ("") if the function failed, Name if it succeed.
+ */
+std::string ffResourceManager_NewImage(ResourceManager& RManager, std::string Name,
+                                       Vulkan::ffImageCreateInfo pCreateInfos,
+                                       VmaAllocationCreateInfo pAllocationInfos);
 
-} // namespace ffGraph
+}    // namespace ffGraph
 
-#endif // RESOURCE_MANAGER_H_
+#endif    // RESOURCE_MANAGER_H_

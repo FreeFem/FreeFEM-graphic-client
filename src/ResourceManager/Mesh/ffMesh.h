@@ -1,6 +1,6 @@
 /**
  * @file ffMesh.h
- * @brief Definition of ffMesh data type and it' related functions.
+ * @brief Declaration of ffMesh data type and it' related functions.
  */
 
 #ifndef FF_MESH_H_
@@ -29,7 +29,7 @@ struct BufferLayout {
 // @brief Integer type used to store one index.
 typedef VkIndexType IndicesType;
 
-}
+}    // namespace Vulkan
 
 /**
  * @brief Renderable object.
@@ -56,12 +56,16 @@ struct ffMesh {
 /**
  * @brief Look if a ffMesh was successfully created.
  */
-inline bool ffisMeshReady(ffMesh m) { return (isArrayReady(m.Vertices) || isArrayReady(m.Indices) || Vulkan::ffIsBufferReady(m.VulkanVertices) || Vulkan::ffIsBufferReady(m.VulkanIndices)); }
+inline bool ffIsMeshReady(ffMesh m) {
+    return (isArrayReady(m.Vertices) || isArrayReady(m.Indices) || Vulkan::ffIsBufferReady(m.VulkanVertices) ||
+            Vulkan::ffIsBufferReady(m.VulkanIndices));
+}
 
 /**
  * @brief Create ffMesh from ffGraph::Array
  */
-ffMesh ffCreateMesh(const VmaAllocator Allocator, Array Vertices, Array Indices, uint32_t LayoutCount, Vulkan::BufferLayout *Layouts, Vulkan::IndicesType IndexType);
+ffMesh ffCreateMesh(const VmaAllocator Allocator, Array Vertices, Array Indices, uint32_t LayoutCount,
+                    Vulkan::BufferLayout *Layouts, Vulkan::IndicesType IndexType);
 
 /**
  * @brief Create ffMesh from JSON.
@@ -76,5 +80,5 @@ ffMesh ffCreateMeshFromString(const VmaAllocator Allocator, std::string JSON_str
  * @brief Destroy a ffMesh
  */
 void ffDestroyMesh(const VmaAllocator Allocator, ffMesh Mesh, bool DestroyArrays);
-}
-#endif // FF_MESH_H_
+}    // namespace ffGraph
+#endif    // FF_MESH_H_

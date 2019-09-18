@@ -1,6 +1,0 @@
-include(${CMAKE_SOURCE_DIR}/src/vk/CMakelists.txt)
-include(${CMAKE_SOURCE_DIR}/src/core/CMakelists.txt)
-
-list(APPEND freeFEM_SOURCES
-    ${CMAKE_CURRENT_LIST_DIR}/main.cpp
-)

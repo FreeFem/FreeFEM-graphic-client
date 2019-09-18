@@ -4,10 +4,10 @@
 namespace ffGraph
 {
 
-    ffClient::ffClient(std::string Host, short int port, std::shared_ptr<std::deque<std::string>>& SharedQueue)
+    ffClient::ffClient(std::string Host, std::string Port, std::shared_ptr<std::deque<std::string>>& SharedQueue)
     : Resolver(IoContext), Socket(IoContext), Deadline(IoContext), HeartBeat(IoContext), SharedDataQueue(SharedQueue)
     {
-        Endpoints = Resolver.resolve(Host, std::to_string(port));
+        Endpoints = Resolver.resolve(Host, Port);
     }
 
     void ffClient::Start()
@@ -47,6 +47,7 @@ namespace ffGraph
             Socket.close();
             StartConnect(++EndP_ITE);
         } else {
+            std::cout << "Connected !\n";
             StartRead();
             StartWrite();
         }
@@ -55,7 +56,7 @@ namespace ffGraph
     void ffClient::StartRead()
     {
         Deadline.expires_after(std::chrono::seconds(30));
-        asio::async_read(Socket, asio::dynamic_buffer(InputBuffer, 66), std::bind(&ffClient::HandleRead, this, std::placeholders::_1, std::placeholders::_2));
+        asio::async_read(Socket, asio::dynamic_buffer(InputBuffer, 64), std::bind(&ffClient::HandleRead, this, std::placeholders::_1, std::placeholders::_2));
     }
 
     void ffClient::HandleRead(const std::error_code& Error, std::size_t n)

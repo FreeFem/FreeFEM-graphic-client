@@ -20,7 +20,7 @@ using asio::ip::tcp;
 
 class ffClient {
     public:
-        ffClient(std::string Host, short int port, std::shared_ptr<std::deque<std::string>>&);
+        ffClient(std::string Host,  std::string Port, std::shared_ptr<std::deque<std::string>>&);
 
         void Start();
 

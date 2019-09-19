@@ -3,5 +3,5 @@ add_library(ffGraph_NET
 )
 
 target_include_directories(ffGraph_NET PRIVATE ${CMAKE_SOURCE_DIR}/extern/asio/asio/include)
-target_include_directories(ffGraph_NET PRIVATE ${CMAKE_SOURCE_DIR}/extern/json/)
+target_include_directories(ffGraph_NET PRIVATE ${CMAKE_SOURCE_DIR}/extern/json/include)
 target_link_libraries(ffGraph_NET Threads::Threads)

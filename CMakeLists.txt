@@ -15,9 +15,11 @@ add_executable(ffGraph src/main.cpp)
 set_target_properties(ffGraph PROPERTIES CXX_STANDARD 11)
 
 # Linking libraries with target
+target_include_directories(ffGraph PRIVATE ${CMAKE_SOURCE_DIR}/extern/asio/asio/include)
+
 target_link_libraries(ffGraph Threads::Threads)
 target_include_directories(ffGraph PRIVATE ./src/ResourceManager)
-target_link_libraries(ffGraph ffGraph_RM)
+target_link_libraries(ffGraph ffGraph_ResourceManager)
 target_include_directories(ffGraph PRIVATE ./src/network)
 target_link_libraries(ffGraph ffGraph_NET)
 target_include_directories(ffGraph PRIVATE ./src/util)

@@ -15,6 +15,8 @@ add_library(ffGraph_ResourceManager
 
 target_include_directories(ffGraph_ResourceManager PRIVATE ${Vulkan_INCLUDE_DIR})
 target_include_directories(ffGraph_ResourceManager PRIVATE ${CMAKE_SOURCE_DIR}/extern/VulkanMemoryAllocator/src)
+target_include_directories(ffGraph_ResourceManager PRIVATE ${CMAKE_SOURCE_DIR}/extern/glm)
 target_include_directories(ffGraph_ResourceManager PRIVATE ${CMAKE_SOURCE_DIR}/extern/json/include)
+target_include_directories(ffGraph_ResourceManager PRIVATE ${CMAKE_SOURCE_DIR}/extern/glm)
 target_include_directories(ffGraph_ResourceManager PRIVATE ${CMAKE_SOURCE_DIR}/src/util)
 target_link_libraries(ffGraph_ResourceManager ${Vulkan_LIBRARY})

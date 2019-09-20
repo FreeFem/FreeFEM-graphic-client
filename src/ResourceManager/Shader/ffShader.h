@@ -14,8 +14,6 @@ namespace Vulkan {
  * @brief Stores a ShaderModule
  */
 struct ffShader {
-    // @brief Name used to query the Shader
-    char *ShaderName;
     VkShaderStageFlags Stage;
     VkShaderModule Module;
 };
@@ -26,12 +24,11 @@ struct ffShader {
  * @param ffShader [in] - ffShader on which the test is performed.
  * @return bool - Boolean value (true : ffGraph::Vulkan::Shader is read / false : ffGraph::Vulkan::Shader isn't ready).
  */
-inline bool ffIsShaderReady(ffShader Shader) { return (Shader.ShaderName == VK_NULL_HANDLE) ? false : true; }
+inline bool ffIsShaderReady(ffShader Shader) { return (Shader.Module == VK_NULL_HANDLE) ? false : true; }
 
 /**
  * @brief Create a new ffGraph::Vulkan::Shader
  *
- * @param const char *Name [in] - Name of the Shader used to query.
  * @param const char *FilePath [in] - SPIRV file location.
  * @param const VkDevice [in] - Device used to create the ShaderModule.
  * @param VkShaderStageFlags Stage [in] - Pipeline stage of the shader.
@@ -39,7 +36,7 @@ inline bool ffIsShaderReady(ffShader Shader) { return (Shader.ShaderName == VK_N
  * @return ffGraph::Vulkan::Shader - A new ffGraph::Vulkan::Shader (use ffGraph::Vulkan::ffIsShaderReady to check return
  * value).
  */
-ffShader ffCreateShader(const char *Name, const char *FilePath, const VkDevice Device, VkShaderStageFlags Stage);
+ffShader ffCreateShader(const char *FilePath, const VkDevice Device, VkShaderStageFlags Stage);
 
 /**
  * @brief Destroy a ffGraph::Vulkan::Shader, releasing it's memory.

@@ -10,16 +10,16 @@
 namespace ffGraph {
 namespace Vulkan {
 
-struct Context {
+struct ffContext {
     NativeWindow Window;
     ffInstance Instance;
     VkSurfaceKHR Surface;
     ffDevice Device;
 };
 
-bool newContext(Context *vkContext);
+bool ffnewContext(ffContext *vkContext);
 
-void destroyContext(Context vkContext);
+void ffdestroyContext(ffContext vkContext);
 
 } // namespace Vulkan
 } // namespace ffGraph

@@ -5,8 +5,9 @@
 #ifndef FF_IMAGE_MANAGER_H_
 #define FF_IMAGE_MANAGER_H_
 
-#include <vector>
+#include <array>
 #include <string>
+#include "ffHandle.h"
 #include "ffImage.h"
 
 namespace ffGraph {
@@ -15,12 +16,13 @@ namespace ffGraph {
  * @brief A ffGraph::Vulkan::ffImage with it's key.
  */
 struct ffImageHandle {
-    std::string Key;
+    bool isUsed = false;
+    uint16_t UniqueBytes = 0;
     Vulkan::ffImage Data;
 };
 
 // @brief Store all ffGraph::Vulkan::ffImage with it's key
-typedef std::vector<ffImageHandle> ffImageManager;
+typedef std::array<ffImageHandle, 32> ffImageManager;
 
 /**
  * @brief Search a ffGraph::Vulkan::ffImage in the ffGraph::ffImageManager.
@@ -30,7 +32,7 @@ typedef std::vector<ffImageHandle> ffImageManager;
  *
  * @return ffGraph::Vulkan::ffImage - Use ffGraph::Vulkan::ffIsImageReady() to check return value.
  */
-Vulkan::ffImage ffImageManager_SearchFor(const ffImageManager& ImageManager, const std::string& Key);
+Vulkan::ffImage ffImageManager_SearchFor(const ffImageManager& ImageManager, ffHandle Index);
 
 /**
  * @brief destroy the ffGraph::ffImageManager, destroying all the ffGraph::Vulkan::ffImage it own.

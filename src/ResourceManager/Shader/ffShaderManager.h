@@ -5,7 +5,7 @@
 #ifndef FF_SHADER_MANAGER_H_
 #define FF_SHADER_MANAGER_H_
 
-#include <vector>
+#include <array>
 #include <string>
 #include "ffShader.h"
 
@@ -23,12 +23,13 @@ enum ffShaderStage {
  * @brief Contains a ffGraph::Vulkan::ffShader and it's std::string Key.
  */
 struct ffShaderHandle {
-    std::string Key;
+    bool isUsed = false;
+    uint16_t UniqueBytes = 0;
     Vulkan::ffShader Data;
 };
 
 // @brief Store every ffGraph::Vulkan::ffShader created.
-typedef std::vector<ffShaderHandle> ffShaderManager;
+typedef std::array<ffShaderHandle, 32> ffShaderManager;
 
 /**
  * @brief Search for ffGraph::Vulkan::ffShader in ffGraph::ffShaderManager.
@@ -38,7 +39,7 @@ typedef std::vector<ffShaderHandle> ffShaderManager;
  *
  * @return ffGraph::Vulkan::ffShader - Use ffGraph::Vulkan::ffIsShaderReady() to check return value.
  */
-Vulkan::ffShader ffShaderManager_SearchFor(const ffShaderManager& Manager, const std::string& Key);
+Vulkan::ffShader ffShaderManager_SearchFor(const ffShaderManager& Manager, ffHandle );
 
 /**
  * @brief Destroy the ffGraph::ffShaderManager and all the ffGraph::Vulkan::ffShader it contains.

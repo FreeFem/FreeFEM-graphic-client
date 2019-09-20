@@ -11,6 +11,7 @@
 #include "Image/ffImageManager.h"
 #include "Shader/ffShaderManager.h"
 #include "Mesh/ffMeshManager.h"
+#include "ffHandle.h"
 
 namespace ffGraph {
 
@@ -24,6 +25,7 @@ struct ResourceManager {
     VmaAllocator Allocator;
     VkDevice* DeviceREF;
 
+    uint16_t UniqueBytes = 0;
     std::shared_ptr<std::deque<std::string>> SharedQueue;
     ffShaderManager ShaderManager;
     ffImageManager ImageManager;
@@ -69,7 +71,7 @@ void destroyResourceManager(ResourceManager RManager);
  *
  * @return uint16_t - UINT16_MAX if the function failed, UID if it succeed.
  */
-uint16_t ffResourceManager_NewMesh(ResourceManager& RManager, uint16_t UID, json JsonData);
+ffHandle ffResourceManager_NewMesh(ResourceManager& RManager, json JsonData, uint16_t &UniqueBytes);
 
 /**
  * @brief  Ask the ffGraph::ResourceManager to create a ffGraph::Vulkan::ffShader.
@@ -81,8 +83,9 @@ uint16_t ffResourceManager_NewMesh(ResourceManager& RManager, uint16_t UID, json
  *
  * @return std::string - Empty string ("") if the function failed, Name if it succeed.
  */
-std::string ffResourceManager_NewShader(ResourceManager& RManager, std::string Filepath, std::string Name,
-                                        ffShaderStage Stage);
+ffHandle ffResourceManager_NewShader(ResourceManager& RManager, std::string Filepath, std::string Name,
+                                        ffShaderStage Stage,
+                                        uint16_t &UniqueBytes);
 
 /**
  * @brief Ask the ffGraph::ResourceManager to create a ffGraph::Vulkan::ffImage.
@@ -94,9 +97,10 @@ std::string ffResourceManager_NewShader(ResourceManager& RManager, std::string F
  *
  * @return std::string - Empty string ("") if the function failed, Name if it succeed.
  */
-std::string ffResourceManager_NewImage(ResourceManager& RManager, std::string Name,
+ffHandle ffResourceManager_NewImage(ResourceManager& RManager,
                                        Vulkan::ffImageCreateInfo pCreateInfos,
-                                       VmaAllocationCreateInfo pAllocationInfos);
+                                       VmaAllocationCreateInfo pAllocationInfos,
+                                       uint16_t &UniqueBytes);
 
 }    // namespace ffGraph
 

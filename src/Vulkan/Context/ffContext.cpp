@@ -1,15 +1,13 @@
 #include <vector>
 #include <string>
 #include <algorithm>
-#include "Context.h"
+#include "ffContext.h"
 #include "Logger.h"
 
-namespace ffGraph
-{
-namespace Vulkan
-{
+namespace ffGraph {
+namespace Vulkan {
 
-bool newContext(Context *vkContext)
+bool ffnewContext(ffContext *vkContext)
 {
     if (ffInitGFLW() != true)
         return false;

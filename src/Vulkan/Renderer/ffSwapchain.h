@@ -5,10 +5,8 @@
 #include <vector>
 #include "Window/NativeWindow.h"
 
-namespace ffGraph
-{
-namespace Vulkan
-{
+namespace ffGraph {
+namespace Vulkan {
 
 struct ffSwapchain {
     VkSwapchainKHR Handle;
@@ -17,7 +15,9 @@ struct ffSwapchain {
     std::vector<VkImageView> Views;
 };
 
-ffSwapchain ffNewSwapchain(const VkDevice& Device, const NativeWindow& Window);
+inline bool ffIsSwapchainReady(ffSwapchain Swaphain) { return (Swaphain.Handle || !Swaphain.Images.empty() || !Swaphain.Views.empty()) ? true : false; }
+
+ffSwapchain ffNewSwapchain(const VkPhysicalDevice& PhysicalDevice, const VkDevice& Device, const VkSurfaceKHR Surface, VkExtent2D Extent);
 
 } // namespace Vulkan
 } // namespace ffGraph

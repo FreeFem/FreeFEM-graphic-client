@@ -19,4 +19,5 @@ target_include_directories(ffGraph_ResourceManager PRIVATE ${CMAKE_SOURCE_DIR}/e
 target_include_directories(ffGraph_ResourceManager PRIVATE ${CMAKE_SOURCE_DIR}/extern/json/include)
 target_include_directories(ffGraph_ResourceManager PRIVATE ${CMAKE_SOURCE_DIR}/extern/glm)
 target_include_directories(ffGraph_ResourceManager PRIVATE ${CMAKE_SOURCE_DIR}/src/util)
+target_include_directories(ffGraph_ResourceManager PRIVATE ${CMAKE_SOURCE_DIR}/src/ResourceManager)
 target_link_libraries(ffGraph_ResourceManager ${Vulkan_LIBRARY})

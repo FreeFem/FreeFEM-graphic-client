@@ -38,7 +38,7 @@ int main(int ac, char **av)
     ffGraph::ffAppCreateInfos AppCreateInfos = ffGraph::ffGetAppCreateInfos(ac, av);
     ffGraph::ffApp App;
     App.SharedQueue = std::make_shared<std::deque<std::string>>();
-    if (ffGraph::Vulkan::newContext(&App.vkContext) == false)
+    if (ffGraph::Vulkan::ffnewContext(&App.vkContext) == false)
         return 1;
     // if (ffGraph::Vulkan::newResourceManager(&App.RManager, &App.vkContext.Device, App.vkContext.PhysicalDevice) == false)
     //     return 1;

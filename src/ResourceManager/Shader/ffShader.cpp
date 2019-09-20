@@ -9,7 +9,7 @@
 namespace ffGraph {
 namespace Vulkan {
 
-ffShader ffCreateShader(const char *Name, const char *FilePath, const VkDevice Device, VkShaderStageFlagBits Stage) {
+ffShader ffCreateShader(const char *FilePath, const VkDevice Device, VkShaderStageFlagBits Stage) {
     ffShader n;
 
     memset(&n, 0, sizeof(ffShader));
@@ -28,15 +28,7 @@ ffShader ffCreateShader(const char *Name, const char *FilePath, const VkDevice D
     createInfo.codeSize = size;
     createInfo.pCode = (uint32_t *)bytes;
     if (vkCreateShaderModule(Device, &createInfo, 0, &n.Module)) {
-        LogError(GetCurrentLogLocation( ), "Failed to create VkShaderModule for Shader : %s.", Name);
-        return n;
-    }
-    n.Stage = Stage;
-    n.ShaderName = strdup(Name);
-    if (n.ShaderName == 0) {
-        LogError(GetCurrentLogLocation( ), "Failed to allocate memory for Shader name %s.", Name);
-        vkDestroyShaderModule(Device, n.Module, 0);
-        n.Module = VK_NULL_HANDLE;
+        LogError(GetCurrentLogLocation( ), "Failed to create VkShaderModule for Shader : %s.", FilePath);
         return n;
     }
     return n;
@@ -44,7 +36,6 @@ ffShader ffCreateShader(const char *Name, const char *FilePath, const VkDevice D
 
 void ffDestroyShader(const VkDevice Device, ffShader Shader) {
     vkDestroyShaderModule(Device, Shader.Module, 0);
-    free(Shader.ShaderName);
 }
 
 }    // namespace Vulkan

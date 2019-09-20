@@ -24,46 +24,60 @@ void ffResourceManager_ReadFromQueue(ResourceManager& RManager) {
 
         json GeometryArray = JSONData.at("Geometry");
         for (auto i = GeometryArray.begin( ); i != GeometryArray.end( ); ++i) {
-            if (ffResourceManager_NewMesh(RManager, RManager.MeshManager.size( ), *i) == UINT16_MAX) return;
+            ffResourceManager_NewMesh(RManager, *i, RManager.UniqueBytes);
         }
     }
 }
 
-uint16_t ffResourceManager_NewMesh(ResourceManager& Manager, uint16_t UID, json JsonData) {
-    ffMesh mesh = ffCreateMesh(Manager.Allocator, JsonData);
+ffHandle ffResourceManager_NewMesh(ResourceManager& Manager, json JsonData, uint16_t& UniqueBytes) {
+    ffMesh Mesh = ffCreateMesh(Manager.Allocator, JsonData);
 
-    if (ffIsMeshReady(mesh) == false)
-        return UINT16_MAX;
-    else {
-        Manager.MeshManager.push_back({UID, mesh});
-        return UID;
+    if (!ffIsMeshReady(Mesh))
+        return InvalidHandle;
+    for (uint32_t i = 0; i < (uint32_t)Manager.MeshManager.size(); ++i) {
+        if (!Manager.MeshManager[i].isUsed) {
+            Manager.UniqueBytes = UniqueBytes;
+            Manager.MeshManager[i].Data = Mesh;
+            UniqueBytes += 1;
+            return ffNewHandle(ffHandleType::FF_HANDLE_TYPE_MESH, UniqueBytes - 1, i);
+        }
     }
-    return UINT16_MAX;
+    return InvalidHandle;
 }
 
-std::string ffResourceManager_NewShader(ResourceManager& Manager, std::string Filepath, std::string Name,
-                                        ffShaderStage Stage) {
+ffHandle ffResourceManager_NewShader(ResourceManager& Manager, std::string Filepath, ffShaderStage Stage, uint16_t& UniqueBytes) {
     Vulkan::ffShader Shader =
-        Vulkan::ffCreateShader(Name.c_str( ), Filepath.c_str( ), *Manager.DeviceREF, (VkShaderStageFlags)Stage);
+        Vulkan::ffCreateShader(Filepath.c_str( ), *Manager.DeviceREF, (VkShaderStageFlags)Stage);
 
-    if (ffIsShaderReady(Shader)) {
-        Manager.ShaderManager.push_back({Name, Shader});
-        return Name;
+    if (!ffIsShaderReady(Shader))
+        return InvalidHandle;
+    for (uint32_t i = 0; i < (uint32_t)Manager.ShaderManager.size(); ++i) {
+        if (!Manager.ShaderManager[i].isUsed) {
+            Manager.UniqueBytes = UniqueBytes;
+            Manager.ShaderManager[i].Data = Shader;
+            UniqueBytes += 1;
+            return ffNewHandle(ffHandleType::FF_HANDLE_TYPE_SHADER, UniqueBytes - 1, i);
+        }
     }
-    return "";
+    return InvalidHandle;
 }
 
-std::string ffResourceManager_NewImage(ResourceManager& Manager, std::string Name,
-                                       Vulkan::ffImageCreateInfo pCreateInfos,
-                                       VmaAllocationCreateInfo pAllocationInfos) {
+ffHandle ffResourceManager_NewImage(ResourceManager& Manager, Vulkan::ffImageCreateInfo pCreateInfos,
+                                       VmaAllocationCreateInfo pAllocationInfos, uint16_t& UniqueBytes) {
     Vulkan::ffImage Image =
         Vulkan::ffCreateImage(Manager.Allocator, *Manager.DeviceREF, pCreateInfos, pAllocationInfos);
 
-    if (Vulkan::ffIsImageReady(Image)) {
-        Manager.ImageManager.push_back({Name, Image});
-        return Name;
+    if (Vulkan::ffIsImageReady(Image))
+        return InvalidHandle;
+    for (uint32_t i = 0; i < (uint32_t)Manager.ImageManager.size(); ++i) {
+        if (!Manager.ImageManager[i].isUsed) {
+            Manager.UniqueBytes = UniqueBytes;
+            Manager.ImageManager[i].Data = Image;
+            UniqueBytes += 1;
+            return ffNewHandle(ffHandleType::FF_HANDLE_TYPE_IMAGE, UniqueBytes - 1, i);
+        }
     }
-    return "";
+    return InvalidHandle;
 }
 
 }    // namespace ffGraph

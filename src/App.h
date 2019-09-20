@@ -3,7 +3,7 @@
 
 #include <thread>
 #include "ffClient.h"
-#include "Vulkan/Context.h"
+#include "Vulkan/Context/ffContext.h"
 #include "ResourceManager/ResourceManager.h"
 
 namespace ffGraph {
@@ -16,7 +16,7 @@ struct ffAppCreateInfos {
 struct ffApp {
     std::shared_ptr<std::deque<std::string>> SharedQueue;
     std::thread ClientThread;
-    Vulkan::Context vkContext;
+    Vulkan::ffContext vkContext;
     ResourceManager RManager;
 };
 

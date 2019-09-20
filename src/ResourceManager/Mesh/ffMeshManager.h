@@ -5,7 +5,8 @@
 #ifndef FF_MESH_MANAGER_H_
 #define FF_MESH_MANAGER_H_
 
-#include <vector>
+#include <array>
+#include "ffHandle.h"
 #include "ffMesh.h"
 
 namespace ffGraph {
@@ -14,12 +15,13 @@ namespace ffGraph {
  * @brief Stored a ffGraph::ffMesh and it's identification number.
  */
 struct ffMeshHandle {
-    uint16_t UID;
+    bool isUsed;
+    uint16_t UniqueBytes;
     ffMesh Data;
 };
 
 // @brief Stores every ffGraph::ffMesh.
-typedef std::vector<ffMeshHandle> ffMeshManager;
+typedef std::array<ffMeshHandle, 128> ffMeshManager;
 
 /**
  * @brief Search for a ffGraph::ffMesh.
@@ -29,7 +31,7 @@ typedef std::vector<ffMeshHandle> ffMeshManager;
  *
  * @return ffGraph::ffMesh - Use ffGraph::ffIsMeshReady() to check result value.
  */
-ffMesh ffMeshManager_SearchFor(const ffMeshManager& Manager, uint16_t UID);
+ffMesh ffMeshManager_SearchFor(const ffMeshManager& Manager, ffHandle Handle);
 
 /**
  * @brief Destroy a ffGraph::ffMeshManager and all the ffGraph::ffMesh it contains.

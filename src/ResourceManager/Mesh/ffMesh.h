@@ -35,6 +35,7 @@ typedef VkIndexType IndicesType;
  * @brief Renderable object.
  */
 struct ffMesh {
+    uint16_t ID;
     // @brief Vertices on CPU memory.
     Array Vertices;
     // @brief Indices on CPU memory.

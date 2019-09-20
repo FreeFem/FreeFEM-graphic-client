@@ -51,12 +51,12 @@ VkPresentModeKHR ChooseSwapchainPresentMode(const std::vector<VkPresentModeKHR>&
     return AvailablePresentMode[0];
 }
 
-VkExtent2D chooseSwapchainExtent(const VkSurfaceCapabilitiesKHR& Capabilities, const NativeWindow& Window)
+VkExtent2D chooseSwapchainExtent(const VkSurfaceCapabilitiesKHR& Capabilities, VkExtent2D Extent)
 {
     VkExtent2D FinalExtent = {0, 0};
 
-    FinalExtent.width = std::max(Capabilities.minImageExtent.width, std::min(Capabilities.maxImageExtent.width, Window.WindowSize.width));
-    FinalExtent.height = std::max(Capabilities.minImageExtent.height, std::min(Capabilities.maxImageExtent.height, Window.WindowSize.height));
+    FinalExtent.width = std::max(Capabilities.minImageExtent.width, std::min(Capabilities.maxImageExtent.width, Extent.width));
+    FinalExtent.height = std::max(Capabilities.minImageExtent.height, std::min(Capabilities.maxImageExtent.height, Extent.height));
 
     return FinalExtent;
 }
@@ -87,14 +87,14 @@ void ffCreateSwapchainImageViews(ffSwapchain& Swapchain, const VkDevice& Device)
     }
 }
 
-ffSwapchain ffNewSwapchain(const VkPhysicalDevice& PhysicalDevice, const VkDevice& Device, const VkSurfaceKHR Surface, const NativeWindow& Window)
+ffSwapchain ffNewSwapchain(const VkPhysicalDevice& PhysicalDevice, const VkDevice& Device, const VkSurfaceKHR Surface, VkExtent2D Extent)
 {
     ffSwapchain n;
     SwapchainSupportDetails Details = GetSwapchainSupport(PhysicalDevice, Surface);
 
     VkSurfaceFormatKHR SurfaceFormat = ChooseSwapchainSurfaceFormat(Details.Formats);
     VkPresentModeKHR PresentMode = ChooseSwapchainPresentMode(Details.PresentModes);
-    VkExtent2D Extent = chooseSwapchainExtent(Details.Capabilities, Window);
+    VkExtent2D Extent = chooseSwapchainExtent(Details.Capabilities, Extent);
 
     uint32_t ImageCount = Details.Capabilities.minImageCount + 1;
     if (Details.Capabilities.maxImageCount > 0 && ImageCount < Details.Capabilities.maxImageCount)

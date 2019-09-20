@@ -8,6 +8,8 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wextra -D_DEBUG")
 
 add_subdirectory(src/ResourceManager)
 add_subdirectory(src/network)
+add_subdirectory(src/Vulkan)
+add_subdirectory(extern/glfw)
 # Telling Cmake to compile a executable
 add_executable(ffGraph src/main.cpp)
 
@@ -16,6 +18,8 @@ set_target_properties(ffGraph PROPERTIES CXX_STANDARD 11)
 
 # Linking libraries with target
 target_include_directories(ffGraph PRIVATE ${CMAKE_SOURCE_DIR}/extern/asio/asio/include)
+target_include_directories(ffGraph PRIVATE ${CMAKE_SOURCE_DIR}/extern/glfw/include)
+target_include_directories(ffGraph PRIVATE ${CMAKE_SOURCE_DIR}/extern/VulkanMemoryAllocator/src)
 
 target_link_libraries(ffGraph Threads::Threads)
 target_include_directories(ffGraph PRIVATE ./src/ResourceManager)
@@ -23,3 +27,5 @@ target_link_libraries(ffGraph ffGraph_ResourceManager)
 target_include_directories(ffGraph PRIVATE ./src/network)
 target_link_libraries(ffGraph ffGraph_NET)
 target_include_directories(ffGraph PRIVATE ./src/util)
+target_link_libraries(ffGraph ffGraph_Vulkan)
+target_include_directories(ffGraph PRIVATE ./src/Vulkan)

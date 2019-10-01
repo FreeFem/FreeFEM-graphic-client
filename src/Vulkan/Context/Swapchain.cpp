@@ -1,4 +1,9 @@
-#include "ffSwapchain.h"
+#include <vector>
+#include <string>
+#include "Device.h"
+#include "../Window/NativeWindow.h"
+#include "Swapchain.h"
+#include "Logger.h"
 
 namespace ffGraph {
 namespace Vulkan {
@@ -61,7 +66,7 @@ VkExtent2D chooseSwapchainExtent(const VkSurfaceCapabilitiesKHR& Capabilities, V
     return FinalExtent;
 }
 
-void ffCreateSwapchainImageViews(ffSwapchain& Swapchain, const VkDevice& Device)
+void CreateSwapchainImageViews(Swapchain& Swapchain, const VkDevice& Device)
 {
     Swapchain.Views.resize(Swapchain.Images.size());
 
@@ -82,19 +87,21 @@ void ffCreateSwapchainImageViews(ffSwapchain& Swapchain, const VkDevice& Device)
     for (size_t i = 0; i < Swapchain.Images.size(); ++i) {
         CreateInfos.image = Swapchain.Images[i];
 
-        if (vkCreateImageView(Device, &CreateInfos, 0, &Swapchain.Views[i]))
+        if (vkCreateImageView(Device, &CreateInfos, 0, &Swapchain.Views[i])) {
+            LogError(GetCurrentLogLocation(), "Failed to create swapchain VkImageView.");
             return;
+        }
     }
 }
 
-ffSwapchain ffNewSwapchain(const VkPhysicalDevice& PhysicalDevice, const VkDevice& Device, const VkSurfaceKHR Surface, VkExtent2D Extent)
+Swapchain newSwapchain(const Device& Device, const VkSurfaceKHR Surface, VkExtent2D Extent)
 {
-    ffSwapchain n;
-    SwapchainSupportDetails Details = GetSwapchainSupport(PhysicalDevice, Surface);
+    Swapchain n;
+    SwapchainSupportDetails Details = GetSwapchainSupport(Device.PhysicalHandle, Surface);
 
     VkSurfaceFormatKHR SurfaceFormat = ChooseSwapchainSurfaceFormat(Details.Formats);
     VkPresentModeKHR PresentMode = ChooseSwapchainPresentMode(Details.PresentModes);
-    VkExtent2D Extent = chooseSwapchainExtent(Details.Capabilities, Extent);
+    Extent = chooseSwapchainExtent(Details.Capabilities, Extent);
 
     uint32_t ImageCount = Details.Capabilities.minImageCount + 1;
     if (Details.Capabilities.maxImageCount > 0 && ImageCount < Details.Capabilities.maxImageCount)
@@ -116,14 +123,14 @@ ffSwapchain ffNewSwapchain(const VkPhysicalDevice& PhysicalDevice, const VkDevic
     SwapchainCreateInfos.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
     SwapchainCreateInfos.clipped = VK_TRUE;
 
-    if (vkCreateSwapchainKHR(Device, &SwapchainCreateInfos, 0, &n.Handle))
+    if (vkCreateSwapchainKHR(Device.Handle, &SwapchainCreateInfos, 0, &n.Handle))
         return n;
     n.Format = SurfaceFormat;
-    uint32_t ImageCount = 0;
-    vkGetSwapchainImagesKHR(Device, n.Handle, &ImageCount, 0);
+    ImageCount = 0;
+    vkGetSwapchainImagesKHR(Device.Handle, n.Handle, &ImageCount, 0);
     n.Images.resize(ImageCount);
-    vkGetSwapchainImagesKHR(Device, n.Handle, &ImageCount, n.Images.data());
-
+    vkGetSwapchainImagesKHR(Device.Handle, n.Handle, &ImageCount, n.Images.data());
+    CreateSwapchainImageViews(n, Device.Handle);
     return n;
 }
 

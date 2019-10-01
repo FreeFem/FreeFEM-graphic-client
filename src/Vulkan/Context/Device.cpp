@@ -1,7 +1,8 @@
 #include <vector>
 #include <cstring>
 #include <string>
-#include "ffDevice.h"
+#include <algorithm>
+#include "Device.h"
 
 namespace ffGraph
 {
@@ -28,7 +29,7 @@ static uint32_t getGraphicsFamilyIndex(VkPhysicalDevice PhysicalDevice, VkSurfac
     return VK_QUEUE_FAMILY_IGNORED;
 }
 
-static void ffNewPhysicalDevice(const VkInstance Instance, const VkSurfaceKHR Surface, ffDevice& Device)
+static void NewPhysicalDevice(const VkInstance Instance, const VkSurfaceKHR Surface, Device& Device)
 {
     uint32_t PhysicalDeviceCount = 0;
 
@@ -62,12 +63,12 @@ static void ffNewPhysicalDevice(const VkInstance Instance, const VkSurfaceKHR Su
     vkGetPhysicalDeviceMemoryProperties(Device.PhysicalHandle, &Device.PhysicalHandleCapabilities.MemoryProperties);
 }
 
-ffDevice ffNewDevice(const VkInstance Instance, const VkSurfaceKHR Surface, std::vector<std::string> Layers)
+Device NewDevice(const VkInstance Instance, const VkSurfaceKHR Surface, std::vector<std::string> Layers)
 {
-    ffDevice n;
+    Device n;
 
-    memset(&n, 0, sizeof(ffDevice));
-    ffNewPhysicalDevice(Instance, Surface, n);
+    memset(&n, 0, sizeof(Device));
+    NewPhysicalDevice(Instance, Surface, n);
     if (n.PhysicalHandle == VK_NULL_HANDLE)
         return n;
     float QueuePriority = 1.f;
@@ -94,7 +95,7 @@ ffDevice ffNewDevice(const VkInstance Instance, const VkSurfaceKHR Surface, std:
         enabledLayers.push_back(layer.data());
     }
 #ifdef _DEBUG
-    if (std::find(Layers.begin(), eLayers.end(), "VK_LAYER_KHRONOS_Validation") == Layers.end())
+    if (std::find(Layers.begin(), Layers.end(), "VK_LAYER_KHRONOS_Validation") == Layers.end())
         enabledLayers.push_back("VK_LAYER_KHRONOS_Validation");
 #endif
     deviceCreateInfo.enabledLayerCount = enabledLayers.size();

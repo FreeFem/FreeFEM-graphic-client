@@ -77,7 +77,7 @@ VkSurfaceKHR ffGetSurface(const VkInstance& Instance, const NativeWindow& Window
  *
  * @return int - See GLFW documentation for function glfwWindowShouldClose().
  */
-inline int ffWindowShouldClose(NativeWindow Window) { return glfwWindowShouldClose(Window.Handle); }
+inline int ffWindowShouldClose(NativeWindow Window) { glfwPollEvents(); return glfwWindowShouldClose(Window.Handle); }
 
 } // namespace Vulkan
 } // namespace ffGraph

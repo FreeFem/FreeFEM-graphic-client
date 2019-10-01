@@ -1,9 +1,10 @@
 #include <cstring>
 #include "App.h"
+#include "Vulkan/Instance.h"
 
 ffGraph::ffAppCreateInfos ffGraph::ffGetAppCreateInfos(int ac, char **av)
 {
-    ffAppCreateInfos Infos = { "localhost", "12345" };
+    ffAppCreateInfos Infos = { "localhost", "12345", 1280, 768};
 
     if (ac < 2)
         return Infos;
@@ -15,48 +16,44 @@ ffGraph::ffAppCreateInfos ffGraph::ffGetAppCreateInfos(int ac, char **av)
             } else if (strcmp(av[i], "-Port") == 0) {
                 Infos.Port.clear();
                 Infos.Port.append(av[i + 1]);
+            } else if (strcmp(av[i], "-ScreenWidth") == 0) {
+                Infos.width = atoi(av[i + 1]);
+            } else if (strcmp(av[i], "-ScreenHeight") == 0) {
+                Infos.height = atoi(av[i + 1]);
             }
         }
     }
     return Infos;
 }
 
-void PrintVertices(void *data, size_t idx)
+namespace ffGraph {
+
+bool ffAppInitialize(ffAppCreateInfos pCreateInfos, std::shared_ptr<std::deque<std::string>>& SharedQueue, ffApp& App)
 {
-    if (idx % 7 == 0)
-        std::cout << "\n";
-    std::cout << ((float *)data)[0] << ", ";
+    App.SharedQueue = SharedQueue;
+    App.vkInstance.load("FreeFem", pCreateInfos.width, pCreateInfos.height);
+    return true;
 }
 
-void PrintIndices(void *data, size_t idx)
+void ffAppRun(ffApp& App)
 {
-    std::cout << ((unsigned short int *)data)[0] << ", ";
+    App.vkInstance.run(App.SharedQueue);
+}
+
 }
 
 int main(int ac, char **av)
 {
     ffGraph::ffAppCreateInfos AppCreateInfos = ffGraph::ffGetAppCreateInfos(ac, av);
     ffGraph::ffApp App;
-    App.SharedQueue = std::make_shared<std::deque<std::string>>();
-    if (ffGraph::Vulkan::ffnewContext(&App.vkContext) == false)
-        return 1;
-    // if (ffGraph::Vulkan::newResourceManager(&App.RManager, &App.vkContext.Device, App.vkContext.PhysicalDevice) == false)
-    //     return 1;
-    // ffGraph::ffClient Client(AppCreateInfos.Host, AppCreateInfos.Port, App.SharedQueue);
+    std::shared_ptr<std::deque<std::string>> SharedQueue = std::make_shared<std::deque<std::string>>();
+    ffGraph::ffAppInitialize(AppCreateInfos, SharedQueue, App);
+    ffGraph::ffClient Client(AppCreateInfos.Host, AppCreateInfos.Port, App.SharedQueue);
 
-    // App.ClientThread = std::thread( [ &Client ]( ){ Client.Start(); } );
-    // while (1) {
-    //     if (!App.SharedQueue->empty()) {
-    //         ffGraph::ffMesh test = ffGraph::ffCreateMeshFromString(App.RManager.Allocator, App.SharedQueue->at(0));
-    //         std::cout << "Vertices :\n";
-    //         ffGraph::ffArrayForEach(test.Vertices, PrintVertices);
-    //         std::cout << "\nIndices :\n";
-    //         ffGraph::ffArrayForEach(test.Indices, PrintIndices);
-    //         std::cout << "\n";
-    //         App.SharedQueue->pop_front();
-    //     }
-    // }
-    // Client.Stop();
-    // App.ClientThread.join();
+    App.ClientThread = std::thread( [ &Client ]( ){ Client.Start(); } );
+    ffGraph::ffAppRun(App);
+    Client.Stop();
+    App.vkInstance.destroy();
+    App.ClientThread.join();
     return 0;
 }

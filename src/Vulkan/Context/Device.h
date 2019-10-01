@@ -6,22 +6,22 @@
 namespace ffGraph {
 namespace Vulkan {
 
-struct ffPhysicalDeviceCapabilities {
+struct PhysicalDeviceCapabilities {
     VkPhysicalDeviceProperties Properties;
     VkPhysicalDeviceFeatures Features;
     VkPhysicalDeviceMemoryProperties MemoryProperties;
 };
 
-struct ffDevice {
+struct Device {
     VkPhysicalDevice PhysicalHandle;
-    ffPhysicalDeviceCapabilities PhysicalHandleCapabilities;
+    PhysicalDeviceCapabilities PhysicalHandleCapabilities;
 
     VkDevice Handle;
     uint32_t QueueIndex;
     VkQueue Queue;
 };
 
-ffDevice ffNewDevice(const VkInstance Instance, const VkSurfaceKHR Surface, std::vector<std::string> Layers);
+Device NewDevice(const VkInstance Instance, const VkSurfaceKHR Surface, std::vector<std::string> Layers);
 
 } // namespace Vulkan
 } // namespace ffGraph

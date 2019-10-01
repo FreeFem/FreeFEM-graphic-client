@@ -55,7 +55,7 @@ namespace ffGraph
 
     void ffClient::StartRead()
     {
-        Deadline.expires_after(std::chrono::seconds(30));
+        //Deadline.expires_after(std::chrono::seconds(30));
         asio::async_read(Socket, asio::dynamic_buffer(InputBuffer, 64), std::bind(&ffClient::HandleRead, this, std::placeholders::_1, std::placeholders::_2));
     }
 
@@ -78,7 +78,6 @@ namespace ffGraph
                     StartRead();
                 else {
                     SharedDataQueue->push_back(InputBuffer.substr(0, ReadSize));
-                    std::cout << "Client : " << SharedDataQueue->size() << "\n";
                     InputBuffer.erase(0, ReadSize);
                 }
             }

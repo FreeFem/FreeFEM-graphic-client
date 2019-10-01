@@ -48,7 +48,7 @@ inline Array ffNewArray(size_t ElementCount, size_t ElementSize) {
  *
  * @param a [in] - ffGraph::Array to destroy.
  */
-inline void ffDestroyArray(Array a) {
+inline void DestroyArray(Array a) {
     free(a.Data);
     memset(&a, 0, sizeof(Array));
 }

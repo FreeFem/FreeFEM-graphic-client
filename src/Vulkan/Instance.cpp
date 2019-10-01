@@ -145,13 +145,13 @@ void Instance::load(const std::string& AppName, unsigned int width, unsigned int
         return;
     }
 
-    GraphConstruct = newGraphConstructor(vkContext.vkDevice.Handle, Allocator, vkContext.SurfaceFormat.format, m_Window.WindowSize, vkContext.vkSwapchain.Views);
+    GraphConstruct = newGraphConstructor(vkContext.vkDevice, Allocator, vkContext.SurfaceFormat.format, m_Window.WindowSize, vkContext.vkSwapchain.Views);
 
     Resources = NewResources(vkContext.vkDevice.Handle);
 
-    vkRenderer = NewRenderer(vkContext.vkDevice.Handle, &vkContext.vkDevice.Queue, vkContext.vkDevice.QueueIndex, vkContext.Surface, m_Window.WindowSize);
+    vkRenderer = NewRenderer(vkContext.vkDevice.Handle, &vkContext.vkDevice.Queue[DEVICE_GRAPH_QUEUE], vkContext.vkDevice.QueueIndex[DEVICE_GRAPH_QUEUE], vkContext.Surface, m_Window.WindowSize);
 
-    pushInitCmdBuffer(vkContext.vkDevice.Handle, vkContext.vkDevice.Queue, GraphConstruct.DepthImage, vkRenderer.Frames[0].CmdBuffer);
+    pushInitCmdBuffer(vkContext.vkDevice, GraphConstruct.DepthImage, GraphConstruct.ColorImage, vkRenderer.CommandPool);
 
     glfwSetWindowUserPointer(m_Window.Handle, this);
     glfwSetKeyCallback(m_Window.Handle, KeyCallback);
@@ -177,10 +177,6 @@ void Instance::destroy()
     ffTerminateGLFW();
 }
 
-// static void Update(Instance *Handle)
-// {
-// }
-
 void Instance::run(std::shared_ptr<std::deque<std::string>> SharedQueue)
 {
     int i = 0;
@@ -192,7 +188,7 @@ void Instance::run(std::shared_ptr<std::deque<std::string>> SharedQueue)
             SharedQueue->pop_front();
             JSON::LogSceneLayout(Layout);
             VkShaderModule Modules[2] = {Resources.GeometryVertex.Module, Resources.GeometryFragment.Module};
-            Graph = ConstructRenderGraph(vkContext.vkDevice.Handle, GraphConstruct.RenderPass, Allocator, Layout, Modules);
+            Graph = ConstructRenderGraph(vkContext.vkDevice, GraphConstruct.RenderPass, Allocator, Layout, Modules);
             Graphs.push_back(Graph);
         }
 

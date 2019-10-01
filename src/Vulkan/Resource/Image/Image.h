@@ -14,6 +14,7 @@ namespace Vulkan {
 struct ImageCreateInfo {
     VkExtent2D Extent;
     VkFormat Format;
+    VkSampleCountFlagBits SampleCount;
     VkBufferUsageFlags Usage;
     VkSharingMode SharingMode;
     bool AsView;

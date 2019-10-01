@@ -33,8 +33,7 @@ void DestroyRenderer(const VkDevice& Device, Renderer& vkRenderer);
 
 void Render(const Context& vkContext, const VkRenderPass RenderPass, std::vector<VkFramebuffer> Framebuffers, Renderer& vkRenderer, const RenderGraph& Graph, const VkExtent2D Extent);
 
-bool pushInitCmdBuffer(const VkDevice Device, const VkQueue Queue, const Image DepthImage,
-                              VkCommandBuffer cmdBuffer);
+bool pushInitCmdBuffer(const Device& D, const Image DepthImage, const Image& ColorImage, const VkCommandPool& Pool);
 }
 }
 

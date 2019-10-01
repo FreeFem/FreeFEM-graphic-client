@@ -6,10 +6,18 @@
 namespace ffGraph {
 namespace Vulkan {
 
-bool pushInitCmdBuffer(const VkDevice Device, const VkQueue Queue, const Image DepthImage,
-                              VkCommandBuffer cmdBuffer) {
-    VkImageMemoryBarrier memBarrier = {};
+static bool pushDepthImage(const Device& D, const Image DepthImage, const VkCommandPool& Pool)
+{
+    VkCommandBufferAllocateInfo AllocInfo = {};
+    AllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    AllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    AllocInfo.commandPool = Pool;
+    AllocInfo.commandBufferCount = 1;
 
+    VkCommandBuffer cmdBuffer;
+    if (vkAllocateCommandBuffers(D.Handle, &AllocInfo, &cmdBuffer))
+        return false;
+    VkImageMemoryBarrier memBarrier = {};
     memBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
     memBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     memBarrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
@@ -20,6 +28,7 @@ bool pushInitCmdBuffer(const VkDevice Device, const VkQueue Queue, const Image D
 
     VkCommandBufferBeginInfo BeginInfo = {};
     BeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    BeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
     if (vkBeginCommandBuffer(cmdBuffer, &BeginInfo)) return false;
     vkCmdPipelineBarrier(cmdBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, 0, 0, 0, 0, 0,
@@ -32,9 +41,62 @@ bool pushInitCmdBuffer(const VkDevice Device, const VkQueue Queue, const Image D
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &cmdBuffer;
 
-    vkQueueSubmit(Queue, 1, &submitInfo, VK_NULL_HANDLE);
+    vkQueueSubmit(D.Queue[DEVICE_GRAPH_QUEUE], 1, &submitInfo, VK_NULL_HANDLE);
+    vkQueueWaitIdle(D.Queue[DEVICE_GRAPH_QUEUE]);
 
-    vkQueueWaitIdle(Queue);
+    vkFreeCommandBuffers(D.Handle, Pool, 1, &cmdBuffer);
+    return true;
+}
+
+static bool pushColorImage(const Device& D, const Image ColorImage, const VkCommandPool& Pool)
+{
+    VkCommandBufferAllocateInfo AllocInfo = {};
+    AllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    AllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    AllocInfo.commandPool = Pool;
+    AllocInfo.commandBufferCount = 1;
+
+    VkCommandBuffer cmdBuffer;
+    if (vkAllocateCommandBuffers(D.Handle, &AllocInfo, &cmdBuffer))
+        return false;
+    VkImageMemoryBarrier memBarrier = {};
+    memBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    memBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    memBarrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    memBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    memBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    memBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    memBarrier.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
+    memBarrier.image = ColorImage.Handle;
+
+    VkCommandBufferBeginInfo BeginInfo = {};
+    BeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    BeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+    if (vkBeginCommandBuffer(cmdBuffer, &BeginInfo)) return false;
+    vkCmdPipelineBarrier(cmdBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, 0, 0, 0, 0,
+                         1, &memBarrier);
+
+    vkEndCommandBuffer(cmdBuffer);
+
+    VkSubmitInfo submitInfo = {};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &cmdBuffer;
+
+    vkQueueSubmit(D.Queue[DEVICE_GRAPH_QUEUE], 1, &submitInfo, VK_NULL_HANDLE);
+    vkQueueWaitIdle(D.Queue[DEVICE_GRAPH_QUEUE]);
+
+    vkFreeCommandBuffers(D.Handle, Pool, 1, &cmdBuffer);
+    return true;
+}
+
+bool pushInitCmdBuffer(const Device& D, const Image DepthImage, const Image& ColorImage, const VkCommandPool& Pool)
+{
+    if (!pushDepthImage(D, DepthImage, Pool))
+        return false;
+    if (!pushColorImage(D, ColorImage, Pool))
+        return false;
     return true;
 }
 
@@ -135,7 +197,7 @@ void Render(const Context& vkContext, const VkRenderPass RenderPass, std::vector
     if (vkBeginCommandBuffer(currentFrame.CmdBuffer, &CmdBufferBeginInfo))
         return;
 
-    VkClearValue clearValues[2];
+    VkClearValue clearValues[3];
     clearValues[0].color.float32[0] = 1.0f;
     clearValues[0].color.float32[1] = 1.0f;
     clearValues[0].color.float32[2] = 1.0f;
@@ -144,13 +206,18 @@ void Render(const Context& vkContext, const VkRenderPass RenderPass, std::vector
     clearValues[1].depthStencil.depth = 1.0f;
     clearValues[1].depthStencil.stencil = 0.0f;
 
+    clearValues[2].color.float32[0] = 1.0f;
+    clearValues[2].color.float32[1] = 1.0f;
+    clearValues[2].color.float32[2] = 1.0f;
+    clearValues[2].color.float32[3] = 1.0f;
+
     VkRenderPassBeginInfo renderPassBeginInfo = {};
     renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     renderPassBeginInfo.renderPass = RenderPass;
     renderPassBeginInfo.framebuffer = Framebuffers[imageIndex];
     renderPassBeginInfo.renderArea.offset = {0, 0};
     renderPassBeginInfo.renderArea.extent = {Extent.width, Extent.height};
-    renderPassBeginInfo.clearValueCount = 2;
+    renderPassBeginInfo.clearValueCount = 3;
     renderPassBeginInfo.pClearValues = clearValues;
 
     vkCmdBeginRenderPass(currentFrame.CmdBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -204,7 +271,7 @@ void Render(const Context& vkContext, const VkRenderPass RenderPass, std::vector
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = &currentFrame.Render;
 
-    res = vkQueueSubmit(vkContext.vkDevice.Queue, 1, &submitInfo, currentFrame.PresentFence);
+    res = vkQueueSubmit(vkContext.vkDevice.Queue[DEVICE_GRAPH_QUEUE], 1, &submitInfo, currentFrame.PresentFence);
     if (res != VK_SUCCESS) return;
 
     VkPresentInfoKHR presentInfo = {};
@@ -215,7 +282,7 @@ void Render(const Context& vkContext, const VkRenderPass RenderPass, std::vector
     presentInfo.pSwapchains = &vkContext.vkSwapchain.Handle;
     presentInfo.pImageIndices = &imageIndex;
 
-    res = vkQueuePresentKHR(vkContext.vkDevice.Queue, &presentInfo);
+    res = vkQueuePresentKHR(vkContext.vkDevice.Queue[DEVICE_GRAPH_QUEUE], &presentInfo);
     if (res != VK_SUCCESS)
         return;
 }

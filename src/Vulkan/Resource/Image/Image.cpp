@@ -16,7 +16,7 @@ Image CreateImage(const VmaAllocator& Allocator, const VkDevice& Device, ImageCr
     vkCreateInfo.extent = {pCreateInfo.Extent.width, pCreateInfo.Extent.height, 1};
     vkCreateInfo.mipLevels = 1;
     vkCreateInfo.arrayLayers = 1;
-    vkCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    vkCreateInfo.samples = pCreateInfo.SampleCount;
     vkCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
     vkCreateInfo.usage = pCreateInfo.Usage;
     vkCreateInfo.sharingMode = pCreateInfo.SharingMode;
@@ -24,7 +24,6 @@ Image CreateImage(const VmaAllocator& Allocator, const VkDevice& Device, ImageCr
 
     if (vmaCreateImage(Allocator, &vkCreateInfo, &pAllocationInfos, &n.Handle, &n.Memory, &n.AllocationInfos)) return n;
 
-    LogInfo("Image creation", "Image %p.", n.AllocationInfos.deviceMemory);
     if (pCreateInfo.AsView) {
         VkImageViewCreateInfo ImageViewCreateInfo = {};
         ImageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;

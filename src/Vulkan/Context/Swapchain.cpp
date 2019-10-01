@@ -117,10 +117,17 @@ Swapchain newSwapchain(const Device& Device, const VkSurfaceKHR Surface, VkExten
     SwapchainCreateInfos.imageExtent = Extent;
     SwapchainCreateInfos.imageArrayLayers = 1;
     SwapchainCreateInfos.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    SwapchainCreateInfos.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    if (Device.QueueIndex[DEVICE_GRAPH_QUEUE] != Device.QueueIndex[DEVICE_GRAPH_QUEUE]) {
+        SwapchainCreateInfos.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+        SwapchainCreateInfos.queueFamilyIndexCount = 2;
+        SwapchainCreateInfos.pQueueFamilyIndices = Device.QueueIndex;
+    } else {
+        SwapchainCreateInfos.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    }
 
     SwapchainCreateInfos.preTransform = Details.Capabilities.currentTransform;
     SwapchainCreateInfos.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    SwapchainCreateInfos.presentMode = PresentMode;
     SwapchainCreateInfos.clipped = VK_TRUE;
 
     if (vkCreateSwapchainKHR(Device.Handle, &SwapchainCreateInfos, 0, &n.Handle))

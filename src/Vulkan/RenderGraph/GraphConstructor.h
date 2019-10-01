@@ -8,6 +8,7 @@
 #include "Resource/Image/Image.h"
 #include "Resource/Mesh/Mesh.h"
 #include "Resource/Camera/Camera.h"
+#include "Context/Device.h"
 
 namespace ffGraph {
 namespace Vulkan {
@@ -32,13 +33,14 @@ struct GraphConstructor {
     std::vector<VkFramebuffer> Framebuffers;
 
     Image DepthImage;
+    Image ColorImage;
 };
 
-GraphConstructor newGraphConstructor(const VkDevice& Device, const VmaAllocator& Allocator, VkFormat SurfaceFormat, VkExtent2D WindowSize, std::vector<VkImageView> SwapchainViews);
+GraphConstructor newGraphConstructor(const Device& D, const VmaAllocator& Allocator, VkFormat SurfaceFormat, VkExtent2D WindowSize, std::vector<VkImageView> SwapchainViews);
 
 void DestroyGraphConstructor(const VkDevice& Device, const VmaAllocator& Allocator, GraphConstructor& Graph);
 
-RenderGraph ConstructRenderGraph(const VkDevice& Device, const VkRenderPass& Renderpass, const VmaAllocator& Allocator, JSON::SceneLayout& Layout, const VkShaderModule Modules[2]);
+RenderGraph ConstructRenderGraph(const Device& D, const VkRenderPass& Renderpass, const VmaAllocator& Allocator, JSON::SceneLayout& Layout, const VkShaderModule Modules[2]);
 
 void DestroyRenderGraph(const VkDevice& Device, const VmaAllocator& Allocator, RenderGraph Graph);
 

@@ -4,7 +4,7 @@
 namespace ffGraph {
 namespace Vulkan {
 
-static RenderGraphNode ConstructRenderGraphNode(const VkDevice& Device, const VkRenderPass& Renderpass, const VmaAllocator& Allocator, JSON::SceneObject& Obj, const VkShaderModule Modules[2])
+static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderPass& Renderpass, const VmaAllocator& Allocator, JSON::SceneObject& Obj, const VkShaderModule Modules[2])
 {
     RenderGraphNode Node;
 
@@ -25,7 +25,7 @@ static RenderGraphNode ConstructRenderGraphNode(const VkDevice& Device, const Vk
     PipelineLayoutInfo.pushConstantRangeCount = 1;
     PipelineLayoutInfo.pPushConstantRanges = &PushConstantRange;
 
-    vkCreatePipelineLayout(Device, &PipelineLayoutInfo, 0, &Node.Layout);
+    vkCreatePipelineLayout(D.Handle, &PipelineLayoutInfo, 0, &Node.Layout);
 
     VkPipelineShaderStageCreateInfo ShaderStageInfo[2] = {};
     ShaderStageInfo[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -113,7 +113,7 @@ static RenderGraphNode ConstructRenderGraphNode(const VkDevice& Device, const Vk
     VkPipelineColorBlendStateCreateInfo colorBlendStateCreateInfo = {};
     colorBlendStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
     colorBlendStateCreateInfo.logicOpEnable = VK_FALSE;
-    colorBlendStateCreateInfo.logicOp = VK_LOGIC_OP_CLEAR;
+    colorBlendStateCreateInfo.logicOp = VK_LOGIC_OP_COPY;
     colorBlendStateCreateInfo.attachmentCount = 1;
     colorBlendStateCreateInfo.pAttachments = &colorBlendAttachementState;
     memset(colorBlendStateCreateInfo.blendConstants, 0, sizeof(float) * 4);
@@ -135,10 +135,8 @@ static RenderGraphNode ConstructRenderGraphNode(const VkDevice& Device, const Vk
 
     VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo = {};
     multisampleStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-    multisampleStateCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+    multisampleStateCreateInfo.rasterizationSamples = D.PhysicalHandleCapabilities.msaaSamples;
     multisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
-    multisampleStateCreateInfo.alphaToCoverageEnable = VK_FALSE;
-    multisampleStateCreateInfo.alphaToOneEnable = VK_FALSE;
 
     VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = {};
     graphicsPipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -157,7 +155,7 @@ static RenderGraphNode ConstructRenderGraphNode(const VkDevice& Device, const Vk
     graphicsPipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
     graphicsPipelineCreateInfo.basePipelineIndex = -1;
 
-    if (vkCreateGraphicsPipelines(Device, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, 0, &Node.Handle)) {
+    if (vkCreateGraphicsPipelines(D.Handle, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, 0, &Node.Handle)) {
         LogError(GetCurrentLogLocation(), "Failed to create VkPipeline.");
         return Node;
     }
@@ -168,12 +166,12 @@ static RenderGraphNode ConstructRenderGraphNode(const VkDevice& Device, const Vk
     return Node;
 }
 
-RenderGraph ConstructRenderGraph(const VkDevice& Device, const VkRenderPass& Renderpass, const VmaAllocator& Allocator, JSON::SceneLayout& Layout, const VkShaderModule Modules[2])
+RenderGraph ConstructRenderGraph(const Device& D, const VkRenderPass& Renderpass, const VmaAllocator& Allocator, JSON::SceneLayout& Layout, const VkShaderModule Modules[2])
 {
     RenderGraph n;
 
     for (auto& obj : Layout.MeshArrays) {
-        n.Nodes.push_back(ConstructRenderGraphNode(Device, Renderpass, Allocator, obj, Modules));
+        n.Nodes.push_back(ConstructRenderGraphNode(D, Renderpass, Allocator, obj, Modules));
     }
     n.Cam = InitCamera(1280.f / 768.f, false);
     CameraResetPositionAndZoom(n.Cam);

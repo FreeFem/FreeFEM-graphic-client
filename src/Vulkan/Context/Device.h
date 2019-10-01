@@ -28,8 +28,7 @@ struct Device {
 
 Device NewDevice(const VkInstance Instance, const VkSurfaceKHR Surface, std::vector<std::string> Layers);
 
-} // namespace Vulkan
-} // namespace ffGraph
+}    // namespace Vulkan
+}    // namespace ffGraph
 
-
-#endif // ff_DEVICE_H_
+#endif    // ff_DEVICE_H_

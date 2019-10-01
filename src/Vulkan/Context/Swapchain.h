@@ -16,7 +16,7 @@ struct Swapchain {
 
 Swapchain newSwapchain(const Device& Device, const VkSurfaceKHR Surface, VkExtent2D Extent);
 
-} // namespace Vulkan
-} // namespace ffGraph
+}    // namespace Vulkan
+}    // namespace ffGraph
 
-#endif // SWAPCHAIN_H_
+#endif    // SWAPCHAIN_H_

@@ -36,7 +36,7 @@ inline bool ffIsShaderReady(Shader Shader) { return (Shader.Module == VK_NULL_HA
  * @return ffGraph::Vulkan::Shader - A new ffGraph::Vulkan::Shader (use ffGraph::Vulkan::ffIsShaderReady to check return
  * value).
  */
-Shader CreateShader(const char *FilePath, const VkDevice& Device, VkShaderStageFlags Stage);
+Shader CreateShader(const char* FilePath, const VkDevice& Device, VkShaderStageFlags Stage);
 
 /**
  * @brief Destroy a ffGraph::Vulkan::Shader, releasing it's memory.

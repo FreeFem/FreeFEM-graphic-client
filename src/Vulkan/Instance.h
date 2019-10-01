@@ -16,38 +16,36 @@ namespace ffGraph {
 namespace Vulkan {
 
 class Instance {
-    public:
-        NativeWindow m_Window;
-        VkInstance m_Handle;
-        std::vector<const char *> Extensions;
+   public:
+    NativeWindow m_Window;
+    VkInstance m_Handle;
+    std::vector<const char*> Extensions;
 
-        Context vkContext;
-        VmaAllocator Allocator;
-        GraphConstructor GraphConstruct;
-        Resource Resources;
-        Renderer vkRenderer;
+    Context vkContext;
+    VmaAllocator Allocator;
+    GraphConstructor GraphConstruct;
+    Resource Resources;
+    Renderer vkRenderer;
 
-        uint32_t CurrentRenderGraph = 0;
-        std::vector<RenderGraph> Graphs = {};
-
+    uint32_t CurrentRenderGraph = 0;
+    std::vector<RenderGraph> Graphs = {};
 
 #ifdef _DEBUG
-        VkDebugUtilsMessengerEXT m_DebugMessenger;
+    VkDebugUtilsMessengerEXT m_DebugMessenger;
 #endif
-        Instance();
-        Instance(NativeWindow& Window);
+    Instance( );
+    Instance(NativeWindow& Window);
 
-        // Deleting copy constructor
-        Instance(Instance&) = delete;
-        Instance& operator=(Instance&) = delete;
+    // Deleting copy constructor
+    Instance(Instance&) = delete;
+    Instance& operator=(Instance&) = delete;
 
-        void load(const std::string& AppName, unsigned int width, unsigned int height);
-        void destroy();
-        void run(std::shared_ptr<std::deque<std::string>> SharedQueue);
+    void load(const std::string& AppName, unsigned int width, unsigned int height);
+    void destroy( );
+    void run(std::shared_ptr<std::deque<std::string>> SharedQueue);
 };
 
-} // namespace Vulkan
-} // namespace ffGraph
+}    // namespace Vulkan
+}    // namespace ffGraph
 
-
-#endif // INSTANCE_H_
+#endif    // INSTANCE_H_

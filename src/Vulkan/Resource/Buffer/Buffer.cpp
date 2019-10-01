@@ -4,10 +4,10 @@
 namespace ffGraph {
 namespace Vulkan {
 
-Buffer CreateBuffer(VmaAllocator Allocator, BufferCreateInfo pCreateInfo)
-{
-    if (pCreateInfo.vkData.Size == 0 || pCreateInfo.vkData.Usage == VK_BUFFER_USAGE_FLAGS_BITS_MAX_ENUM || pCreateInfo.vkData.SharingMode == VK_SHARING_MODE_MAX_ENUM) {
-        LogError(GetCurrentLogLocation(), "ffGraph::Vulkan::BufferCreateInfo pCreateInfo wasn't filled correctly.");
+Buffer CreateBuffer(VmaAllocator Allocator, BufferCreateInfo pCreateInfo) {
+    if (pCreateInfo.vkData.Size == 0 || pCreateInfo.vkData.Usage == VK_BUFFER_USAGE_FLAGS_BITS_MAX_ENUM ||
+        pCreateInfo.vkData.SharingMode == VK_SHARING_MODE_MAX_ENUM) {
+        LogError(GetCurrentLogLocation( ), "ffGraph::Vulkan::BufferCreateInfo pCreateInfo wasn't filled correctly.");
         return {VK_NULL_HANDLE, VK_NULL_HANDLE, {0}};
     }
     VkBufferCreateInfo BufferInfos = {};
@@ -20,9 +20,7 @@ Buffer CreateBuffer(VmaAllocator Allocator, BufferCreateInfo pCreateInfo)
 
     VmaAllocationCreateInfo AllocInfo = {};
     AllocInfo.usage = pCreateInfo.vmaData.Usage;
-
 }
 
-
-} // namespace Vulkan
-} // namespace ffGraph
+}    // namespace Vulkan
+}    // namespace ffGraph

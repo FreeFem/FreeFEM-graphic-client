@@ -14,7 +14,7 @@ namespace ffGraph {
 namespace Vulkan {
 
 struct NativeWindow {
-    GLFWwindow *Handle = NULL;
+    GLFWwindow* Handle = NULL;
     VkExtent2D WindowSize = {1280, 768};
     std::vector<std::string> SurfaceExtensions = {};
 };
@@ -51,14 +51,14 @@ void ffDestroyWindow(NativeWindow Window);
  *
  * return bool
  */
-inline bool ffInitGFLW() { return glfwInit(); }
+inline bool ffInitGFLW( ) { return glfwInit( ); }
 
 /**
  * @brief Call mandatory function : glfwTerminate().
  *
  * return void
  */
-inline void ffTerminateGLFW() { glfwTerminate(); }
+inline void ffTerminateGLFW( ) { glfwTerminate( ); }
 
 /**
  * @brief Use GLFW to get our Vulkan VkSurfaceKHR.
@@ -77,9 +77,12 @@ VkSurfaceKHR ffGetSurface(const VkInstance& Instance, const NativeWindow& Window
  *
  * @return int - See GLFW documentation for function glfwWindowShouldClose().
  */
-inline int ffWindowShouldClose(NativeWindow Window) { glfwPollEvents(); return glfwWindowShouldClose(Window.Handle); }
+inline int ffWindowShouldClose(NativeWindow Window) {
+    glfwPollEvents( );
+    return glfwWindowShouldClose(Window.Handle);
+}
 
-} // namespace Vulkan
-} // namespace ffGraph
+}    // namespace Vulkan
+}    // namespace ffGraph
 
-#endif // NATIVE_WINDOW_H_
+#endif    // NATIVE_WINDOW_H_

@@ -18,7 +18,7 @@ struct PerFrame {
 };
 
 struct Renderer {
-    VkQueue *Queue_REF;
+    VkQueue* Queue_REF;
 
     VkCommandPool CommandPool;
 
@@ -27,14 +27,16 @@ struct Renderer {
     // Framebuffers
 };
 
-Renderer NewRenderer(const VkDevice& Device, VkQueue *Queue, uint32_t QueueIndex, const VkSurfaceKHR& Surface, VkExtent2D Extent);
+Renderer NewRenderer(const VkDevice& Device, VkQueue* Queue, uint32_t QueueIndex, const VkSurfaceKHR& Surface,
+                     VkExtent2D Extent);
 
 void DestroyRenderer(const VkDevice& Device, Renderer& vkRenderer);
 
-void Render(const Context& vkContext, const VkRenderPass RenderPass, std::vector<VkFramebuffer> Framebuffers, Renderer& vkRenderer, const RenderGraph& Graph, const VkExtent2D Extent);
+void Render(const Context& vkContext, const VkRenderPass RenderPass, std::vector<VkFramebuffer> Framebuffers,
+            Renderer& vkRenderer, const RenderGraph& Graph, const VkExtent2D Extent);
 
 bool pushInitCmdBuffer(const Device& D, const Image DepthImage, const Image& ColorImage, const VkCommandPool& Pool);
-}
-}
+}    // namespace Vulkan
+}    // namespace ffGraph
 
-#endif // RENDERER_H_
+#endif    // RENDERER_H_

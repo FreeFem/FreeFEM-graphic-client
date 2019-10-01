@@ -36,15 +36,17 @@ struct GraphConstructor {
     Image ColorImage;
 };
 
-GraphConstructor newGraphConstructor(const Device& D, const VmaAllocator& Allocator, VkFormat SurfaceFormat, VkExtent2D WindowSize, std::vector<VkImageView> SwapchainViews);
+GraphConstructor newGraphConstructor(const Device& D, const VmaAllocator& Allocator, VkFormat SurfaceFormat,
+                                     VkExtent2D WindowSize, std::vector<VkImageView> SwapchainViews);
 
 void DestroyGraphConstructor(const VkDevice& Device, const VmaAllocator& Allocator, GraphConstructor& Graph);
 
-RenderGraph ConstructRenderGraph(const Device& D, const VkRenderPass& Renderpass, const VmaAllocator& Allocator, JSON::SceneLayout& Layout, const VkShaderModule Modules[2]);
+RenderGraph ConstructRenderGraph(const Device& D, const VkRenderPass& Renderpass, const VmaAllocator& Allocator,
+                                 JSON::SceneLayout& Layout, const VkShaderModule Modules[2]);
 
 void DestroyRenderGraph(const VkDevice& Device, const VmaAllocator& Allocator, RenderGraph Graph);
 
-} // namespace Vulkan
-} // namespace ffGraph
+}    // namespace Vulkan
+}    // namespace ffGraph
 
-#endif // GRAPH_CONSTRUCTOR_H_
+#endif    // GRAPH_CONSTRUCTOR_H_

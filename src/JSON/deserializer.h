@@ -9,17 +9,9 @@
 namespace ffGraph {
 namespace JSON {
 
-enum Type {
-    Mesh2D,
-    Mesh3D
-};
+enum Type { Mesh2D, Mesh3D };
 
-enum RenderType {
-    Point = 0,
-    Line = 1,
-    Triangle = 3,
-    Arrow = 0
-};
+enum RenderType { Point = 0, Line = 1, Triangle = 3, Arrow = 0 };
 
 struct SceneObject {
     Type DataType;
@@ -27,7 +19,6 @@ struct SceneObject {
     std::vector<Array> Data;
     int LineWidth = 2;
 };
-
 
 struct SceneLayout {
     std::vector<SceneObject> MeshArrays;
@@ -41,7 +32,7 @@ void LogSceneLayout(const SceneLayout& Layout);
 
 void DestroySceneLayout(SceneLayout& Layout);
 
-} // namespace JSON
-} // namespace ffGraph
+}    // namespace JSON
+}    // namespace ffGraph
 
-#endif // DESERIALIZER_H_
+#endif    // DESERIALIZER_H_

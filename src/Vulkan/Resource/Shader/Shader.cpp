@@ -9,7 +9,7 @@
 namespace ffGraph {
 namespace Vulkan {
 
-Shader CreateShader(const char *FilePath, const VkDevice& Device, VkShaderStageFlags Stage) {
+Shader CreateShader(const char *FilePath, const VkDevice &Device, VkShaderStageFlags Stage) {
     Shader n;
 
     memset(&n, 0, sizeof(Shader));
@@ -34,9 +34,7 @@ Shader CreateShader(const char *FilePath, const VkDevice& Device, VkShaderStageF
     return n;
 }
 
-void DestroyShader(const VkDevice Device, Shader Shader) {
-    vkDestroyShaderModule(Device, Shader.Module, 0);
-}
+void DestroyShader(const VkDevice Device, Shader Shader) { vkDestroyShaderModule(Device, Shader.Module, 0); }
 
 }    // namespace Vulkan
 }    // namespace ffGraph

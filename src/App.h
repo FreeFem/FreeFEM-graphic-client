@@ -20,10 +20,10 @@ struct ffApp {
     Vulkan::Instance vkInstance;
 };
 
-ffAppCreateInfos ffGetAppCreateInfos(int ac, char **av);
+ffAppCreateInfos ffGetAppCreateInfos(int ac, char** av);
 
 bool ffAppInitialize(ffAppCreateInfos pCreateInfos, std::shared_ptr<std::deque<std::string>>& SharedQueue, ffApp& App);
 
-}
+}    // namespace ffGraph
 
-#endif // APP_H_
+#endif    // APP_H_

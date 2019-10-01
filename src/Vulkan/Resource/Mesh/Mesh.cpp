@@ -5,8 +5,7 @@
 namespace ffGraph {
 namespace Vulkan {
 
-Mesh newMesh(const VmaAllocator& Allocator, JSON::SceneObject& Obj, int ite)
-{
+Mesh newMesh(const VmaAllocator& Allocator, JSON::SceneObject& Obj, int ite) {
     Mesh n;
 
     memset(&n, 0, sizeof(Mesh));
@@ -25,7 +24,7 @@ Mesh newMesh(const VmaAllocator& Allocator, JSON::SceneObject& Obj, int ite)
     VerticesAllocInfo.preferredFlags = VK_MEMORY_PROPERTY_HOST_CACHED_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
     if (vmaCreateBuffer(Allocator, &vkCreateInfo, &VerticesAllocInfo, &n.GPUBuffer, &n.Memory, &n.Infos)) {
-        LogError(GetCurrentLogLocation(), "Failed to create VkBuffer.\n");
+        LogError(GetCurrentLogLocation( ), "Failed to create VkBuffer.\n");
         return n;
     }
     n.CPUBuffer = Obj.Data[ite];
@@ -34,15 +33,13 @@ Mesh newMesh(const VmaAllocator& Allocator, JSON::SceneObject& Obj, int ite)
     return n;
 }
 
-void DestroyMesh(const VmaAllocator& Allocator, Mesh m)
-{
+void DestroyMesh(const VmaAllocator& Allocator, Mesh m) {
     vmaDestroyBuffer(Allocator, m.GPUBuffer, m.Memory);
     DestroyArray(m.CPUBuffer);
 }
 
-BoundingBox ComputeMeshBoundingBox(const Mesh& M)
-{
-    Vertex *v = (Vertex *)M.CPUBuffer.Data;
+BoundingBox ComputeMeshBoundingBox(const Mesh& M) {
+    Vertex* v = (Vertex*)M.CPUBuffer.Data;
     BoundingBox bb;
 
     for (size_t i = 0; i < M.CPUBuffer.ElementCount; ++i) {
@@ -57,5 +54,5 @@ BoundingBox ComputeMeshBoundingBox(const Mesh& M)
     return bb;
 }
 
-} // namespace Vulkan
-} // namespace ffGraph
+}    // namespace Vulkan
+}    // namespace ffGraph

@@ -15,7 +15,7 @@ Resource NewResources(const VkDevice& Device);
 
 void DestroyResources(const VkDevice& Device, Resource& Resources);
 
-}
-}
+}    // namespace Vulkan
+}    // namespace ffGraph
 
-#endif // RESOURCE_H_
+#endif    // RESOURCE_H_

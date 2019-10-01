@@ -12,8 +12,8 @@ struct BufferCreateInfo {
         VkDeviceSize Size = 0;
         VkBufferUsageFlags Usage = VK_BUFFER_USAGE_FLAGS_BITS_MAX_ENUM;
         VkSharingMode SharingMode = VK_SHARING_MODE_MAX_ENUM;
-        uint32_t queueFamilyIndexCount = 0; // Optional
-        uint32_t *pQueueFamilyIndices = 0; // Optional
+        uint32_t queueFamilyIndexCount = 0;    // Optional
+        uint32_t *pQueueFamilyIndices = 0;     // Optional
     } vkData;
 
     struct {
@@ -32,7 +32,7 @@ struct Buffer {
 
 Buffer CreateBuffer(VmaAllocator Allocator, BufferCreateInfo pCreateInfo);
 
-}
-}
+}    // namespace Vulkan
+}    // namespace ffGraph
 
-#endif // BUFFER_H_
+#endif    // BUFFER_H_

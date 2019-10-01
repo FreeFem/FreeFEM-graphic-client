@@ -52,7 +52,7 @@ inline bool IsImageReady(Image Image) { return (Image.Handle == VK_NULL_HANDLE) 
  * @return ffGraph::Vulkan::Image - Use ffGraph::Vulkan::ffisImageReady to check return value.
  */
 Image CreateImage(const VmaAllocator& Allocator, const VkDevice& Device, ImageCreateInfo pCreateInfos,
-                      VmaAllocationCreateInfo pAllocateInfo);
+                  VmaAllocationCreateInfo pAllocateInfo);
 
 /**
  * @brief Destroy a ffGraph::Vulkan::Image, releasing memory.

@@ -34,7 +34,7 @@ BoundingBox ComputeMeshBoundingBox(const Mesh& M);
 
 void DestroyMesh(const VmaAllocator& Allocator, Mesh m);
 
-} // namespace Vulkan
-} // namespace ffGraph
+}    // namespace Vulkan
+}    // namespace ffGraph
 
-#endif // MESH_H_
+#endif    // MESH_H_

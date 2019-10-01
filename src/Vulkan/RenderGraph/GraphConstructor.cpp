@@ -5,8 +5,7 @@
 namespace ffGraph {
 namespace Vulkan {
 
-VkRenderPass newRenderPass(const VkDevice& Device, VkFormat SurfaceFormat, VkSampleCountFlagBits msaaSample)
-{
+VkRenderPass newRenderPass(const VkDevice& Device, VkFormat SurfaceFormat, VkSampleCountFlagBits msaaSample) {
     VkAttachmentDescription AttachmentDescription[3] = {};
     AttachmentDescription[0].flags = 0;
     AttachmentDescription[0].format = SurfaceFormat;
@@ -82,14 +81,13 @@ VkRenderPass newRenderPass(const VkDevice& Device, VkFormat SurfaceFormat, VkSam
     return renderpass;
 }
 
-GraphConstructor newGraphConstructor(const Device& D, const VmaAllocator& Allocator, VkFormat SurfaceFormat, VkExtent2D WindowSize, std::vector<VkImageView> SwapchainViews)
-{
+GraphConstructor newGraphConstructor(const Device& D, const VmaAllocator& Allocator, VkFormat SurfaceFormat,
+                                     VkExtent2D WindowSize, std::vector<VkImageView> SwapchainViews) {
     GraphConstructor n;
 
     memset(&n, 0, sizeof(GraphConstructor));
     n.RenderPass = newRenderPass(D.Handle, SurfaceFormat, D.PhysicalHandleCapabilities.msaaSamples);
-    if (n.RenderPass == VK_NULL_HANDLE)
-        return n;
+    if (n.RenderPass == VK_NULL_HANDLE) return n;
     ImageCreateInfo DepthCreateInfo = {};
     DepthCreateInfo.AsView = true;
     DepthCreateInfo.Extent = WindowSize;
@@ -103,8 +101,7 @@ GraphConstructor newGraphConstructor(const Device& D, const VmaAllocator& Alloca
     ImageAlloc.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
     n.DepthImage = CreateImage(Allocator, D.Handle, DepthCreateInfo, ImageAlloc);
-    if (n.DepthImage.Handle == VK_NULL_HANDLE || n.DepthImage.View == VK_NULL_HANDLE)
-        return n;
+    if (n.DepthImage.Handle == VK_NULL_HANDLE || n.DepthImage.View == VK_NULL_HANDLE) return n;
 
     ImageCreateInfo ColorCreateInfo = {};
     ColorCreateInfo.AsView = true;
@@ -116,11 +113,10 @@ GraphConstructor newGraphConstructor(const Device& D, const VmaAllocator& Alloca
     ColorCreateInfo.ViewInfos.AspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 
     n.ColorImage = CreateImage(Allocator, D.Handle, ColorCreateInfo, ImageAlloc);
-    if (n.ColorImage.Handle == VK_NULL_HANDLE || n.ColorImage.View == VK_NULL_HANDLE)
-        return n;
+    if (n.ColorImage.Handle == VK_NULL_HANDLE || n.ColorImage.View == VK_NULL_HANDLE) return n;
 
-    n.Framebuffers.resize(SwapchainViews.size());
-    for (uint32_t i = 0; i < n.Framebuffers.size(); ++i) {
+    n.Framebuffers.resize(SwapchainViews.size( ));
+    for (uint32_t i = 0; i < n.Framebuffers.size( ); ++i) {
         VkImageView attachment[3] = {n.ColorImage.View, n.DepthImage.View, SwapchainViews[i]};
         VkFramebufferCreateInfo FrameInfo = {};
         FrameInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -138,15 +134,14 @@ GraphConstructor newGraphConstructor(const Device& D, const VmaAllocator& Alloca
     return n;
 }
 
-void DestroyGraphConstructor(const VkDevice& Device, const VmaAllocator& Allocator, GraphConstructor& Graph)
-{
+void DestroyGraphConstructor(const VkDevice& Device, const VmaAllocator& Allocator, GraphConstructor& Graph) {
     DestroyImage(Allocator, Device, Graph.DepthImage);
     DestroyImage(Allocator, Device, Graph.ColorImage);
-    for (uint16_t i = 0; i < Graph.Framebuffers.size(); ++i) {
+    for (uint16_t i = 0; i < Graph.Framebuffers.size( ); ++i) {
         vkDestroyFramebuffer(Device, Graph.Framebuffers[i], 0);
     }
     vkDestroyRenderPass(Device, Graph.RenderPass, 0);
 }
 
-}
-}
+}    // namespace Vulkan
+}    // namespace ffGraph

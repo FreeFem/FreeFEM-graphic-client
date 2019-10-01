@@ -7,27 +7,27 @@
 namespace ffGraph {
 namespace Vulkan {
 
-bool newContext(Context& vkContext, const VkInstance& Instance, const NativeWindow& Window)
-{
+bool newContext(Context& vkContext, const VkInstance& Instance, const NativeWindow& Window) {
     vkContext.Surface = ffGetSurface(Instance, Window);
     if (vkContext.Surface == VK_NULL_HANDLE) {
-        LogError(GetCurrentLogLocation(), "Couldn't create the VkSurfaceKHR.");
+        LogError(GetCurrentLogLocation( ), "Couldn't create the VkSurfaceKHR.");
         return false;
     }
     vkContext.vkDevice = NewDevice(Instance, vkContext.Surface, {});
     if (vkContext.vkDevice.Handle == VK_NULL_HANDLE || vkContext.vkDevice.PhysicalHandle == VK_NULL_HANDLE) {
-        LogError(GetCurrentLogLocation(), "Couldn't create the VkPhysicalDevice and VkDevice.");
+        LogError(GetCurrentLogLocation( ), "Couldn't create the VkPhysicalDevice and VkDevice.");
         return false;
     }
     vkContext.vkSwapchain = newSwapchain(vkContext.vkDevice, vkContext.Surface, Window.WindowSize);
     if (vkContext.vkSwapchain.Handle == VK_NULL_HANDLE) {
-        LogError(GetCurrentLogLocation(), "Couldn't create the VkSwapchainKHR.");
+        LogError(GetCurrentLogLocation( ), "Couldn't create the VkSwapchainKHR.");
         return false;
     }
     uint32_t formatCount = 0;
     vkGetPhysicalDeviceSurfaceFormatsKHR(vkContext.vkDevice.PhysicalHandle, vkContext.Surface, &formatCount, 0);
     std::vector<VkSurfaceFormatKHR> formats(formatCount);
-    vkGetPhysicalDeviceSurfaceFormatsKHR(vkContext.vkDevice.PhysicalHandle, vkContext.Surface, &formatCount, formats.data());
+    vkGetPhysicalDeviceSurfaceFormatsKHR(vkContext.vkDevice.PhysicalHandle, vkContext.Surface, &formatCount,
+                                         formats.data( ));
 
     VkFormat finalFormat;
     if (formatCount == 1 && formats[0].format == VK_FORMAT_UNDEFINED) {
@@ -42,9 +42,8 @@ bool newContext(Context& vkContext, const VkInstance& Instance, const NativeWind
     return true;
 }
 
-void destroyContext(Context vkContext, const VkInstance& Instance)
-{
-    for (uint32_t i = 0; i < vkContext.vkSwapchain.Views.size(); ++i) {
+void destroyContext(Context vkContext, const VkInstance& Instance) {
+    for (uint32_t i = 0; i < vkContext.vkSwapchain.Views.size( ); ++i) {
         vkDestroyImageView(vkContext.vkDevice.Handle, vkContext.vkSwapchain.Views[i], 0);
     }
     vkDestroySwapchainKHR(vkContext.vkDevice.Handle, vkContext.vkSwapchain.Handle, 0);
@@ -52,5 +51,5 @@ void destroyContext(Context vkContext, const VkInstance& Instance)
     vkDestroyDevice(vkContext.vkDevice.Handle, 0);
 }
 
-} // namespace Vulkan
-} // namespace ffGraph
+}    // namespace Vulkan
+}    // namespace ffGraph

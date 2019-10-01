@@ -21,8 +21,7 @@ bool newContext(Context& vkContext, const VkInstance& Instance, const NativeWind
 
 void destroyContext(Context vkContext, const VkInstance& Instance);
 
-} // namespace Vulkan
-} // namespace ffGraph
+}    // namespace Vulkan
+}    // namespace ffGraph
 
-
-#endif // CONTEXT_H_
+#endif    // CONTEXT_H_

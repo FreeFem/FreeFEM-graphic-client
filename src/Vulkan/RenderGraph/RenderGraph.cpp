@@ -4,13 +4,14 @@
 namespace ffGraph {
 namespace Vulkan {
 
-static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderPass& Renderpass, const VmaAllocator& Allocator, JSON::SceneObject& Obj, const VkShaderModule Modules[2])
-{
+static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderPass& Renderpass,
+                                                const VmaAllocator& Allocator, JSON::SceneObject& Obj,
+                                                const VkShaderModule Modules[2]) {
     RenderGraphNode Node;
 
     Node.Topology = (VkPrimitiveTopology)Obj.RenderPrimitive;
-    Node.Meshes.resize(Obj.Data.size());
-    for (int i = 0; i < (int)Obj.Data.size(); ++i) {
+    Node.Meshes.resize(Obj.Data.size( ));
+    for (int i = 0; i < (int)Obj.Data.size( ); ++i) {
         Node.Meshes[i] = newMesh(Allocator, Obj, i);
     }
 
@@ -67,10 +68,10 @@ static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderP
 
     VkPipelineVertexInputStateCreateInfo VertexInputStateInfo = {};
     VertexInputStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    VertexInputStateInfo.vertexBindingDescriptionCount = (uint32_t)vertexInputBindingDescription.size();
-    VertexInputStateInfo.pVertexBindingDescriptions = vertexInputBindingDescription.data();
-    VertexInputStateInfo.vertexAttributeDescriptionCount = (uint32_t)vertexInputAttributeDescription.size();
-    VertexInputStateInfo.pVertexAttributeDescriptions = vertexInputAttributeDescription.data();
+    VertexInputStateInfo.vertexBindingDescriptionCount = (uint32_t)vertexInputBindingDescription.size( );
+    VertexInputStateInfo.pVertexBindingDescriptions = vertexInputBindingDescription.data( );
+    VertexInputStateInfo.vertexAttributeDescriptionCount = (uint32_t)vertexInputAttributeDescription.size( );
+    VertexInputStateInfo.pVertexAttributeDescriptions = vertexInputAttributeDescription.data( );
 
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo = {};
     inputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -83,7 +84,6 @@ static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderP
     dynamicStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
     dynamicStateCreateInfo.dynamicStateCount = 2;
     dynamicStateCreateInfo.pDynamicStates = dynamicStateEnables;
-
 
     VkPipelineViewportStateCreateInfo viewportStateCreateInfo = {};
     viewportStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -108,7 +108,8 @@ static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderP
     colorBlendAttachementState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
     colorBlendAttachementState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
     colorBlendAttachementState.alphaBlendOp = VK_BLEND_OP_ADD;
-    colorBlendAttachementState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+    colorBlendAttachementState.colorWriteMask =
+        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 
     VkPipelineColorBlendStateCreateInfo colorBlendStateCreateInfo = {};
     colorBlendStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -156,18 +157,18 @@ static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderP
     graphicsPipelineCreateInfo.basePipelineIndex = -1;
 
     if (vkCreateGraphicsPipelines(D.Handle, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, 0, &Node.Handle)) {
-        LogError(GetCurrentLogLocation(), "Failed to create VkPipeline.");
+        LogError(GetCurrentLogLocation( ), "Failed to create VkPipeline.");
         return Node;
     }
-    Node.GPUBuffers.resize(Node.Meshes.size());
-    for (uint32_t i = 0; i < Node.Meshes.size(); ++i) {
+    Node.GPUBuffers.resize(Node.Meshes.size( ));
+    for (uint32_t i = 0; i < Node.Meshes.size( ); ++i) {
         Node.GPUBuffers[i] = Node.Meshes[i].GPUBuffer;
     }
     return Node;
 }
 
-RenderGraph ConstructRenderGraph(const Device& D, const VkRenderPass& Renderpass, const VmaAllocator& Allocator, JSON::SceneLayout& Layout, const VkShaderModule Modules[2])
-{
+RenderGraph ConstructRenderGraph(const Device& D, const VkRenderPass& Renderpass, const VmaAllocator& Allocator,
+                                 JSON::SceneLayout& Layout, const VkShaderModule Modules[2]) {
     RenderGraph n;
 
     for (auto& obj : Layout.MeshArrays) {
@@ -180,8 +181,7 @@ RenderGraph ConstructRenderGraph(const Device& D, const VkRenderPass& Renderpass
     return n;
 }
 
-void DestroyRenderGraph(const VkDevice& Device, const VmaAllocator& Allocator, RenderGraph Graph)
-{
+void DestroyRenderGraph(const VkDevice& Device, const VmaAllocator& Allocator, RenderGraph Graph) {
     for (auto& Node : Graph.Nodes) {
         vkDestroyPipeline(Device, Node.Handle, 0);
         vkDestroyPipelineLayout(Device, Node.Layout, 0);
@@ -191,5 +191,5 @@ void DestroyRenderGraph(const VkDevice& Device, const VmaAllocator& Allocator, R
     }
 }
 
-}
-}
+}    // namespace Vulkan
+}    // namespace ffGraph

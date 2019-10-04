@@ -7,6 +7,7 @@
 #include "deserializer.h"
 #include "Resource/Image/Image.h"
 #include "Resource/Mesh/Mesh.h"
+#include "Resource/Buffer/Buffer.h"
 #include "Resource/Camera/Camera.h"
 #include "Context/Device.h"
 
@@ -14,15 +15,18 @@ namespace ffGraph {
 namespace Vulkan {
 
 struct RenderGraphNode {
-    VkPrimitiveTopology Topology;
-    std::vector<Mesh> Meshes;
-    std::vector<VkBuffer> GPUBuffers;
     VkPipeline Handle;
     VkPipelineLayout Layout;
+
+    uint8_t LineWidth = 1;
+    Batch CPUMeshData;
+    Buffer GPUMeshData;
+
 };
 
 struct RenderGraph {
     std::vector<RenderGraphNode> Nodes;
+    JSON::SceneLayout Layout;
 
     CameraUniform PushCamera;
     Camera Cam;
@@ -31,6 +35,8 @@ struct RenderGraph {
 struct GraphConstructor {
     VkRenderPass RenderPass;
     std::vector<VkFramebuffer> Framebuffers;
+
+    std::vector<RenderGraph> Graphs;
 
     Image DepthImage;
     Image ColorImage;

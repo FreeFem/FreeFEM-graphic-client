@@ -234,14 +234,12 @@ void Render(const Context& vkContext, const VkRenderPass RenderPass, std::vector
 
         vkCmdPushConstants(currentFrame.CmdBuffer, Node.Layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(CameraUniform),
                            &Graph.PushCamera);
-        VkDeviceSize Offset = 0;
-        for (uint32_t i = 0; i < Node.GPUBuffers.size( ); ++i) {
-            vkCmdBindVertexBuffers(currentFrame.CmdBuffer, i, 1, &Node.GPUBuffers[i], &Offset);
-        }
-        uint32_t VerticesCount = 0;
-        for (uint32_t i = 0; i < Node.GPUBuffers.size( ); ++i) {
-            VerticesCount += Node.Meshes[i].CPUBuffer.ElementCount;
-        }
+        std::vector<VkDeviceSize> Offsets = {};
+        for (uint32_t i = 0; i < Node.CPUMeshData.Layouts.size(); ++i)
+            Offsets.push_back(Node.CPUMeshData.Layouts[i].offset);
+        vkCmdBindVertexBuffers(currentFrame.CmdBuffer, 0, 1, &Node.GPUMeshData.Handle, Offsets.data());
+
+        uint32_t VerticesCount = Node.CPUMeshData.BatchedMeshes.ElementCount;
         vkCmdDraw(currentFrame.CmdBuffer, VerticesCount, 1, 0, 0);
     }
 

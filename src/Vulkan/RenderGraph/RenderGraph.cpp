@@ -4,17 +4,31 @@
 namespace ffGraph {
 namespace Vulkan {
 
+static RenderGraphNode FillRenderGraphNode(const VmaAllocator& Allocator, JSON::SceneObject& Obj)
+{
+    RenderGraphNode Node;
+    Node.CPUMeshData = newBatch(Obj);
+    BufferCreateInfo bCreateInfo = {};
+    bCreateInfo.vkData.SharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    bCreateInfo.vkData.Size = Node.CPUMeshData.BatchedMeshes.ElementCount * Node.CPUMeshData.BatchedMeshes.ElementSize;
+    bCreateInfo.vkData.Usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+
+    bCreateInfo.vmaData.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+    bCreateInfo.vmaData.Usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+    Node.GPUMeshData = CreateBuffer(Allocator, bCreateInfo);
+
+    memcpy(Node.GPUMeshData.Infos.pMappedData, Node.CPUMeshData.BatchedMeshes.Data, Node.CPUMeshData.BatchedMeshes.ElementCount * Node.CPUMeshData.BatchedMeshes.ElementSize);
+
+    return Node;
+}
+
 static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderPass& Renderpass,
                                                 const VmaAllocator& Allocator, JSON::SceneObject& Obj,
-                                                const VkShaderModule Modules[2]) {
-    RenderGraphNode Node;
+                                                const VkShaderModule Modules[2])
+{
+    RenderGraphNode Node = FillRenderGraphNode(Allocator, Obj);
 
-    Node.Topology = (VkPrimitiveTopology)Obj.RenderPrimitive;
-    Node.Meshes.resize(Obj.Data.size( ));
-    for (int i = 0; i < (int)Obj.Data.size( ); ++i) {
-        Node.Meshes[i] = newMesh(Allocator, Obj, i);
-    }
-
+    Node.CPUMeshData.Topology = (VkPrimitiveTopology)Obj.RenderPrimitive;
     VkPushConstantRange PushConstantRange = {};
     PushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     PushConstantRange.offset = 0;
@@ -42,16 +56,13 @@ static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderP
     int BindingInput = 0;
     std::vector<VkVertexInputBindingDescription> vertexInputBindingDescription = {};
     std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescription = {};
-    int location = 0;
-    for (const auto& vBuffer : Node.Meshes) {
-        VkVertexInputBindingDescription inputBindingDescription;
-        inputBindingDescription.binding = BindingInput;
-        inputBindingDescription.stride = sizeof(float) * 7;
-        inputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-        vertexInputBindingDescription.push_back(inputBindingDescription);
 
-        BindingInput += 1;
-    }
+    VkVertexInputBindingDescription inputBindingDescription;
+    inputBindingDescription.binding = BindingInput;
+    inputBindingDescription.stride = sizeof(float) * 7;
+    inputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    vertexInputBindingDescription.push_back(inputBindingDescription);
+
     VkVertexInputAttributeDescription inputAttributeDescription[2] = {};
     inputAttributeDescription[0].binding = 0;
     inputAttributeDescription[0].location = 0;
@@ -75,7 +86,7 @@ static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderP
 
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo = {};
     inputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-    inputAssemblyStateCreateInfo.topology = Node.Topology;
+    inputAssemblyStateCreateInfo.topology = Node.CPUMeshData.Topology;
     inputAssemblyStateCreateInfo.primitiveRestartEnable = VK_FALSE;
 
     VkDynamicState dynamicStateEnables[2] = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
@@ -160,10 +171,6 @@ static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderP
         LogError(GetCurrentLogLocation( ), "Failed to create VkPipeline.");
         return Node;
     }
-    Node.GPUBuffers.resize(Node.Meshes.size( ));
-    for (uint32_t i = 0; i < Node.Meshes.size( ); ++i) {
-        Node.GPUBuffers[i] = Node.Meshes[i].GPUBuffer;
-    }
     return Node;
 }
 
@@ -174,6 +181,7 @@ RenderGraph ConstructRenderGraph(const Device& D, const VkRenderPass& Renderpass
     for (auto& obj : Layout.MeshArrays) {
         n.Nodes.push_back(ConstructRenderGraphNode(D, Renderpass, Allocator, obj, Modules));
     }
+    n.Layout = Layout;
     n.Cam = InitCamera(1280.f / 768.f, false);
     CameraResetPositionAndZoom(n.Cam);
     n.PushCamera.Model = glm::mat4(1.0f);
@@ -185,9 +193,16 @@ void DestroyRenderGraph(const VkDevice& Device, const VmaAllocator& Allocator, R
     for (auto& Node : Graph.Nodes) {
         vkDestroyPipeline(Device, Node.Handle, 0);
         vkDestroyPipelineLayout(Device, Node.Layout, 0);
-        for (auto& M : Node.Meshes) {
-            DestroyMesh(Allocator, M);
-        }
+        DestroyBatch(Node.CPUMeshData);
+        DestroyBuffer(Allocator, Node.GPUMeshData);
+    }
+}
+
+void ReloadRenderGraph(const VkDevice& Device, const VmaAllocator& Allocator, RenderGraph Graph)
+{
+    for (auto& Node : Graph.Nodes) {
+        vkDestroyPipeline(Device, Node.Handle, 0);
+        vkDestroyPipelineLayout(Device, Node.Layout, 0);
     }
 }
 

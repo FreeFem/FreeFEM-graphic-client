@@ -21,6 +21,8 @@ bool newContext(Context& vkContext, const VkInstance& Instance, const NativeWind
 
 void destroyContext(Context vkContext, const VkInstance& Instance);
 
+void reloadContext(Context& vkContext, const VkInstance& Instance, const NativeWindow& Window);
+
 }    // namespace Vulkan
 }    // namespace ffGraph
 

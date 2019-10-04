@@ -122,14 +122,13 @@ SceneLayout JSONString_to_SceneLayout(std::string& JSON_Data) {
     json Axes = GetAxes( );
     Layout.MeshArrays.push_back(JSONObject_to_SceneObject(Axes, 1));
     for (auto& Geometry : Data["Geometry"]) {
-        // int ite = FindRightSceneObject(Layout.MeshArrays, Geometry);
+        int ite = FindRightSceneObject(Layout.MeshArrays, Geometry);
 
-        // if (ite != -1) {
-        //     SceneObject_Add_JSONObject(Layout.MeshArrays[ite], Geometry);
-        // } else {
-        //     Layout.MeshArrays.push_back(JSONObject_to_SceneObject(Geometry));
-        // }
-        Layout.MeshArrays.push_back(JSONObject_to_SceneObject(Geometry, 2));
+        if (ite != -1) {
+            SceneObject_Add_JSONObject(Layout.MeshArrays[ite], Geometry);
+        } else {
+            Layout.MeshArrays.push_back(JSONObject_to_SceneObject(Geometry, 2));
+        }
     }
 
     return Layout;

@@ -10,7 +10,7 @@ namespace Vulkan {
 struct BufferCreateInfo {
     struct {
         VkDeviceSize Size = 0;
-        VkBufferUsageFlags Usage = VK_BUFFER_USAGE_FLAGS_BITS_MAX_ENUM;
+        VkBufferUsageFlags Usage;
         VkSharingMode SharingMode = VK_SHARING_MODE_MAX_ENUM;
         uint32_t queueFamilyIndexCount = 0;    // Optional
         uint32_t *pQueueFamilyIndices = 0;     // Optional
@@ -31,6 +31,7 @@ struct Buffer {
 };
 
 Buffer CreateBuffer(VmaAllocator Allocator, BufferCreateInfo pCreateInfo);
+void DestroyBuffer(VmaAllocator Allocator, Buffer toDestroy);
 
 }    // namespace Vulkan
 }    // namespace ffGraph

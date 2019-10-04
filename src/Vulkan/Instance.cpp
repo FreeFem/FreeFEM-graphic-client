@@ -35,6 +35,14 @@ bool FindExtension(std::vector<const char *> list, std::string toCompare) {
     return false;
 }
 
+static void FramebufferResizeCallback(GLFWwindow *Window, int width, int height)
+{
+    Instance *Handle = static_cast<Instance *>(glfwGetWindowUserPointer(Window));
+
+    Handle->m_Window.WindowSize = {width, height};
+    Handle->reload();
+}
+
 static void KeyCallback(GLFWwindow *Window, int key, int scancode, int action, int mods) {
     Instance *Handle = static_cast<Instance *>(glfwGetWindowUserPointer(Window));
 
@@ -103,7 +111,7 @@ void Instance::load(const std::string &AppName, unsigned int width, unsigned int
 #endif
     };
 
-#ifdef _DEBUG    // Creating deubg messenger
+#ifdef _DEBUG    // Creating debug messenger
     VkDebugUtilsMessengerCreateInfoEXT MessengerCreateInfo = {};
 
     MessengerCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
@@ -181,14 +189,15 @@ void Instance::run(std::shared_ptr<std::deque<std::string>> SharedQueue) {
     int i = 0;
     int render = 0;
     RenderGraph Graph;
+    std::vector<RenderGraph> test(10);
     while (!ffWindowShouldClose(m_Window)) {
         if (!SharedQueue->empty( )) {
             JSON::SceneLayout Layout = JSON::JSONString_to_SceneLayout(SharedQueue->at(0));
             SharedQueue->pop_front( );
             JSON::LogSceneLayout(Layout);
             VkShaderModule Modules[2] = {Resources.GeometryVertex.Module, Resources.GeometryFragment.Module};
-            Graph = ConstructRenderGraph(vkContext.vkDevice, GraphConstruct.RenderPass, Allocator, Layout, Modules);
-            Graphs.push_back(Graph);
+            //Graph = ConstructRenderGraph(vkContext.vkDevice, GraphConstruct.RenderPass, Allocator, Layout, Modules);
+            Graphs.push_back(ConstructRenderGraph(vkContext.vkDevice, GraphConstruct.RenderPass, Allocator, Layout, Modules));
         }
 
         if (!Graphs.empty( ))

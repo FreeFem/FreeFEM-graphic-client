@@ -28,7 +28,7 @@ struct Camera {
     bool CanRotate;
 
     glm::vec3 CameraPosition;
-    float CameraRotation;
+    float CameraRotation = 0.f;
     float CameraTranslationSpeed = 1.f;
     float CameraRotationSpeed = 1.f;
 };

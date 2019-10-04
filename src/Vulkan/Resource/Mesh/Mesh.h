@@ -13,6 +13,7 @@ namespace Vulkan {
 struct BoundingBox {
     glm::vec3 A = glm::vec3(0.f, 0.f, 0.f);
     glm::vec3 B = glm::vec3(0.f, 0.f, 0.f);
+    Array Vertices;
 };
 
 struct Vertex {
@@ -20,19 +21,33 @@ struct Vertex {
     float r, g, b, a;
 };
 
-struct Mesh {
-    VkPrimitiveTopology Topology;
-    Array CPUBuffer;
-    VkBuffer GPUBuffer;
-    VmaAllocation Memory;
-    VmaAllocationInfo Infos;
+typedef Array Mesh;
+
+struct BatchLayout {
+    size_t size = 0;
+    size_t offset = 0;
 };
 
-Mesh newMesh(const VmaAllocator& Allocator, JSON::SceneObject& Obj, int ite);
+struct Batch {
+    uint32_t NbOfMeshBatched = 0;
+    VkPrimitiveTopology Topology;
+    std::vector<BatchLayout> Layouts = {};
+    Mesh BatchedMeshes;
+};
 
-BoundingBox ComputeMeshBoundingBox(const Mesh& M);
+#define CastArrayToVertices(Array) ((Vertex *)Array.Data)
 
-void DestroyMesh(const VmaAllocator& Allocator, Mesh m);
+Batch newBatch(JSON::SceneObject& Obj);
+
+Batch newBatch(std::vector<Array> Data, VkPrimitiveTopology Topology);
+
+Batch addDataToBatch(Batch& b, JSON::SceneObject& Obj);
+
+void DestroyBatch(Batch& b);
+
+BoundingBox ComputeBatchBoundingBox(Batch b, bool asRenderableArray);
+
+BoundingBox ComputeSingleMeshBoundingBox(Batch b, uint32_t index, bool asRenderableArray);
 
 }    // namespace Vulkan
 }    // namespace ffGraph

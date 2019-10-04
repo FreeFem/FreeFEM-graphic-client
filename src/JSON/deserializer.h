@@ -18,6 +18,7 @@ struct SceneObject {
     RenderType RenderPrimitive;
     std::vector<Array> Data;
     int LineWidth = 2;
+    bool Mergable = true;
 };
 
 struct SceneLayout {

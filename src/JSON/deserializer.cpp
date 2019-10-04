@@ -29,7 +29,7 @@ static SceneObject JSONObject3D_to_SceneObject(json JSONObj) {
     return SceneObj;
 }
 
-static SceneObject JSONObject_to_SceneObject(json JSONObj, int LineWidth) {
+static SceneObject JSONObject_to_SceneObject(json JSONObj, int LineWidth, bool Mergable) {
     SceneObject SceneObj;
 
     std::string ObjType = JSONObj["Type"];
@@ -61,6 +61,7 @@ static SceneObject JSONObject_to_SceneObject(json JSONObj, int LineWidth) {
         }
     }
     SceneObj.Data.push_back(tmp);
+    SceneObj.Mergable = Mergable;
 
     return SceneObj;
 }
@@ -101,7 +102,7 @@ int FindRightSceneObject(std::vector<SceneObject> Objects, json JSONObj) {
         RenderPrimitive = RenderType::Triangle;
 
     for (int ite = 0; ite < (int)Objects.size( ); ++ite) {
-        if (Objects[ite].DataType == DataType && Objects[ite].RenderPrimitive == RenderPrimitive) return ite;
+        if (Objects[ite].DataType == DataType && Objects[ite].RenderPrimitive == RenderPrimitive && Objects[ite].Mergable) return ite;
     }
     return -1;
 }
@@ -120,14 +121,14 @@ SceneLayout JSONString_to_SceneLayout(std::string& JSON_Data) {
     SceneLayout Layout;
     json Data = json::from_cbor(JSON_Data);
     json Axes = GetAxes( );
-    Layout.MeshArrays.push_back(JSONObject_to_SceneObject(Axes, 1));
+    Layout.MeshArrays.push_back(JSONObject_to_SceneObject(Axes, 1, false));
     for (auto& Geometry : Data["Geometry"]) {
         int ite = FindRightSceneObject(Layout.MeshArrays, Geometry);
 
         if (ite != -1) {
             SceneObject_Add_JSONObject(Layout.MeshArrays[ite], Geometry);
         } else {
-            Layout.MeshArrays.push_back(JSONObject_to_SceneObject(Geometry, 2));
+            Layout.MeshArrays.push_back(JSONObject_to_SceneObject(Geometry, 2, true));
         }
     }
 

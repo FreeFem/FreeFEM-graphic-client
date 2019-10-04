@@ -1,3 +1,4 @@
+#include <iostream>
 #include "Camera.h"
 
 namespace ffGraph {
@@ -52,5 +53,14 @@ void CameraResetPositionAndZoom(Camera& Cam) {
     CameraSetAspectRatio(Cam, Cam.AspectRatio);
     RecalculateViewMatrix(Cam);
 }
+
+void ApplyCameraTo2DPosition(Camera& Cam, float x, float y)
+{
+    glm::vec4 v = glm::vec4(x, y, 0.f, 1.f);
+
+    v = glm::inverse(Cam.Data.ViewProjectionMatrix) * v;
+    std::cout << "[Mouse Position in world space] : {" << v.x << ", " << v.y << "}\n";
+}
+
 }    // namespace Vulkan
 }    // namespace ffGraph

@@ -39,6 +39,7 @@ void CameraTranslate(Camera& Cam, glm::vec3 Translation);
 void SetProjection(Camera& Cam, float left, float right, float bottom, float top);
 void CameraSetAspectRatio(Camera& Cam, float AspectRatio);
 void CameraResetPositionAndZoom(Camera& Cam);
+void ApplyCameraTo2DPosition(Camera& Cam, float x, float y);
 }    // namespace Vulkan
 }    // namespace ffGraph
 

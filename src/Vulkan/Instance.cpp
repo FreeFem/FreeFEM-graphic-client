@@ -55,8 +55,23 @@ static void KeyCallback(GLFWwindow *Window, int key, int scancode, int action, i
         CameraTranslate(Handle->Graphs[Handle->CurrentRenderGraph].Cam, glm::vec3(0.f, 1.f * Factor, 0.f));
     } else if (key == GLFW_KEY_DOWN) {
         CameraTranslate(Handle->Graphs[Handle->CurrentRenderGraph].Cam, glm::vec3(0.f, -1.f * Factor, 0.f));
-    } else if (key == GLFW_KEY_R)
+    } else if (key == GLFW_KEY_R) {
         CameraResetPositionAndZoom(Handle->Graphs[Handle->CurrentRenderGraph].Cam);
+    } else if (key == GLFW_KEY_U) {
+        double x, y = 0;
+        glfwGetCursorPos(Window, &x, &y);
+        x -= ((float)Handle->m_Window.WindowSize.width / 2.f);
+        x /= (float)Handle->m_Window.WindowSize.width / 2;
+        y -= ((float)Handle->m_Window.WindowSize.height / 2.f);
+        y /= (float)Handle->m_Window.WindowSize.height / 2;
+        ApplyCameraTo2DPosition(Handle->Graphs[Handle->CurrentRenderGraph].Cam, x, y);
+    } else if (key == GLFW_KEY_A) {
+        if (Handle->CurrentRenderGraph > 0)
+            --Handle->CurrentRenderGraph;
+    } else if (key == GLFW_KEY_D) {
+        Handle->CurrentRenderGraph = std::min(Handle->CurrentRenderGraph  + 1U, (uint32_t)Handle->Graphs.size() - 1U);
+    }
+
     Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.ViewProj =
         Handle->Graphs[Handle->CurrentRenderGraph].Cam.Data.ViewProjectionMatrix;
 }
@@ -189,20 +204,19 @@ void Instance::run(std::shared_ptr<std::deque<std::string>> SharedQueue) {
     int i = 0;
     int render = 0;
     RenderGraph Graph;
-    std::vector<RenderGraph> test(10);
     while (!ffWindowShouldClose(m_Window)) {
         if (!SharedQueue->empty( )) {
             JSON::SceneLayout Layout = JSON::JSONString_to_SceneLayout(SharedQueue->at(0));
             SharedQueue->pop_front( );
             JSON::LogSceneLayout(Layout);
             VkShaderModule Modules[2] = {Resources.GeometryVertex.Module, Resources.GeometryFragment.Module};
-            //Graph = ConstructRenderGraph(vkContext.vkDevice, GraphConstruct.RenderPass, Allocator, Layout, Modules);
             Graphs.push_back(ConstructRenderGraph(vkContext.vkDevice, GraphConstruct.RenderPass, Allocator, Layout, Modules));
         }
 
-        if (!Graphs.empty( ))
+        if (!Graphs.empty( )) {
             Render(vkContext, GraphConstruct.RenderPass, GraphConstruct.Framebuffers, vkRenderer,
                    Graphs[CurrentRenderGraph], m_Window.WindowSize);
+        }
     }
 }
 

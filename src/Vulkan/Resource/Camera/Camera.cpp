@@ -1,5 +1,7 @@
 #include <iostream>
 #include "Camera.h"
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/string_cast.hpp>
 
 namespace ffGraph {
 namespace Vulkan {

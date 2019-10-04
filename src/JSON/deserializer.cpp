@@ -20,7 +20,7 @@ static SceneObject JSONObject3D_to_SceneObject(json JSONObj) {
         SceneObj.RenderPrimitive = RenderType::Triangle;
 
     std::vector<float> vertices = JSONObj["Vertices"].get<std::vector<float>>( );
-    Array tmp = ffNewArray(vertices.size( ), sizeof(float));
+    Array tmp = ffNewArray(vertices.size( ) / 7, sizeof(float) * 7);
 
     ffMemcpyArray(tmp, vertices.data( ));
 
@@ -66,7 +66,21 @@ static SceneObject JSONObject_to_SceneObject(json JSONObj, int LineWidth, bool M
     return SceneObj;
 }
 
+static void SceneObject_Add_JSONObject3D(SceneObject& Obj, json JSONObj)
+{
+    std::vector<float> vertices = JSONObj["Vertices"].get<std::vector<float>>( );
+    Array tmp = ffNewArray(vertices.size() / 7, sizeof(float) * 7);
+
+    ffMemcpyArray(tmp, vertices.data());
+
+    Obj.Data.push_back(tmp);
+}
+
 static void SceneObject_Add_JSONObject(SceneObject& Obj, json JSONObj) {
+    if (Obj.DataType == Type::Mesh3D) {
+        SceneObject_Add_JSONObject3D(Obj, JSONObj);
+        return;
+    }
     std::vector<unsigned long int> indices = JSONObj["Indices"].get<std::vector<unsigned long int>>( );
 
     std::vector<float> vertices = JSONObj["Vertices"].get<std::vector<float>>( );

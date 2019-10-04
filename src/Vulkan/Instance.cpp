@@ -212,8 +212,8 @@ void Instance::run(std::shared_ptr<std::deque<std::string>> SharedQueue) {
             VkShaderModule Modules[2] = {Resources.GeometryVertex.Module, Resources.GeometryFragment.Module};
             Graphs.push_back(ConstructRenderGraph(vkContext.vkDevice, GraphConstruct.RenderPass, Allocator, Layout, Modules));
         }
-
         if (!Graphs.empty( )) {
+            //Graphs[CurrentRenderGraph].PushCamera.Model = glm::rotate(Graphs[CurrentRenderGraph].PushCamera.Model, (float)0.0001, glm::vec3(0.f, 1.f, 0.f));
             Render(vkContext, GraphConstruct.RenderPass, GraphConstruct.Framebuffers, vkRenderer,
                    Graphs[CurrentRenderGraph], m_Window.WindowSize);
         }

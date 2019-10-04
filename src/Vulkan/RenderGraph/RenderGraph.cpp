@@ -7,6 +7,9 @@ namespace Vulkan {
 static RenderGraphNode FillRenderGraphNode(const VmaAllocator& Allocator, JSON::SceneObject& Obj)
 {
     RenderGraphNode Node;
+    std::cout << "Filling data.\n";
+    std::cout << "Number of Array : " << Obj.Data.size() << "\n";
+    std::cout << "Size 1 : " << Obj.Data[0].ElementSize << "\nSize 2 " << Obj.Data[1].ElementSize << "\n";
     Node.CPUMeshData = newBatch(Obj);
     BufferCreateInfo bCreateInfo = {};
     bCreateInfo.vkData.SharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -106,7 +109,7 @@ static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderP
     rasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
     rasterizationStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
     rasterizationStateCreateInfo.polygonMode = VK_POLYGON_MODE_LINE;
-    rasterizationStateCreateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
+    rasterizationStateCreateInfo.cullMode = VK_CULL_MODE_NONE;
     rasterizationStateCreateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
     rasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
     rasterizationStateCreateInfo.lineWidth = Obj.LineWidth;

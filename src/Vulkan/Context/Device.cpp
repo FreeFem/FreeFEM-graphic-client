@@ -103,7 +103,6 @@ Device NewDevice(const VkInstance Instance, const VkSurfaceKHR Surface, std::vec
     NewPhysicalDevice(Instance, Surface, n);
     if (n.PhysicalHandle == VK_NULL_HANDLE) return n;
     float QueuePriority[2] = {1.f, 0.5f};
-    uint32_t count = 0;
     VkDeviceQueueCreateInfo queueCreateInfo = {};
     std::vector<VkDeviceQueueCreateInfo> QueueCreateInfo = {};
 

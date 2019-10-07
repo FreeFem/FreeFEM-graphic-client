@@ -7,7 +7,8 @@ namespace Vulkan {
 
 Image CreateImage(const VmaAllocator& Allocator, const VkDevice& Device, ImageCreateInfo pCreateInfo,
                   VmaAllocationCreateInfo pAllocationInfos) {
-    Image n = {VK_NULL_HANDLE, VK_NULL_HANDLE, 0, 0};
+    Image n;
+    memset(&n, 0, sizeof(Image));
 
     VkImageCreateInfo vkCreateInfo = {};
     vkCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;

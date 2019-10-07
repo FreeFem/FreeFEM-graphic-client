@@ -36,9 +36,6 @@ void Instance::reload()
     newGraphConstructor(vkContext.vkDevice, Allocator, vkContext.SurfaceFormat.format, m_Window.WindowSize, vkContext.vkSwapchain.Views);
     pushInitCmdBuffer(vkContext.vkDevice, GraphConstruct.DepthImage, GraphConstruct.ColorImage, vkRenderer.CommandPool);
 
-    for (auto& Node : GraphConstruct.Graphs) {
-
-    }
 }
 
 }

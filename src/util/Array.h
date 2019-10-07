@@ -96,7 +96,7 @@ inline void ffMemcpyArray(Array dst, Array src) { memcpy(dst.Data, src.Data, dst
  */
 inline void ffArrayForEach(Array a, void (*func)(void *array, size_t idx)) {
     for (size_t idx = 0; idx < a.ElementCount; ++idx) {
-        func(a.Data + (idx * a.ElementSize), idx);
+        func((char *)a.Data + (idx * a.ElementSize), idx);
     }
 }
 

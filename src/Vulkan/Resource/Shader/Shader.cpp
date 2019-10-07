@@ -31,6 +31,7 @@ Shader CreateShader(const char *FilePath, const VkDevice &Device, VkShaderStageF
         LogError(GetCurrentLogLocation( ), "Failed to create VkShaderModule for Shader : %s.", FilePath);
         return n;
     }
+    n.Stage = Stage;
     return n;
 }
 

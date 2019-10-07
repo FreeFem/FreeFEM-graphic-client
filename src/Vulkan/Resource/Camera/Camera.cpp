@@ -10,6 +10,7 @@ static Camera InitCameraInternal(Camera& Cam, float left, float right, float bot
     Cam.Data.ProjectionMatrix = glm::ortho(left, right, bottom, top, -1.f, 1.f);
     Cam.Data.ViewMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(1.f, -1.f, 1.f));
     Cam.Data.ViewProjectionMatrix = Cam.Data.ProjectionMatrix * Cam.Data.ViewMatrix;
+    Cam.Type = _2D;
     return Cam;
 }
 
@@ -63,6 +64,22 @@ void ApplyCameraTo2DPosition(Camera& Cam, float x, float y)
     v = glm::inverse(Cam.Data.ViewProjectionMatrix) * v;
     std::cout << "[Mouse Position in world space] : {" << v.x << ", " << v.y << "}\n";
 }
+
+void SwitchCameraType(Camera& Cam)
+{
+    std::cout << Cam.Type << "\n";
+    Cam.Type = (Cam.Type == _2D) ? _3D : _2D;
+
+    if (Cam.Type == _2D) {
+        CameraSetAspectRatio(Cam, Cam.AspectRatio);
+    } else {
+        std::cout << "Camera 3D.\n";
+        Cam.Data.ProjectionMatrix = glm::perspective(90.f, Cam.AspectRatio, -1.f, 1.f);
+        Cam.Data.ViewMatrix = glm::lookAt(glm::vec3(5.f, 5.f, 5.f), glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 1.f, 0.f));
+        Cam.Data.ViewProjectionMatrix = Cam.Data.ProjectionMatrix * Cam.Data.ViewMatrix;
+    }
+}
+
 
 }    // namespace Vulkan
 }    // namespace ffGraph

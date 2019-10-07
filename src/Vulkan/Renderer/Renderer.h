@@ -27,8 +27,7 @@ struct Renderer {
     // Framebuffers
 };
 
-Renderer NewRenderer(const VkDevice& Device, VkQueue* Queue, uint32_t QueueIndex, const VkSurfaceKHR& Surface,
-                     VkExtent2D Extent);
+Renderer NewRenderer(const VkDevice& Device, VkQueue* Queue, uint32_t QueueIndex);
 
 void DestroyRenderer(const VkDevice& Device, Renderer& vkRenderer);
 

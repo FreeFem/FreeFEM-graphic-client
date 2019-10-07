@@ -16,6 +16,11 @@ struct CameraUniform {
     glm::mat4 Model;
 };
 
+enum CameraType {
+    _2D,
+    _3D
+};
+
 struct Camera {
     struct {
         glm::mat4 ProjectionMatrix;
@@ -23,6 +28,9 @@ struct Camera {
 
         glm::mat4 ViewProjectionMatrix;
     } Data;
+
+    CameraType Type;
+
     float AspectRatio;
     float ZoomLevel;
     bool CanRotate;
@@ -40,6 +48,8 @@ void SetProjection(Camera& Cam, float left, float right, float bottom, float top
 void CameraSetAspectRatio(Camera& Cam, float AspectRatio);
 void CameraResetPositionAndZoom(Camera& Cam);
 void ApplyCameraTo2DPosition(Camera& Cam, float x, float y);
+
+void SwitchCameraType(Camera& Cam);
 }    // namespace Vulkan
 }    // namespace ffGraph
 

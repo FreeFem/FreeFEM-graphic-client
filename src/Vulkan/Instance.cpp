@@ -1,13 +1,14 @@
 #include "Instance.h"
 #include "Logger.h"
+#include "utils.h"
 
 namespace ffGraph {
 namespace Vulkan {
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugMessengerCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-                                                             VkDebugUtilsMessageTypeFlagsEXT messageType,
+                                                             UNUSED_PARAM(VkDebugUtilsMessageTypeFlagsEXT messageType),
                                                              const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
-                                                             void *pUserData) {
+                                                             UNUSED_PARAM(void *pUserData)) {
     if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
         LogWarning(GetCurrentLogLocation( ), "%s [%s] : %s\n",
                    GetVariableAsString(VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT), pCallbackData->pMessageIdName,
@@ -39,11 +40,11 @@ static void FramebufferResizeCallback(GLFWwindow *Window, int width, int height)
 {
     Instance *Handle = static_cast<Instance *>(glfwGetWindowUserPointer(Window));
 
-    Handle->m_Window.WindowSize = {width, height};
+    Handle->m_Window.WindowSize = {(uint32_t)width, (uint32_t)height};
     Handle->reload();
 }
 
-static void KeyCallback(GLFWwindow *Window, int key, int scancode, int action, int mods) {
+static void KeyCallback(GLFWwindow *Window, int key, UNUSED_PARAM(int scancode), UNUSED_PARAM(int action), UNUSED_PARAM(int mods)) {
     Instance *Handle = static_cast<Instance *>(glfwGetWindowUserPointer(Window));
 
     float Factor = std::min(Handle->Graphs[Handle->CurrentRenderGraph].Cam.ZoomLevel, 1.f) / 10;
@@ -70,13 +71,15 @@ static void KeyCallback(GLFWwindow *Window, int key, int scancode, int action, i
             --Handle->CurrentRenderGraph;
     } else if (key == GLFW_KEY_D) {
         Handle->CurrentRenderGraph = std::min(Handle->CurrentRenderGraph  + 1U, (uint32_t)Handle->Graphs.size() - 1U);
+    } else if (key == GLFW_KEY_3) {
+        SwitchCameraType(Handle->Graphs[Handle->CurrentRenderGraph].Cam);
     }
 
     Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.ViewProj =
         Handle->Graphs[Handle->CurrentRenderGraph].Cam.Data.ViewProjectionMatrix;
 }
 
-static void MouseScroolCallback(GLFWwindow *Window, double xOffset, double yOffset) {
+static void MouseScroolCallback(GLFWwindow *Window, UNUSED_PARAM(double xOffset), double yOffset) {
     Instance *Handle = static_cast<Instance *>(glfwGetWindowUserPointer(Window));
 
     Handle->Graphs[Handle->CurrentRenderGraph].Cam.ZoomLevel -= yOffset * 0.25f;
@@ -175,7 +178,7 @@ void Instance::load(const std::string &AppName, unsigned int width, unsigned int
     Resources = NewResources(vkContext.vkDevice.Handle);
 
     vkRenderer = NewRenderer(vkContext.vkDevice.Handle, &vkContext.vkDevice.Queue[DEVICE_GRAPH_QUEUE],
-                             vkContext.vkDevice.QueueIndex[DEVICE_GRAPH_QUEUE], vkContext.Surface, m_Window.WindowSize);
+                             vkContext.vkDevice.QueueIndex[DEVICE_GRAPH_QUEUE]);
 
     pushInitCmdBuffer(vkContext.vkDevice, GraphConstruct.DepthImage, GraphConstruct.ColorImage, vkRenderer.CommandPool);
 
@@ -201,8 +204,6 @@ void Instance::destroy( ) {
 }
 
 void Instance::run(std::shared_ptr<std::deque<std::string>> SharedQueue) {
-    int i = 0;
-    int render = 0;
     RenderGraph Graph;
     while (!ffWindowShouldClose(m_Window)) {
         if (!SharedQueue->empty( )) {

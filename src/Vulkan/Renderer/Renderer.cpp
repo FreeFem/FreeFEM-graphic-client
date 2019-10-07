@@ -94,9 +94,8 @@ bool pushInitCmdBuffer(const Device& D, const Image DepthImage, const Image& Col
 }
 
 static std::vector<VkCommandBuffer> newCommandBuffers(const VkDevice Device, const VkCommandPool CommandPool,
-                                                      uint32_t Count, const VkCommandBufferLevel CmdBufferLevels) {
-    VkResult res;
-
+                                                      uint32_t Count, const VkCommandBufferLevel CmdBufferLevels)
+{
     VkCommandBufferAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.commandPool = CommandPool;
@@ -126,8 +125,8 @@ static VkSemaphore newSemaphore(const VkDevice Device) {
     return Semaphore;
 }
 
-Renderer NewRenderer(const VkDevice& Device, VkQueue* Queue, uint32_t QueueIndex, const VkSurfaceKHR& Surface,
-                     VkExtent2D Extent) {
+Renderer NewRenderer(const VkDevice& Device, VkQueue* Queue, uint32_t QueueIndex)
+{
     Renderer n;
     memset(&n, 0, sizeof(Renderer));
 

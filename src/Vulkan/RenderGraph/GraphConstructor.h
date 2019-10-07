@@ -8,7 +8,7 @@
 #include "Resource/Image/Image.h"
 #include "Resource/Mesh/Mesh.h"
 #include "Resource/Buffer/Buffer.h"
-#include "Resource/Camera/Camera.h"
+#include "Resource/Camera/CameraController.h"
 #include "Context/Device.h"
 
 namespace ffGraph {
@@ -29,7 +29,7 @@ struct RenderGraph {
     JSON::SceneLayout Layout;
 
     CameraUniform PushCamera;
-    Camera Cam;
+    CameraController Cam;
 };
 
 struct GraphConstructor {

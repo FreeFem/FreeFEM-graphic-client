@@ -185,8 +185,6 @@ RenderGraph ConstructRenderGraph(const Device& D, const VkRenderPass& Renderpass
         n.Nodes.push_back(ConstructRenderGraphNode(D, Renderpass, Allocator, obj, Modules));
     }
     n.Layout = Layout;
-    n.Cam = InitCamera(1280.f / 768.f, false);
-    CameraResetPositionAndZoom(n.Cam);
     n.PushCamera.Model = glm::mat4(1.0f);
     n.PushCamera.ViewProj = glm::mat4(1.0f);
     return n;

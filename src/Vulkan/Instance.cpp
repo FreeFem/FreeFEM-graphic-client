@@ -36,67 +36,6 @@ bool FindExtension(std::vector<const char *> list, std::string toCompare) {
     return false;
 }
 
-static void FramebufferResizeCallback(GLFWwindow *Window, int width, int height)
-{
-    Instance *Handle = static_cast<Instance *>(glfwGetWindowUserPointer(Window));
-
-    Handle->m_Window.WindowSize = {(uint32_t)width, (uint32_t)height};
-    Handle->reload();
-}
-
-static void KeyCallback(GLFWwindow *Window, int key, UNUSED_PARAM(int scancode), UNUSED_PARAM(int action), UNUSED_PARAM(int mods)) {
-    Instance *Handle = static_cast<Instance *>(glfwGetWindowUserPointer(Window));
-
-    float Factor = std::min(Handle->Graphs[Handle->CurrentRenderGraph].Cam.ZoomLevel, 1.f) / 10;
-    if (key == GLFW_KEY_LEFT) {
-        CameraTranslate(Handle->Graphs[Handle->CurrentRenderGraph].Cam, glm::vec3(1.f * Factor, 0.f, 0.f));
-    } else if (key == GLFW_KEY_RIGHT) {
-        CameraTranslate(Handle->Graphs[Handle->CurrentRenderGraph].Cam, glm::vec3(-1.f * Factor, 0.f, 0.f));
-    } else if (key == GLFW_KEY_UP) {
-        CameraTranslate(Handle->Graphs[Handle->CurrentRenderGraph].Cam, glm::vec3(0.f, 1.f * Factor, 0.f));
-    } else if (key == GLFW_KEY_DOWN) {
-        CameraTranslate(Handle->Graphs[Handle->CurrentRenderGraph].Cam, glm::vec3(0.f, -1.f * Factor, 0.f));
-    } else if (key == GLFW_KEY_R) {
-        CameraResetPositionAndZoom(Handle->Graphs[Handle->CurrentRenderGraph].Cam);
-    } else if (key == GLFW_KEY_U) {
-        double x, y = 0;
-        glfwGetCursorPos(Window, &x, &y);
-        x -= ((float)Handle->m_Window.WindowSize.width / 2.f);
-        x /= (float)Handle->m_Window.WindowSize.width / 2;
-        y -= ((float)Handle->m_Window.WindowSize.height / 2.f);
-        y /= (float)Handle->m_Window.WindowSize.height / 2;
-        ApplyCameraTo2DPosition(Handle->Graphs[Handle->CurrentRenderGraph].Cam, x, y);
-    } else if (key == GLFW_KEY_A) {
-        if (Handle->CurrentRenderGraph > 0)
-            --Handle->CurrentRenderGraph;
-    } else if (key == GLFW_KEY_D) {
-        Handle->CurrentRenderGraph = std::min(Handle->CurrentRenderGraph  + 1U, (uint32_t)Handle->Graphs.size() - 1U);
-    } else if (key == GLFW_KEY_3) {
-        SwitchCameraType(Handle->Graphs[Handle->CurrentRenderGraph].Cam);
-    }
-
-    Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.ViewProj =
-        Handle->Graphs[Handle->CurrentRenderGraph].Cam.Data.ViewProjectionMatrix;
-}
-
-static void MouseScroolCallback(GLFWwindow *Window, UNUSED_PARAM(double xOffset), double yOffset) {
-    Instance *Handle = static_cast<Instance *>(glfwGetWindowUserPointer(Window));
-
-    Handle->Graphs[Handle->CurrentRenderGraph].Cam.ZoomLevel -= yOffset * 0.25f;
-    Handle->Graphs[Handle->CurrentRenderGraph].Cam.ZoomLevel =
-        std::max(Handle->Graphs[Handle->CurrentRenderGraph].Cam.ZoomLevel, 0.25f);
-    Handle->Graphs[Handle->CurrentRenderGraph].Cam.ZoomLevel =
-        std::min(Handle->Graphs[Handle->CurrentRenderGraph].Cam.ZoomLevel, 5.f);
-
-    float AspectRatio = Handle->Graphs[Handle->CurrentRenderGraph].Cam.AspectRatio;
-    float ZoomLevel = Handle->Graphs[Handle->CurrentRenderGraph].Cam.ZoomLevel;
-
-    SetProjection(Handle->Graphs[Handle->CurrentRenderGraph].Cam, -AspectRatio * ZoomLevel, AspectRatio * ZoomLevel,
-                  -ZoomLevel, ZoomLevel);
-    Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.ViewProj =
-        Handle->Graphs[Handle->CurrentRenderGraph].Cam.Data.ViewProjectionMatrix;
-}
-
 void Instance::load(const std::string &AppName, unsigned int width, unsigned int height) {
     ffInitGFLW( );
     if (m_Window.Handle == NULL) {
@@ -183,8 +122,7 @@ void Instance::load(const std::string &AppName, unsigned int width, unsigned int
     pushInitCmdBuffer(vkContext.vkDevice, GraphConstruct.DepthImage, GraphConstruct.ColorImage, vkRenderer.CommandPool);
 
     glfwSetWindowUserPointer(m_Window.Handle, this);
-    glfwSetKeyCallback(m_Window.Handle, KeyCallback);
-    glfwSetScrollCallback(m_Window.Handle, MouseScroolCallback);
+    initGFLWCallbacks();
 }
 
 void Instance::destroy( ) {
@@ -206,15 +144,17 @@ void Instance::destroy( ) {
 void Instance::run(std::shared_ptr<std::deque<std::string>> SharedQueue) {
     RenderGraph Graph;
     while (!ffWindowShouldClose(m_Window)) {
+        Events();
         if (!SharedQueue->empty( )) {
             JSON::SceneLayout Layout = JSON::JSONString_to_SceneLayout(SharedQueue->at(0));
             SharedQueue->pop_front( );
             JSON::LogSceneLayout(Layout);
             VkShaderModule Modules[2] = {Resources.GeometryVertex.Module, Resources.GeometryFragment.Module};
             Graphs.push_back(ConstructRenderGraph(vkContext.vkDevice, GraphConstruct.RenderPass, Allocator, Layout, Modules));
+            InitCameraController((*(Graphs.end() - 1)).Cam, (float)m_Window.WindowSize.width /(float)m_Window.WindowSize.height, 90.f, CameraType::_2D);
+            (*(Graphs.end() - 1)).PushCamera.ViewProj = (*(Graphs.end() - 1)).Cam.Handle.ViewProjMatrix;
         }
         if (!Graphs.empty( )) {
-            //Graphs[CurrentRenderGraph].PushCamera.Model = glm::rotate(Graphs[CurrentRenderGraph].PushCamera.Model, (float)0.0001, glm::vec3(0.f, 1.f, 0.f));
             Render(vkContext, GraphConstruct.RenderPass, GraphConstruct.Framebuffers, vkRenderer,
                    Graphs[CurrentRenderGraph], m_Window.WindowSize);
         }

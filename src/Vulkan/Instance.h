@@ -44,6 +44,9 @@ class Instance {
     void reload();
     void destroy( );
     void run(std::shared_ptr<std::deque<std::string>> SharedQueue);
+    private:
+    void initGFLWCallbacks();
+    void Events();
 };
 
 }    // namespace Vulkan

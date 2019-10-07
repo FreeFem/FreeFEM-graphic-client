@@ -17,6 +17,8 @@ struct NativeWindow {
     GLFWwindow* Handle = NULL;
     VkExtent2D WindowSize = {1280, 768};
     std::vector<std::string> SurfaceExtensions = {};
+    double MouseX = 0;
+    double MouseY = 0;
 };
 
 /**

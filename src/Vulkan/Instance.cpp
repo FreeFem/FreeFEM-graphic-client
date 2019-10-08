@@ -148,9 +148,7 @@ void Instance::run(std::shared_ptr<std::deque<std::string>> SharedQueue) {
         if (!SharedQueue->empty( )) {
             JSON::SceneLayout Layout = JSON::JSONString_to_SceneLayout(SharedQueue->at(0));
             SharedQueue->pop_front( );
-            JSON::LogSceneLayout(Layout);
-            VkShaderModule Modules[2] = {Resources.GeometryVertex.Module, Resources.GeometryFragment.Module};
-            Graphs.push_back(ConstructRenderGraph(vkContext.vkDevice, GraphConstruct.RenderPass, Allocator, Layout, Modules));
+            Graphs.push_back(ConstructRenderGraph(vkContext.vkDevice, GraphConstruct.RenderPass, Allocator, Layout, Resources));
             InitCameraController((*(Graphs.end() - 1)).Cam, (float)m_Window.WindowSize.width /(float)m_Window.WindowSize.height, 90.f, CameraType::_2D);
             (*(Graphs.end() - 1)).PushCamera.ViewProj = (*(Graphs.end() - 1)).Cam.Handle.ViewProjMatrix;
         }

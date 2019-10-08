@@ -12,16 +12,16 @@ Batch newBatch(JSON::SceneObject& Obj)
         count += Obj.Data[i].ElementCount;
 
     Batch n;
-    std::cout << "Count : " << count << "\n";
     n.BatchedMeshes = ffNewArray(count, Obj.Data[0].ElementSize);
-    std::cout << "Total size : " << Obj.Data[0].ElementSize << "\n";
+    std::cout << "Size : " << n.BatchedMeshes.ElementSize << "\n";
+    std::cout << "Count : " << n.BatchedMeshes.ElementCount << "\n";
+    n.Topology = (VkPrimitiveTopology)Obj.RenderPrimitive;
     if (n.BatchedMeshes.Data == 0)
         return {0, (VkPrimitiveTopology)0, {}, {0, 0, 0}};
     BatchLayout Layout = {0, 0};
     for (size_t i = 0; i < Obj.Data.size(); ++i) {
         Layout.offset += (i == 0) ? 0 : Layout.size;
         Layout.size = Obj.Data[i].ElementSize * Obj.Data[i].ElementCount;
-        std::cout << "Layout offset : " << Layout.offset << "\n";
 
         n.Layouts.push_back(Layout);
         memcpy((char *)n.BatchedMeshes.Data + Layout.offset, Obj.Data[i].Data, Layout.size);

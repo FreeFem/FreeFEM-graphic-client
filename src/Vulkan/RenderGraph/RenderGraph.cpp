@@ -7,9 +7,9 @@ namespace Vulkan {
 static RenderGraphNode FillRenderGraphNode(const VmaAllocator& Allocator, JSON::SceneObject& Obj)
 {
     RenderGraphNode Node;
-    std::cout << "Filling data.\n";
-    std::cout << "Number of Array : " << Obj.Data.size() << "\n";
-    std::cout << "Size 1 : " << Obj.Data[0].ElementSize << "\nSize 2 " << Obj.Data[1].ElementSize << "\n";
+
+    Node.GeoType = Obj.GeoType;
+    Node.to_render = true;
     Node.CPUMeshData = newBatch(Obj);
     BufferCreateInfo bCreateInfo = {};
     bCreateInfo.vkData.SharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -27,7 +27,7 @@ static RenderGraphNode FillRenderGraphNode(const VmaAllocator& Allocator, JSON::
 
 static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderPass& Renderpass,
                                                 const VmaAllocator& Allocator, JSON::SceneObject& Obj,
-                                                const VkShaderModule Modules[2])
+                                                const Resource& r)
 {
     RenderGraphNode Node = FillRenderGraphNode(Allocator, Obj);
 
@@ -46,46 +46,71 @@ static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderP
     vkCreatePipelineLayout(D.Handle, &PipelineLayoutInfo, 0, &Node.Layout);
 
     VkPipelineShaderStageCreateInfo ShaderStageInfo[2] = {};
-    ShaderStageInfo[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    ShaderStageInfo[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-    ShaderStageInfo[0].module = Modules[0];
-    ShaderStageInfo[0].pName = "main";
+    if (Obj.DataType == JSON::Type::Mesh2D) {
+        ShaderStageInfo[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        ShaderStageInfo[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+        ShaderStageInfo[0].module = r.Shaders[0].Module;
+        ShaderStageInfo[0].pName = "main";
+    } else {
+        ShaderStageInfo[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        ShaderStageInfo[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+        ShaderStageInfo[0].module = r.Shaders[1].Module;
+        ShaderStageInfo[0].pName = "main";
+    }
 
     ShaderStageInfo[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     ShaderStageInfo[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    ShaderStageInfo[1].module = Modules[1];
+    ShaderStageInfo[1].module = r.Shaders[2].Module;
     ShaderStageInfo[1].pName = "main";
 
     int BindingInput = 0;
     std::vector<VkVertexInputBindingDescription> vertexInputBindingDescription = {};
-    std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescription = {};
 
     VkVertexInputBindingDescription inputBindingDescription;
-    inputBindingDescription.binding = BindingInput;
-    inputBindingDescription.stride = sizeof(float) * 7;
-    inputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-    vertexInputBindingDescription.push_back(inputBindingDescription);
-
     VkVertexInputAttributeDescription inputAttributeDescription[2] = {};
-    inputAttributeDescription[0].binding = 0;
-    inputAttributeDescription[0].location = 0;
-    inputAttributeDescription[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-    inputAttributeDescription[0].offset = sizeof(float) * 0;
+    if (Obj.DataType == JSON::Type::Mesh2D) {
 
-    inputAttributeDescription[1].binding = 0;
-    inputAttributeDescription[1].location = 1;
-    inputAttributeDescription[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-    inputAttributeDescription[1].offset = sizeof(float) * 3;
+        inputBindingDescription.binding = BindingInput;
+        inputBindingDescription.stride = sizeof(float) * 6;
+        inputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+        vertexInputBindingDescription.push_back(inputBindingDescription);
 
-    vertexInputAttributeDescription.push_back(inputAttributeDescription[0]);
-    vertexInputAttributeDescription.push_back(inputAttributeDescription[1]);
+        inputAttributeDescription[0].binding = 0;
+        inputAttributeDescription[0].location = 0;
+        inputAttributeDescription[0].format = VK_FORMAT_R32G32_SFLOAT;
+        inputAttributeDescription[0].offset = sizeof(float) * 0;
+
+        inputAttributeDescription[1].binding = 0;
+        inputAttributeDescription[1].location = 1;
+        inputAttributeDescription[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+        inputAttributeDescription[1].offset = sizeof(float) * 2;
+
+    } else {
+
+        std::cout << "3D Triangle.\n";
+        inputBindingDescription.binding = BindingInput;
+        inputBindingDescription.stride = sizeof(float) * 7;
+        inputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+        vertexInputBindingDescription.push_back(inputBindingDescription);
+
+        inputAttributeDescription[0].binding = 0;
+        inputAttributeDescription[0].location = 0;
+        inputAttributeDescription[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+        inputAttributeDescription[0].offset = sizeof(float) * 0;
+
+        inputAttributeDescription[1].binding = 0;
+        inputAttributeDescription[1].location = 1;
+        inputAttributeDescription[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+        inputAttributeDescription[1].offset = sizeof(float) * 3;
+
+    }
 
     VkPipelineVertexInputStateCreateInfo VertexInputStateInfo = {};
     VertexInputStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     VertexInputStateInfo.vertexBindingDescriptionCount = (uint32_t)vertexInputBindingDescription.size( );
     VertexInputStateInfo.pVertexBindingDescriptions = vertexInputBindingDescription.data( );
-    VertexInputStateInfo.vertexAttributeDescriptionCount = (uint32_t)vertexInputAttributeDescription.size( );
-    VertexInputStateInfo.pVertexAttributeDescriptions = vertexInputAttributeDescription.data( );
+    VertexInputStateInfo.vertexAttributeDescriptionCount = (uint32_t)2;
+    VertexInputStateInfo.pVertexAttributeDescriptions = inputAttributeDescription;
 
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo = {};
     inputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -178,11 +203,12 @@ static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderP
 }
 
 RenderGraph ConstructRenderGraph(const Device& D, const VkRenderPass& Renderpass, const VmaAllocator& Allocator,
-                                 JSON::SceneLayout& Layout, const VkShaderModule Modules[2]) {
+                                 JSON::SceneLayout& Layout, const Resource& r) {
     RenderGraph n;
 
+    std::cout << "Number of group : " << Layout.MeshArrays.size() << "\n";
     for (auto& obj : Layout.MeshArrays) {
-        n.Nodes.push_back(ConstructRenderGraphNode(D, Renderpass, Allocator, obj, Modules));
+        n.Nodes.push_back(ConstructRenderGraphNode(D, Renderpass, Allocator, obj, r));
     }
     n.Layout = Layout;
     n.PushCamera.Model = glm::mat4(1.0f);

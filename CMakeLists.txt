@@ -21,8 +21,9 @@ else (UNIX)
 endif(UNIX)
 
 list(APPEND GLSL_SOURCE_FILES
-    ${CMAKE_SOURCE_DIR}/shaders/geometry.vert
-    ${CMAKE_SOURCE_DIR}/shaders/geometry.frag
+    ${CMAKE_SOURCE_DIR}/shaders/Geo2D.vert
+    ${CMAKE_SOURCE_DIR}/shaders/Geo3D.vert
+    ${CMAKE_SOURCE_DIR}/shaders/Color.frag
 )
 
 foreach(GLSL ${GLSL_SOURCE_FILES})

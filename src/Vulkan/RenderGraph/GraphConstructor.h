@@ -6,6 +6,7 @@
 #include "vk_mem_alloc.h"
 #include "deserializer.h"
 #include "Resource/Image/Image.h"
+#include "Resource/Resource.h"
 #include "Resource/Mesh/Mesh.h"
 #include "Resource/Buffer/Buffer.h"
 #include "Resource/Camera/CameraController.h"
@@ -15,8 +16,10 @@ namespace ffGraph {
 namespace Vulkan {
 
 struct RenderGraphNode {
+    bool to_render;
     VkPipeline Handle;
     VkPipelineLayout Layout;
+    JSON::GeometryType GeoType;
 
     uint8_t LineWidth = 1;
     Batch CPUMeshData;
@@ -48,7 +51,7 @@ GraphConstructor newGraphConstructor(const Device& D, const VmaAllocator& Alloca
 void DestroyGraphConstructor(const VkDevice& Device, const VmaAllocator& Allocator, GraphConstructor& Graph);
 
 RenderGraph ConstructRenderGraph(const Device& D, const VkRenderPass& Renderpass, const VmaAllocator& Allocator,
-                                 JSON::SceneLayout& Layout, const VkShaderModule Modules[2]);
+                                 JSON::SceneLayout& Layout, const Resource& r);
 
 void DestroyRenderGraph(const VkDevice& Device, const VmaAllocator& Allocator, RenderGraph Graph);
 

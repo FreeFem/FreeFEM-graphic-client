@@ -211,6 +211,8 @@ void Render(const Context& vkContext, const VkRenderPass RenderPass, std::vector
     vkCmdBeginRenderPass(currentFrame.CmdBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
     for (auto& Node : Graph.Nodes) {
+        if (!Node.to_render) continue;
+
         vkCmdBindPipeline(currentFrame.CmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Node.Handle);
 
         VkViewport viewport = {};

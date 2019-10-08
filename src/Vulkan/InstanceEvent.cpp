@@ -31,6 +31,21 @@ static void KeyCallback(GLFWwindow *Window, int key, UNUSED_PARAM(int scancode),
     }
     if (action == GLFW_PRESS) {
         CameraKeyEvents(Handle->Graphs[Handle->CurrentRenderGraph].Cam, key);
+        if (key == GLFW_KEY_V) {
+            for (auto& Node : Handle->Graphs[Handle->CurrentRenderGraph].Nodes) {
+                if (Node.GeoType == JSON::GeometryType::Volume) {
+                    std::cout << "Removing one Node from the rendering queue.\n";
+                    Node.to_render = !Node.to_render;
+                }
+            }
+        } else if (key == GLFW_KEY_S) {
+            for (auto& Node : Handle->Graphs[Handle->CurrentRenderGraph].Nodes) {
+                if (Node.GeoType == JSON::GeometryType::Surface) {
+                    std::cout << "Removing one Node from the rendering queue.\n";
+                    Node.to_render = !Node.to_render;
+                }
+            }
+        }
     }
     Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.ViewProj = Handle->Graphs[Handle->CurrentRenderGraph].Cam.Handle.ViewProjMatrix;
 }
@@ -74,8 +89,6 @@ void Instance::Events()
             m_Window.MouseX = cMouseX;
             m_Window.MouseY = cMouseY;
         }
-
-
     }
 }
 

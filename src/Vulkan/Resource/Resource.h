@@ -1,14 +1,14 @@
 #ifndef RESOURCE_H_
 #define RESOURCE_H_
 
+#include <vector>
 #include "Shader/Shader.h"
 
 namespace ffGraph {
 namespace Vulkan {
 
 struct Resource {
-    Shader GeometryVertex;
-    Shader GeometryFragment;
+    std::vector<Shader> Shaders;
 };
 
 Resource NewResources(const VkDevice& Device);

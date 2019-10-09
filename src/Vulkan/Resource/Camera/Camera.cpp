@@ -6,10 +6,7 @@
 namespace ffGraph {
 namespace Vulkan {
 
-void UpdateCameraHandle(CameraHandle& Cam)
-{
-    Cam.ViewProjMatrix = Cam.ProjectionMatrix * Cam.ViewMatrix;
-}
+void UpdateCameraHandle(CameraHandle& Cam) { Cam.ViewProjMatrix = Cam.ProjectionMatrix * Cam.ViewMatrix; }
 
 }    // namespace Vulkan
 }    // namespace ffGraph

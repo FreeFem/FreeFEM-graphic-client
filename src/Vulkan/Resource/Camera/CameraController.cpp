@@ -6,25 +6,25 @@
 namespace ffGraph {
 namespace Vulkan {
 
-static void InitCameraControllerInternal(CameraController& Cam, CameraType Type)
-{
-    Cam.Handle.ProjectionMatrix = glm::ortho(-Cam.AspectRatio * Cam.ZoomLevel, Cam.AspectRatio * Cam.ZoomLevel, -Cam.ZoomLevel, Cam.ZoomLevel, -10000.f, 10000.f);
+static void InitCameraControllerInternal(CameraController& Cam, CameraType Type) {
+    Cam.Handle.ProjectionMatrix = glm::ortho(-Cam.AspectRatio * Cam.ZoomLevel, Cam.AspectRatio * Cam.ZoomLevel,
+                                             -Cam.ZoomLevel, Cam.ZoomLevel, -10000.f, 10000.f);
     if (Type == CameraType::_2D) {
         Cam.Handle.ViewMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(1.f, -1.f, 1.f));
     } else {
-        Cam.Handle.ViewMatrix = glm::scale(glm::lookAt(Cam.Position, glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 1.f, 0.f)), glm::vec3(1.f, -1.f, 1.f));
+        Cam.Handle.ViewMatrix = glm::scale(
+            glm::lookAt(Cam.Position, glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 1.f, 0.f)), glm::vec3(1.f, -1.f, 1.f));
     }
     UpdateCameraHandle(Cam.Handle);
 }
 
-static void UpdateCameraControllerProjection(CameraController& Cam)
-{
-    Cam.Handle.ProjectionMatrix = glm::ortho(-Cam.AspectRatio * Cam.ZoomLevel, Cam.AspectRatio * Cam.ZoomLevel, -Cam.ZoomLevel, Cam.ZoomLevel, -10000.f, 10000.f);
+static void UpdateCameraControllerProjection(CameraController& Cam) {
+    Cam.Handle.ProjectionMatrix = glm::ortho(-Cam.AspectRatio * Cam.ZoomLevel, Cam.AspectRatio * Cam.ZoomLevel,
+                                             -Cam.ZoomLevel, Cam.ZoomLevel, -10000.f, 10000.f);
     UpdateCameraHandle(Cam.Handle);
 }
 
-void InitCameraController(CameraController& Cam, float AspectRatio, float FOV, CameraType BaseType)
-{
+void InitCameraController(CameraController& Cam, float AspectRatio, float FOV, CameraType BaseType) {
     Cam.FOV = FOV;
     Cam.AspectRatio = AspectRatio;
     Cam.Position = glm::vec3(0.f, 0.f, 0.f);
@@ -35,8 +35,7 @@ void InitCameraController(CameraController& Cam, float AspectRatio, float FOV, C
     InitCameraControllerInternal(Cam, BaseType);
 }
 
-void CameraKeyEvents(CameraController& Cam, int key)
-{
+void CameraKeyEvents(CameraController& Cam, int key) {
     if (key == GLFW_KEY_UP) {
         Cam.Translate(glm::vec3(0.f, -0.5f, 0.f));
     } else if (key == GLFW_KEY_DOWN) {
@@ -48,18 +47,17 @@ void CameraKeyEvents(CameraController& Cam, int key)
     } else if (key == GLFW_KEY_KP_3) {
         Cam.Type = !Cam.Type;
         Cam.SetPosition(glm::vec3(5.f, 5.f, 5.f));
-        Cam.UpdateCameraViewMatrix();
+        Cam.UpdateCameraViewMatrix( );
     }
     UpdateCameraHandle(Cam.Handle);
 }
 
-void CameraScroolEvents(CameraController& Cam, double yOffset)
-{
+void CameraScroolEvents(CameraController& Cam, double yOffset) {
     float ZoomSpeed = Cam.ZoomLevel * 0.15f;
     Cam.ZoomLevel -= yOffset * ZoomSpeed;
     Cam.ZoomLevel = std::max(Cam.ZoomLevel, 0.25f);
     UpdateCameraControllerProjection(Cam);
 }
 
-}
-}
+}    // namespace Vulkan
+}    // namespace ffGraph

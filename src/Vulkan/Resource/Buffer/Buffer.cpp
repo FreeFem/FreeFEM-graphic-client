@@ -25,14 +25,13 @@ Buffer CreateBuffer(VmaAllocator Allocator, BufferCreateInfo pCreateInfo) {
 
     Buffer n;
     if (vmaCreateBuffer(Allocator, &BufferInfos, &AllocInfo, &n.Handle, &n.Memory, &n.Infos)) {
-        LogError(GetCurrentLogLocation(), "Failed to create Buffer.\n");
+        LogError(GetCurrentLogLocation( ), "Failed to create Buffer.\n");
         return {VK_NULL_HANDLE, VK_NULL_HANDLE, {0, 0, 0, 0, 0, 0}};
     }
     return n;
 }
 
-void DestroyBuffer(VmaAllocator Allocator, Buffer toDestroy)
-{
+void DestroyBuffer(VmaAllocator Allocator, Buffer toDestroy) {
     vmaDestroyBuffer(Allocator, toDestroy.Handle, toDestroy.Memory);
 }
 

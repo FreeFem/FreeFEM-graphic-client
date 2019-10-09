@@ -4,8 +4,7 @@
 namespace ffGraph {
 namespace Vulkan {
 
-static RenderGraphNode FillRenderGraphNode(const VmaAllocator& Allocator, JSON::SceneObject& Obj)
-{
+static RenderGraphNode FillRenderGraphNode(const VmaAllocator& Allocator, JSON::SceneObject& Obj) {
     RenderGraphNode Node;
 
     Node.GeoType = Obj.GeoType;
@@ -20,15 +19,15 @@ static RenderGraphNode FillRenderGraphNode(const VmaAllocator& Allocator, JSON::
     bCreateInfo.vmaData.Usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
     Node.GPUMeshData = CreateBuffer(Allocator, bCreateInfo);
 
-    memcpy(Node.GPUMeshData.Infos.pMappedData, Node.CPUMeshData.BatchedMeshes.Data, Node.CPUMeshData.BatchedMeshes.ElementCount * Node.CPUMeshData.BatchedMeshes.ElementSize);
+    memcpy(Node.GPUMeshData.Infos.pMappedData, Node.CPUMeshData.BatchedMeshes.Data,
+           Node.CPUMeshData.BatchedMeshes.ElementCount * Node.CPUMeshData.BatchedMeshes.ElementSize);
 
     return Node;
 }
 
 static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderPass& Renderpass,
                                                 const VmaAllocator& Allocator, JSON::SceneObject& Obj,
-                                                const Resource& r)
-{
+                                                const Resource& r) {
     RenderGraphNode Node = FillRenderGraphNode(Allocator, Obj);
 
     Node.CPUMeshData.Topology = (VkPrimitiveTopology)Obj.RenderPrimitive;
@@ -69,7 +68,6 @@ static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderP
     VkVertexInputBindingDescription inputBindingDescription;
     VkVertexInputAttributeDescription inputAttributeDescription[2] = {};
     if (Obj.DataType == JSON::Type::Mesh2D) {
-
         inputBindingDescription.binding = BindingInput;
         inputBindingDescription.stride = sizeof(float) * 6;
         inputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
@@ -86,8 +84,6 @@ static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderP
         inputAttributeDescription[1].offset = sizeof(float) * 2;
 
     } else {
-
-        std::cout << "3D Triangle.\n";
         inputBindingDescription.binding = BindingInput;
         inputBindingDescription.stride = sizeof(float) * 7;
         inputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
@@ -102,7 +98,6 @@ static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderP
         inputAttributeDescription[1].location = 1;
         inputAttributeDescription[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
         inputAttributeDescription[1].offset = sizeof(float) * 3;
-
     }
 
     VkPipelineVertexInputStateCreateInfo VertexInputStateInfo = {};
@@ -206,7 +201,7 @@ RenderGraph ConstructRenderGraph(const Device& D, const VkRenderPass& Renderpass
                                  JSON::SceneLayout& Layout, const Resource& r) {
     RenderGraph n;
 
-    std::cout << "Number of group : " << Layout.MeshArrays.size() << "\n";
+    std::cout << "Number of group : " << Layout.MeshArrays.size( ) << "\n";
     for (auto& obj : Layout.MeshArrays) {
         n.Nodes.push_back(ConstructRenderGraphNode(D, Renderpass, Allocator, obj, r));
     }
@@ -225,8 +220,7 @@ void DestroyRenderGraph(const VkDevice& Device, const VmaAllocator& Allocator, R
     }
 }
 
-void ReloadRenderGraph(const VkDevice& Device, const VmaAllocator& Allocator, RenderGraph Graph)
-{
+void ReloadRenderGraph(const VkDevice& Device, const VmaAllocator& Allocator, RenderGraph Graph) {
     for (auto& Node : Graph.Nodes) {
         vkDestroyPipeline(Device, Node.Handle, 0);
         vkDestroyPipelineLayout(Device, Node.Layout, 0);

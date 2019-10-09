@@ -122,7 +122,7 @@ void Instance::load(const std::string &AppName, unsigned int width, unsigned int
     pushInitCmdBuffer(vkContext.vkDevice, GraphConstruct.DepthImage, GraphConstruct.ColorImage, vkRenderer.CommandPool);
 
     glfwSetWindowUserPointer(m_Window.Handle, this);
-    initGFLWCallbacks();
+    initGFLWCallbacks( );
 }
 
 void Instance::destroy( ) {
@@ -144,13 +144,16 @@ void Instance::destroy( ) {
 void Instance::run(std::shared_ptr<std::deque<std::string>> SharedQueue) {
     RenderGraph Graph;
     while (!ffWindowShouldClose(m_Window)) {
-        Events();
+        Events( );
         if (!SharedQueue->empty( )) {
             JSON::SceneLayout Layout = JSON::JSONString_to_SceneLayout(SharedQueue->at(0));
             SharedQueue->pop_front( );
-            Graphs.push_back(ConstructRenderGraph(vkContext.vkDevice, GraphConstruct.RenderPass, Allocator, Layout, Resources));
-            InitCameraController((*(Graphs.end() - 1)).Cam, (float)m_Window.WindowSize.width /(float)m_Window.WindowSize.height, 90.f, CameraType::_2D);
-            (*(Graphs.end() - 1)).PushCamera.ViewProj = (*(Graphs.end() - 1)).Cam.Handle.ViewProjMatrix;
+            Graphs.push_back(
+                ConstructRenderGraph(vkContext.vkDevice, GraphConstruct.RenderPass, Allocator, Layout, Resources));
+            InitCameraController((*(Graphs.end( ) - 1)).Cam,
+                                 (float)m_Window.WindowSize.width / (float)m_Window.WindowSize.height, 90.f,
+                                 CameraType::_2D);
+            (*(Graphs.end( ) - 1)).PushCamera.ViewProj = (*(Graphs.end( ) - 1)).Cam.Handle.ViewProjMatrix;
         }
         if (!Graphs.empty( )) {
             Render(vkContext, GraphConstruct.RenderPass, GraphConstruct.Framebuffers, vkRenderer,

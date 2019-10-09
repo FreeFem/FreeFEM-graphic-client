@@ -24,7 +24,6 @@ struct RenderGraphNode {
     uint8_t LineWidth = 1;
     Batch CPUMeshData;
     Buffer GPUMeshData;
-
 };
 
 struct RenderGraph {

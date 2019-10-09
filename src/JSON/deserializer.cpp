@@ -9,8 +9,7 @@ namespace JSON {
 
 using json = nlohmann::json;
 
-static RenderType GetRenderType(std::string PrimitiveType)
-{
+static RenderType GetRenderType(std::string PrimitiveType) {
     if (PrimitiveType.compare("Line") == 0)
         return RenderType::Line;
     else if (PrimitiveType.compare("Triangle") == 0)
@@ -20,8 +19,7 @@ static RenderType GetRenderType(std::string PrimitiveType)
     return RenderType::Line;
 }
 
-static Array ChooseImportFunction(std::string PrimitiveType, std::string Type, json Geometry, LabelTable& Table)
-{
+static Array ChooseImportFunction(std::string PrimitiveType, std::string Type, json Geometry, LabelTable& Table) {
     if (Type.compare("Mesh2D") == 0) {
         if (PrimitiveType.compare("Line") == 0) {
             LogInfo("ChooseImportFunction", "Importing a 2D mesh (Line)");
@@ -49,8 +47,7 @@ static Array ChooseImportFunction(std::string PrimitiveType, std::string Type, j
     return {0, 0, 0};
 }
 
-static bool JSONObject_to_SceneObject(SceneObject& Obj, LabelTable& Table, json JSONObj, int LineWidth)
-{
+static bool JSONObject_to_SceneObject(SceneObject& Obj, LabelTable& Table, json JSONObj, int LineWidth) {
     std::string PrimitiveType = JSONObj["Primitive"];
     std::string Type = JSONObj["Type"];
     std::string GeoType = JSONObj["GeometryType"];
@@ -62,11 +59,10 @@ static bool JSONObject_to_SceneObject(SceneObject& Obj, LabelTable& Table, json 
 
     Array r = ChooseImportFunction(PrimitiveType, Type, JSONObj, Table);
 
-    if (r.Data == 0)
-        return false;
+    if (r.Data == 0) return false;
 
     Obj.Data.push_back((Array){0, 0, 0});
-    (*(Obj.Data.end() - 1)) = r;
+    (*(Obj.Data.end( ) - 1)) = r;
     return true;
 }
 
@@ -74,7 +70,7 @@ SceneLayout JSONString_to_SceneLayout(std::string& JSON_Data) {
     SceneLayout Layout;
     json Data = json::from_cbor(JSON_Data);
 
-    Layout.MeshArrays.resize(Data["Geometry"].size());
+    Layout.MeshArrays.resize(Data["Geometry"].size( ));
     int i = 0;
     for (auto& Geometry : Data["Geometry"]) {
         if (!JSONObject_to_SceneObject(Layout.MeshArrays[i], Layout.ColorTable, Geometry, 2.f)) {

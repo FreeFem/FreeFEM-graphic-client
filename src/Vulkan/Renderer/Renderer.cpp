@@ -94,8 +94,7 @@ bool pushInitCmdBuffer(const Device& D, const Image DepthImage, const Image& Col
 }
 
 static std::vector<VkCommandBuffer> newCommandBuffers(const VkDevice Device, const VkCommandPool CommandPool,
-                                                      uint32_t Count, const VkCommandBufferLevel CmdBufferLevels)
-{
+                                                      uint32_t Count, const VkCommandBufferLevel CmdBufferLevels) {
     VkCommandBufferAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.commandPool = CommandPool;
@@ -125,8 +124,7 @@ static VkSemaphore newSemaphore(const VkDevice Device) {
     return Semaphore;
 }
 
-Renderer NewRenderer(const VkDevice& Device, VkQueue* Queue, uint32_t QueueIndex)
-{
+Renderer NewRenderer(const VkDevice& Device, VkQueue* Queue, uint32_t QueueIndex) {
     Renderer n;
     memset(&n, 0, sizeof(Renderer));
 
@@ -236,9 +234,9 @@ void Render(const Context& vkContext, const VkRenderPass RenderPass, std::vector
         vkCmdPushConstants(currentFrame.CmdBuffer, Node.Layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(CameraUniform),
                            &Graph.PushCamera);
         std::vector<VkDeviceSize> Offsets = {};
-        for (uint32_t i = 0; i < Node.CPUMeshData.Layouts.size(); ++i)
+        for (uint32_t i = 0; i < Node.CPUMeshData.Layouts.size( ); ++i)
             Offsets.push_back(Node.CPUMeshData.Layouts[i].offset);
-        vkCmdBindVertexBuffers(currentFrame.CmdBuffer, 0, 1, &Node.GPUMeshData.Handle, Offsets.data());
+        vkCmdBindVertexBuffers(currentFrame.CmdBuffer, 0, 1, &Node.GPUMeshData.Handle, Offsets.data( ));
 
         uint32_t VerticesCount = Node.CPUMeshData.BatchedMeshes.ElementCount;
         vkCmdDraw(currentFrame.CmdBuffer, VerticesCount, 1, 0, 0);

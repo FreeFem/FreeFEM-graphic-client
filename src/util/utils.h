@@ -3,4 +3,4 @@
 
 #define UNUSED_PARAM(Param) __attribute__((unused)) Param
 
-#endif // UTILS_H_
+#endif    // UTILS_H_

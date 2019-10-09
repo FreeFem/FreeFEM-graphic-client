@@ -22,6 +22,6 @@ void ClearLabelTable(LabelTable& Table);
 
 Color GetColor(const LabelTable& Table, const Label l);
 
-}
+}    // namespace ffGraph
 
-#endif // LABEL_TABLE_H_
+#endif    // LABEL_TABLE_H_

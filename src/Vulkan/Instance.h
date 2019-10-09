@@ -41,12 +41,13 @@ class Instance {
     Instance& operator=(Instance&) = delete;
 
     void load(const std::string& AppName, unsigned int width, unsigned int height);
-    void reload();
+    void reload( );
     void destroy( );
     void run(std::shared_ptr<std::deque<std::string>> SharedQueue);
-    private:
-    void initGFLWCallbacks();
-    void Events();
+
+   private:
+    void initGFLWCallbacks( );
+    void Events( );
 };
 
 }    // namespace Vulkan

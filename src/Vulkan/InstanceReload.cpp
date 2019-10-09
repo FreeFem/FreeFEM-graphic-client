@@ -4,8 +4,7 @@
 namespace ffGraph {
 namespace Vulkan {
 
-static void cleanup_for_reload(Instance *Handle)
-{
+static void cleanup_for_reload(Instance* Handle) {
     DestroyImage(Handle->Allocator, Handle->vkContext.vkDevice.Handle, Handle->GraphConstruct.DepthImage);
     DestroyImage(Handle->Allocator, Handle->vkContext.vkDevice.Handle, Handle->GraphConstruct.ColorImage);
 
@@ -26,17 +25,16 @@ static void cleanup_for_reload(Instance *Handle)
     vkDestroySwapchainKHR(Handle->vkContext.vkDevice.Handle, Handle->vkContext.vkSwapchain.Handle, 0);
 }
 
-void Instance::reload()
-{
+void Instance::reload( ) {
     vkDeviceWaitIdle(vkContext.vkDevice.Handle);
 
     cleanup_for_reload(this);
 
     newSwapchain(vkContext.vkDevice, vkContext.Surface, m_Window.WindowSize);
-    newGraphConstructor(vkContext.vkDevice, Allocator, vkContext.SurfaceFormat.format, m_Window.WindowSize, vkContext.vkSwapchain.Views);
+    newGraphConstructor(vkContext.vkDevice, Allocator, vkContext.SurfaceFormat.format, m_Window.WindowSize,
+                        vkContext.vkSwapchain.Views);
     pushInitCmdBuffer(vkContext.vkDevice, GraphConstruct.DepthImage, GraphConstruct.ColorImage, vkRenderer.CommandPool);
-
 }
 
-}
-}
+}    // namespace Vulkan
+}    // namespace ffGraph

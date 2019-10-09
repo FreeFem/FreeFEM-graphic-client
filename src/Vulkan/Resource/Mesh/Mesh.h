@@ -35,7 +35,7 @@ struct Batch {
     Mesh BatchedMeshes;
 };
 
-#define CastArrayToVertices(Array) ((Vertex *)Array.Data)
+#define CastArrayToVertices(Array) ((Vertex*)Array.Data)
 
 Batch newBatch(JSON::SceneObject& Obj);
 

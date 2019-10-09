@@ -19,7 +19,7 @@ Array ImportTriangleMesh3D(json Geometry, LabelTable& Colors);
 Array ImportLineMesh2D(json Geometry, LabelTable& Colors);
 Array ImportLineMesh3D(json Geometry, LabelTable& Colors);
 
-}
-}
+}    // namespace JSON
+}    // namespace ffGraph
 
-#endif // IMPORT_H_
+#endif    // IMPORT_H_

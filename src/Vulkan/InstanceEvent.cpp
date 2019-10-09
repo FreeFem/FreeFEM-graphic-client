@@ -9,6 +9,12 @@ static void FramebufferResizeCallback(GLFWwindow *Window, int width, int height)
     Instance *Handle = static_cast<Instance *>(glfwGetWindowUserPointer(Window));
 
     Handle->m_Window.WindowSize = {(uint32_t)width, (uint32_t)height};
+    for (auto& Graph : Handle->Graphs) {
+        Graph.Update = true;
+        for (auto& Node : Graph.Nodes) {
+            Node.Update = true;
+        }
+    }
     Handle->reload( );
 }
 
@@ -77,6 +83,7 @@ void Instance::initGFLWCallbacks( ) {
     glfwSetKeyCallback(m_Window.Handle, &KeyCallback);
     glfwSetScrollCallback(m_Window.Handle, &MouseScroolCallback);
     glfwSetMouseButtonCallback(m_Window.Handle, &MousePressCallback);
+    glfwSetFramebufferSizeCallback(m_Window.Handle, &FramebufferResizeCallback);
 }
 
 void Instance::Events( ) {

@@ -131,7 +131,8 @@ Swapchain newSwapchain(const Device& Device, const VkSurfaceKHR Surface, VkExten
     ImageCount = 0;
     vkGetSwapchainImagesKHR(Device.Handle, n.Handle, &ImageCount, 0);
     n.Images.resize(ImageCount);
-    vkGetSwapchainImagesKHR(Device.Handle, n.Handle, &ImageCount, n.Images.data( ));
+    if (vkGetSwapchainImagesKHR(Device.Handle, n.Handle, &ImageCount, n.Images.data( )))
+        LogError("Swapchain creation", "Failed to get the swapchain iamges.");
     CreateSwapchainImageViews(n, Device.Handle);
     return n;
 }

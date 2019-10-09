@@ -10,14 +10,14 @@
 namespace ffGraph {
 namespace JSON {
 
-enum Type { Mesh2D, Mesh3D };
+enum Dimension { Mesh2D, Mesh3D };
 
 enum RenderType { Point = 0, Line = 1, Triangle = 3, Arrow = 0 };
 
 enum GeometryType { Volume = 0, Surface = 1 };
 
 struct SceneObject {
-    Type DataType;
+    Dimension DataType;
     RenderType RenderPrimitive;
     GeometryType GeoType;
     std::vector<Array> Data;

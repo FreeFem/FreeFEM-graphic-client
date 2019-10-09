@@ -84,9 +84,6 @@ Array ImportLineMesh3D(json Geometry, LabelTable &Colors) {
         ptr[i].b = vColor.b;
         ptr[i].a = vColor.a;
     }
-    for (size_t i = 0; i < Indices.size( ); ++i) {
-        std::cout << "Index : " << i << " | Vertices : " << ptr[i].x << ", " << ptr[i].y << ", " << ptr[i].z << "\n";
-    }
     LogInfo("ImportLineMesh3D", "Successfully imported geometry.");
     Labels.clear( );
     Indices.clear( );

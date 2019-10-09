@@ -8,29 +8,16 @@ static RenderGraphNode FillRenderGraphNode(const VmaAllocator& Allocator, JSON::
     RenderGraphNode Node;
 
     Node.GeoType = Obj.GeoType;
+    Node.BatchDimension = Obj.DataType;
     Node.to_render = true;
     Node.CPUMeshData = newBatch(Obj);
-    BufferCreateInfo bCreateInfo = {};
-    bCreateInfo.vkData.SharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    bCreateInfo.vkData.Size = Node.CPUMeshData.BatchedMeshes.ElementCount * Node.CPUMeshData.BatchedMeshes.ElementSize;
-    bCreateInfo.vkData.Usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-
-    bCreateInfo.vmaData.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
-    bCreateInfo.vmaData.Usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
-    Node.GPUMeshData = CreateBuffer(Allocator, bCreateInfo);
-
-    memcpy(Node.GPUMeshData.Infos.pMappedData, Node.CPUMeshData.BatchedMeshes.Data,
-           Node.CPUMeshData.BatchedMeshes.ElementCount * Node.CPUMeshData.BatchedMeshes.ElementSize);
+    Node.LineWidth = Obj.LineWidth;
 
     return Node;
 }
 
-static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderPass& Renderpass,
-                                                const VmaAllocator& Allocator, JSON::SceneObject& Obj,
-                                                const Resource& r) {
-    RenderGraphNode Node = FillRenderGraphNode(Allocator, Obj);
+static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderPass& Renderpass, const Resource& r, RenderGraphNode& Node) {
 
-    Node.CPUMeshData.Topology = (VkPrimitiveTopology)Obj.RenderPrimitive;
     VkPushConstantRange PushConstantRange = {};
     PushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     PushConstantRange.offset = 0;
@@ -45,7 +32,7 @@ static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderP
     vkCreatePipelineLayout(D.Handle, &PipelineLayoutInfo, 0, &Node.Layout);
 
     VkPipelineShaderStageCreateInfo ShaderStageInfo[2] = {};
-    if (Obj.DataType == JSON::Type::Mesh2D) {
+    if (Node.BatchDimension == JSON::Dimension::Mesh2D) {
         ShaderStageInfo[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         ShaderStageInfo[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
         ShaderStageInfo[0].module = r.Shaders[0].Module;
@@ -67,7 +54,7 @@ static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderP
 
     VkVertexInputBindingDescription inputBindingDescription;
     VkVertexInputAttributeDescription inputAttributeDescription[2] = {};
-    if (Obj.DataType == JSON::Type::Mesh2D) {
+    if (Node.BatchDimension == JSON::Dimension::Mesh2D) {
         inputBindingDescription.binding = BindingInput;
         inputBindingDescription.stride = sizeof(float) * 6;
         inputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
@@ -132,7 +119,7 @@ static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderP
     rasterizationStateCreateInfo.cullMode = VK_CULL_MODE_NONE;
     rasterizationStateCreateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
     rasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
-    rasterizationStateCreateInfo.lineWidth = Obj.LineWidth;
+    rasterizationStateCreateInfo.lineWidth = Node.LineWidth;
 
     VkPipelineColorBlendAttachmentState colorBlendAttachementState = {};
     colorBlendAttachementState.blendEnable = VK_FALSE;
@@ -201,10 +188,25 @@ RenderGraph ConstructRenderGraph(const Device& D, const VkRenderPass& Renderpass
                                  JSON::SceneLayout& Layout, const Resource& r) {
     RenderGraph n;
 
-    std::cout << "Number of group : " << Layout.MeshArrays.size( ) << "\n";
+    uint32_t sMax = 0;
     for (auto& obj : Layout.MeshArrays) {
-        n.Nodes.push_back(ConstructRenderGraphNode(D, Renderpass, Allocator, obj, r));
+        RenderGraphNode tmp = FillRenderGraphNode(Allocator, obj);
+        n.Nodes.push_back(ConstructRenderGraphNode(D, Renderpass, r, tmp));
     }
+    for (auto& Node : n.Nodes)
+        sMax = std::max(sMax, (uint32_t)(Node.CPUMeshData.BatchedMeshes.ElementCount * Node.CPUMeshData.BatchedMeshes.ElementSize));
+    BufferCreateInfo bCreateInfo = {};
+    bCreateInfo.vkData.SharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    bCreateInfo.vkData.Size = sMax;
+    bCreateInfo.vkData.Usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+
+    bCreateInfo.vmaData.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+    bCreateInfo.vmaData.Usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+    n.PushBuffer = CreateBuffer(Allocator, bCreateInfo);
+
+    if (n.PushBuffer.Handle == VK_NULL_HANDLE)
+        return n;
+
     n.Layout = Layout;
     n.PushCamera.Model = glm::mat4(1.0f);
     n.PushCamera.ViewProj = glm::mat4(1.0f);
@@ -216,15 +218,28 @@ void DestroyRenderGraph(const VkDevice& Device, const VmaAllocator& Allocator, R
         vkDestroyPipeline(Device, Node.Handle, 0);
         vkDestroyPipelineLayout(Device, Node.Layout, 0);
         DestroyBatch(Node.CPUMeshData);
-        DestroyBuffer(Allocator, Node.GPUMeshData);
     }
+    DestroyBuffer(Allocator, Graph.PushBuffer);
 }
 
-void ReloadRenderGraph(const VkDevice& Device, const VmaAllocator& Allocator, RenderGraph Graph) {
+void ReloadRenderGraph(const Device& D, const VkRenderPass& RenderPass, const Resource& r, RenderGraph& Graph) {
+    if (!Graph.Update)
+        return;
+    std::cout << Graph.Nodes.size() << " nodes to reload.\n";
     for (auto& Node : Graph.Nodes) {
-        vkDestroyPipeline(Device, Node.Handle, 0);
-        vkDestroyPipelineLayout(Device, Node.Layout, 0);
+        if (Node.Update) {
+            if (Node.Handle != VK_NULL_HANDLE && Node.Layout != VK_NULL_HANDLE) {
+                vkDestroyPipeline(D.Handle, Node.Handle, 0);
+                vkDestroyPipelineLayout(D.Handle, Node.Layout, 0);
+                Node.Handle = VK_NULL_HANDLE;
+                Node.Layout = VK_NULL_HANDLE;
+            }
+            std::cout << "Reloading Node.\n";
+            ConstructRenderGraphNode(D, RenderPass, r, Node);
+            Node.Update = false;
+        }
     }
+    Graph.Update = false;
 }
 
 }    // namespace Vulkan

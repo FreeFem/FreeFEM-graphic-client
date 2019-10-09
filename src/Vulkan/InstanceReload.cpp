@@ -6,7 +6,9 @@ namespace Vulkan {
 
 static void cleanup_for_reload(Instance* Handle) {
     DestroyImage(Handle->Allocator, Handle->vkContext.vkDevice.Handle, Handle->GraphConstruct.DepthImage);
+    memset(&Handle->GraphConstruct.DepthImage, 0, sizeof(Image));
     DestroyImage(Handle->Allocator, Handle->vkContext.vkDevice.Handle, Handle->GraphConstruct.ColorImage);
+    memset(&Handle->GraphConstruct.ColorImage, 0, sizeof(Image));
 
     for (auto framebuffer : Handle->GraphConstruct.Framebuffers)
         vkDestroyFramebuffer(Handle->vkContext.vkDevice.Handle, framebuffer, 0);
@@ -15,6 +17,8 @@ static void cleanup_for_reload(Instance* Handle) {
         for (auto Pipeline : Node.Nodes) {
             vkDestroyPipeline(Handle->vkContext.vkDevice.Handle, Pipeline.Handle, 0);
             vkDestroyPipelineLayout(Handle->vkContext.vkDevice.Handle, Pipeline.Layout, 0);
+            Pipeline.Handle = VK_NULL_HANDLE;
+            Pipeline.Layout = VK_NULL_HANDLE;
         }
     }
     vkDestroyRenderPass(Handle->vkContext.vkDevice.Handle, Handle->GraphConstruct.RenderPass, 0);
@@ -23,6 +27,8 @@ static void cleanup_for_reload(Instance* Handle) {
         vkDestroyImageView(Handle->vkContext.vkDevice.Handle, view, 0);
 
     vkDestroySwapchainKHR(Handle->vkContext.vkDevice.Handle, Handle->vkContext.vkSwapchain.Handle, 0);
+    Handle->vkContext.vkSwapchain.Views.clear();
+    Handle->vkContext.vkSwapchain.Images.clear();
 }
 
 void Instance::reload( ) {
@@ -30,10 +36,13 @@ void Instance::reload( ) {
 
     cleanup_for_reload(this);
 
-    newSwapchain(vkContext.vkDevice, vkContext.Surface, m_Window.WindowSize);
-    newGraphConstructor(vkContext.vkDevice, Allocator, vkContext.SurfaceFormat.format, m_Window.WindowSize,
+    vkContext.vkSwapchain = newSwapchain(vkContext.vkDevice, vkContext.Surface, m_Window.WindowSize);
+    GraphConstruct = newGraphConstructor(vkContext.vkDevice, Allocator, vkContext.SurfaceFormat.format, m_Window.WindowSize,
                         vkContext.vkSwapchain.Views);
     pushInitCmdBuffer(vkContext.vkDevice, GraphConstruct.DepthImage, GraphConstruct.ColorImage, vkRenderer.CommandPool);
+    for (auto& Graph : Graphs) {
+        ReloadRenderGraph(vkContext.vkDevice, GraphConstruct.RenderPass, Resources, Graph);
+    }
 }
 
 }    // namespace Vulkan

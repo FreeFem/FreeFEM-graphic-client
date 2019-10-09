@@ -210,6 +210,9 @@ void Render(const Context& vkContext, const VkRenderPass RenderPass, std::vector
 
     for (auto& Node : Graph.Nodes) {
         if (!Node.to_render) continue;
+        memcpy(Graph.PushBuffer.Infos.pMappedData, Node.CPUMeshData.BatchedMeshes.Data,
+           Node.CPUMeshData.BatchedMeshes.ElementCount * Node.CPUMeshData.BatchedMeshes.ElementSize);
+
 
         vkCmdBindPipeline(currentFrame.CmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Node.Handle);
 
@@ -236,7 +239,7 @@ void Render(const Context& vkContext, const VkRenderPass RenderPass, std::vector
         std::vector<VkDeviceSize> Offsets = {};
         for (uint32_t i = 0; i < Node.CPUMeshData.Layouts.size( ); ++i)
             Offsets.push_back(Node.CPUMeshData.Layouts[i].offset);
-        vkCmdBindVertexBuffers(currentFrame.CmdBuffer, 0, 1, &Node.GPUMeshData.Handle, Offsets.data( ));
+        vkCmdBindVertexBuffers(currentFrame.CmdBuffer, 0, 1, &Graph.PushBuffer.Handle, Offsets.data( ));
 
         uint32_t VerticesCount = Node.CPUMeshData.BatchedMeshes.ElementCount;
         vkCmdDraw(currentFrame.CmdBuffer, VerticesCount, 1, 0, 0);

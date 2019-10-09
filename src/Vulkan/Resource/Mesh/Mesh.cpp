@@ -11,8 +11,6 @@ Batch newBatch(JSON::SceneObject &Obj) {
 
     Batch n;
     n.BatchedMeshes = ffNewArray(count, Obj.Data[0].ElementSize);
-    std::cout << "Size : " << n.BatchedMeshes.ElementSize << "\n";
-    std::cout << "Count : " << n.BatchedMeshes.ElementCount << "\n";
     n.Topology = (VkPrimitiveTopology)Obj.RenderPrimitive;
     if (n.BatchedMeshes.Data == 0) return {0, (VkPrimitiveTopology)0, {}, {0, 0, 0}};
     BatchLayout Layout = {0, 0};
@@ -213,7 +211,6 @@ BoundingBox ComputeBatchBoundingBox(Batch b, bool asRenderableArray) {
 }
 
 Batch addDataToBatch(Batch &b, JSON::SceneObject &Obj) {
-    std::cout << "Add to batch.\n";
     if (b.Topology != (VkPrimitiveTopology)Obj.RenderPrimitive) {
         LogWarning(GetCurrentLogLocation( ), "Tried to add data from the wrong type to a batch.");
         return b;

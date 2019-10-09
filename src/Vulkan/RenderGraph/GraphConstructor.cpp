@@ -101,8 +101,10 @@ GraphConstructor newGraphConstructor(const Device& D, const VmaAllocator& Alloca
     ImageAlloc.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
     n.DepthImage = CreateImage(Allocator, D.Handle, DepthCreateInfo, ImageAlloc);
-    if (n.DepthImage.Handle == VK_NULL_HANDLE || n.DepthImage.View == VK_NULL_HANDLE) return n;
-
+    if (n.DepthImage.Handle == VK_NULL_HANDLE || n.DepthImage.View == VK_NULL_HANDLE) {
+        LogError("newGraphConstructor", "Failed to create DepthImage.\n");
+        return n;
+    }
     ImageCreateInfo ColorCreateInfo = {};
     ColorCreateInfo.AsView = true;
     ColorCreateInfo.Extent = WindowSize;

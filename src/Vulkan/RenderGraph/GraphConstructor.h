@@ -16,17 +16,20 @@ namespace ffGraph {
 namespace Vulkan {
 
 struct RenderGraphNode {
+    bool Update = false;
     bool to_render;
     VkPipeline Handle;
     VkPipelineLayout Layout;
     JSON::GeometryType GeoType;
+    JSON::Dimension BatchDimension;
 
     uint8_t LineWidth = 1;
     Batch CPUMeshData;
-    Buffer GPUMeshData;
 };
 
 struct RenderGraph {
+    bool Update = false;
+    Buffer PushBuffer;
     std::vector<RenderGraphNode> Nodes;
     JSON::SceneLayout Layout;
 
@@ -53,6 +56,9 @@ RenderGraph ConstructRenderGraph(const Device& D, const VkRenderPass& Renderpass
                                  JSON::SceneLayout& Layout, const Resource& r);
 
 void DestroyRenderGraph(const VkDevice& Device, const VmaAllocator& Allocator, RenderGraph Graph);
+
+
+void ReloadRenderGraph(const Device& D, const VkRenderPass& RenderPass, const Resource& r, RenderGraph& Graph);
 
 }    // namespace Vulkan
 }    // namespace ffGraph

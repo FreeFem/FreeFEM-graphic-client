@@ -52,7 +52,7 @@ static bool JSONObject_to_SceneObject(SceneObject& Obj, LabelTable& Table, json 
     std::string Type = JSONObj["Type"];
     std::string GeoType = JSONObj["GeometryType"];
 
-    Obj.DataType = (Type.compare("Mesh2D") == 0) ? Type::Mesh2D : Type::Mesh3D;
+    Obj.DataType = (Type.compare("Mesh2D") == 0) ? Dimension::Mesh2D : Dimension::Mesh3D;
     Obj.LineWidth = LineWidth;
     Obj.RenderPrimitive = GetRenderType(PrimitiveType);
     Obj.GeoType = (GeoType.compare("Surface") == 0) ? GeometryType::Surface : GeometryType::Volume;

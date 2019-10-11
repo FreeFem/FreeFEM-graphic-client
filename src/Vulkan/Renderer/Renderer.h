@@ -17,6 +17,11 @@ struct PerFrame {
     VkCommandBuffer CmdBuffer;
 };
 
+struct RenderInfos {
+    VkExtent2D Offset;
+    VkExtent2D Size;
+};
+
 struct Renderer {
     VkQueue* Queue_REF;
 

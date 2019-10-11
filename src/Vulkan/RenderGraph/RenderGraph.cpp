@@ -9,9 +9,24 @@ static RenderGraphNode FillRenderGraphNode(const VmaAllocator& Allocator, JSON::
 
     Node.GeoType = Obj.GeoType;
     Node.BatchDimension = Obj.DataType;
-    Node.to_render = true;
+    Node.to_render = (Obj.GeoType == JSON::GeometryType::Volume) ? false : true;
     Node.CPUMeshData = newBatch(Obj);
     Node.LineWidth = Obj.LineWidth;
+
+    return Node;
+}
+
+RenderGraphNode FillRenderGraphNode(const VmaAllocator& Allocator, Array& Data, JSON::GeometryType GeoType, JSON::Dimension n, int LineWidth) {
+    RenderGraphNode Node;
+
+    Node.Layout = VK_NULL_HANDLE;
+    Node.Handle = VK_NULL_HANDLE;
+
+    Node.GeoType = GeoType;
+    Node.BatchDimension = n;
+    Node.to_render = (Node.GeoType == JSON::GeometryType::Volume) ? false : true;
+    Node.CPUMeshData = newBatch({Data}, (n == JSON::Dimension::Mesh2D) ? VK_PRIMITIVE_TOPOLOGY_LINE_LIST : VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+    Node.LineWidth = LineWidth;
 
     return Node;
 }
@@ -115,7 +130,7 @@ static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderP
     rasterizationStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     rasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
     rasterizationStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
-    rasterizationStateCreateInfo.polygonMode = VK_POLYGON_MODE_LINE;
+    rasterizationStateCreateInfo.polygonMode = Node.PolygonMode;
     rasterizationStateCreateInfo.cullMode = VK_CULL_MODE_NONE;
     rasterizationStateCreateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
     rasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
@@ -189,8 +204,10 @@ RenderGraph ConstructRenderGraph(const Device& D, const VkRenderPass& Renderpass
     RenderGraph n;
 
     uint32_t sMax = 0;
+    JSON::Dimension Dim;
     for (auto& obj : Layout.MeshArrays) {
         RenderGraphNode tmp = FillRenderGraphNode(Allocator, obj);
+        Dim = tmp.BatchDimension;
         n.Nodes.push_back(ConstructRenderGraphNode(D, Renderpass, r, tmp));
     }
     for (auto& Node : n.Nodes)
@@ -210,6 +227,7 @@ RenderGraph ConstructRenderGraph(const Device& D, const VkRenderPass& Renderpass
     n.Layout = Layout;
     n.PushCamera.Model = glm::mat4(1.0f);
     n.PushCamera.ViewProj = glm::mat4(1.0f);
+    n.Cam.Type = (Dim == JSON::Dimension::Mesh2D) ? CameraType::_2D : CameraType::_3D;
     return n;
 }
 
@@ -225,7 +243,7 @@ void DestroyRenderGraph(const VkDevice& Device, const VmaAllocator& Allocator, R
 void ReloadRenderGraph(const Device& D, const VkRenderPass& RenderPass, const Resource& r, RenderGraph& Graph) {
     if (!Graph.Update)
         return;
-    std::cout << Graph.Nodes.size() << " nodes to reload.\n";
+    vkDeviceWaitIdle(D.Handle);
     for (auto& Node : Graph.Nodes) {
         if (Node.Update) {
             if (Node.Handle != VK_NULL_HANDLE && Node.Layout != VK_NULL_HANDLE) {
@@ -234,7 +252,6 @@ void ReloadRenderGraph(const Device& D, const VkRenderPass& RenderPass, const Re
                 Node.Handle = VK_NULL_HANDLE;
                 Node.Layout = VK_NULL_HANDLE;
             }
-            std::cout << "Reloading Node.\n";
             ConstructRenderGraphNode(D, RenderPass, r, Node);
             Node.Update = false;
         }

@@ -45,7 +45,7 @@ Batch addDataToBatch(Batch& b, JSON::SceneObject& Obj);
 
 void DestroyBatch(Batch& b);
 
-BoundingBox ComputeBatchBoundingBox(Batch b, bool asRenderableArray);
+BoundingBox ComputeBatchBoundingBox(Batch& b, bool asRenderableArray, JSON::Dimension Dimension);
 
 BoundingBox ComputeSingleMeshBoundingBox(Batch b, uint32_t index, bool asRenderableArray);
 

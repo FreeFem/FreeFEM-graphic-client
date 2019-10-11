@@ -46,36 +46,70 @@ Batch newBatch(std::vector<Array> Data, VkPrimitiveTopology Topology) {
     return n;
 }
 
-Vertex *FillCoordinates2DSpace(Vertex *v, glm::vec3 A, glm::vec3 B) {
+void *FillCoordinates2DSpace(void *Data, glm::vec3 A, glm::vec3 B) {
+    struct Vertex2D {
+        float x, y, r, g, b, a;
+    };
+
+    Vertex2D *v = (Vertex2D *)Data;
+
     v[0].x = A.x;
-    v[1].x = B.x;
     v[0].y = A.y;
+    v[0].r = 0.f;
+    v[0].g = 0.f;
+    v[0].b = 0.f;
+    v[0].a = 0.25f;
+
+    v[1].x = B.x;
     v[1].y = A.y;
-    v[0].z = A.z;
-    v[1].z = A.z;
+    v[1].r = 0.f;
+    v[1].g = 0.f;
+    v[1].b = 0.f;
+    v[1].a = 0.25f;
 
     v[2].x = B.x;
-    v[3].x = B.x;
     v[2].y = A.y;
+    v[2].r = 0.f;
+    v[2].g = 0.f;
+    v[2].b = 0.f;
+    v[2].a = 0.25f;
+
+    v[3].x = B.x;
     v[3].y = B.y;
-    v[2].z = A.z;
-    v[3].z = A.z;
+    v[3].r = 0.f;
+    v[3].g = 0.f;
+    v[3].b = 0.f;
+    v[3].a = 0.25f;
 
     v[4].x = B.x;
-    v[5].x = A.x;
     v[4].y = B.y;
+    v[4].r = 0.f;
+    v[4].g = 0.f;
+    v[4].b = 0.f;
+    v[4].a = 0.25f;
+
+    v[5].x = A.x;
     v[5].y = B.y;
-    v[4].z = A.z;
-    v[5].z = A.z;
+    v[5].r = 0.f;
+    v[5].g = 0.f;
+    v[5].b = 0.f;
+    v[5].a = 0.25f;
 
     v[6].x = A.x;
-    v[7].x = A.x;
     v[6].y = B.y;
-    v[7].y = A.y;
-    v[6].z = A.z;
-    v[7].z = A.z;
+    v[6].r = 0.f;
+    v[6].g = 0.f;
+    v[6].b = 0.f;
+    v[6].a = 0.25f;
 
-    return v;
+    v[7].x = A.x;
+    v[7].y = A.y;
+    v[7].r = 0.f;
+    v[7].g = 0.f;
+    v[7].b = 0.f;
+    v[7].a = 0.25f;
+
+    return Data;
 }
 
 Vertex *FillCoordinates3DSpace(Vertex *v, glm::vec3 A, glm::vec3 B) {
@@ -179,28 +213,32 @@ Vertex *FillColorSpace(Vertex *v, size_t count, float r, float g, float b, float
     return v;
 }
 
-BoundingBox ComputeBatchBoundingBox(Batch b, bool asRenderableArray) {
+BoundingBox ComputeBatchBoundingBox(Batch& b, bool asRenderableArray, JSON::Dimension Dimension) {
     Vertex *v = (Vertex *)b.BatchedMeshes.Data;
-    BoundingBox bbox;
+    float *f = (float *)b.BatchedMeshes.Data;
+    BoundingBox bbox = {};
 
+    size_t offset = 0;
     for (size_t i = 0; i < b.BatchedMeshes.ElementCount; ++i) {
-        bbox.A.x = std::max(bbox.A.x, v[i].x);
-        bbox.A.y = std::max(bbox.A.y, v[i].y);
-        bbox.A.z = std::max(bbox.A.z, v[i].z);
+        bbox.A.x = std::max(bbox.A.x, *(f + offset));
+        bbox.A.y = std::max(bbox.A.y, *(f + offset + 1));
 
-        bbox.B.x = std::min(bbox.B.x, v[i].x);
-        bbox.B.y = std::min(bbox.B.y, v[i].y);
-        bbox.B.z = std::min(bbox.B.z, v[i].z);
+        bbox.B.x = std::min(bbox.B.x, *(f + offset));
+        bbox.B.y = std::min(bbox.B.y, *(f + offset + 1));
+        offset += (Dimension == JSON::Dimension::Mesh2D) ? 6 : 7;
     }
     if (asRenderableArray) {
-        if (bbox.B.z == bbox.A.z) {
-            bbox.Vertices = ffNewArray(8, sizeof(float) * 7);
-            v = CastArrayToVertices(bbox.Vertices);
-            v = FillColorSpace(v, bbox.Vertices.ElementCount, 0.1, 0.5, 0.5,
-                               0.4);    // BoundingBox will be rendered in a blue color.
-            v = FillCoordinates2DSpace(v, bbox.A, bbox.B);
+        if (Dimension == JSON::Dimension::Mesh2D) {
+            bbox.Vertices = ffNewArray(8, sizeof(float) * 6);
+            if (bbox.Vertices.Data == 0)
+                return {bbox.A, bbox.B, {0, 0, 0}};
+            //v = FillColorSpace(v, bbox.Vertices.ElementCount, 0.1, 0.5, 0.5,
+            //                   0.4);    // BoundingBox will be rendered in a blue color.
+            bbox.Vertices.Data = FillCoordinates2DSpace(bbox.Vertices.Data, bbox.A, bbox.B);
         } else {
             bbox.Vertices = ffNewArray(24, sizeof(float) * 7);
+            if (bbox.Vertices.Data == 0)
+                return {bbox.A, bbox.B, {0, 0, 0}};
             v = CastArrayToVertices(bbox.Vertices);
             v = FillColorSpace(v, bbox.Vertices.ElementCount, 0.1, 0.5, 0.5,
                                0.4);    // BoundingBox will be rendered in a blue color.

@@ -31,7 +31,7 @@ void InitCameraController(CameraController& Cam, float AspectRatio, float FOV, C
     Cam.Rotation = glm::vec3(0.f, 0.f, 0.f);
     Cam.ZoomLevel = 1.f;
 
-    Cam.Type = BaseType;
+    // Cam.Type = BaseType;
     InitCameraControllerInternal(Cam, BaseType);
 }
 

@@ -1,6 +1,7 @@
 #include "Instance.h"
 #include "utils.h"
 #include "Logger.h"
+#include "Resource/Mesh/Mesh.h"
 
 namespace ffGraph {
 namespace Vulkan {
@@ -16,6 +17,18 @@ static void FramebufferResizeCallback(GLFWwindow *Window, int width, int height)
         }
     }
     Handle->reload( );
+}
+
+int FindArraySurface(std::vector<RenderGraphNode> Nodes)
+{
+    int i = 0;
+    for (auto& Node : Nodes) {
+        if (Node.GeoType == JSON::GeometryType::Surface) {
+            return i;
+        }
+        ++i;
+    }
+    return -1;
 }
 
 static void KeyCallback(GLFWwindow *Window, int key, UNUSED_PARAM(int scancode), int action, UNUSED_PARAM(int mods)) {
@@ -56,6 +69,32 @@ static void KeyCallback(GLFWwindow *Window, int key, UNUSED_PARAM(int scancode),
                     Node.to_render = !Node.to_render;
                 }
             }
+        } else if (key == GLFW_KEY_L) {
+            for (auto &Node : Handle->Graphs[Handle->CurrentRenderGraph].Nodes) {
+                    Node.PolygonMode = (Node.PolygonMode == VK_POLYGON_MODE_LINE) ? VK_POLYGON_MODE_FILL : VK_POLYGON_MODE_LINE;
+                    Node.Update = true;
+            }
+            Handle->Graphs[Handle->CurrentRenderGraph].Update = true;
+            ReloadRenderGraph(Handle->vkContext.vkDevice, Handle->GraphConstruct.RenderPass, Handle->Resources, Handle->Graphs[Handle->CurrentRenderGraph]);
+        } else if (key == GLFW_KEY_N) {
+            int c = FindArraySurface(Handle->Graphs[Handle->CurrentRenderGraph].Nodes);
+            if (c == -1)
+                return;
+            BoundingBox bbox = ComputeBatchBoundingBox(Handle->Graphs[Handle->CurrentRenderGraph].Nodes[c].CPUMeshData, true,  Handle->Graphs[Handle->CurrentRenderGraph].Nodes[c].BatchDimension);
+            if (bbox.Vertices.Data == 0) {
+                LogWarning("EventKey", "Failed to create boundingbox data.\n");
+                return;
+            }
+            RenderGraphNode Node = FillRenderGraphNode(Handle->Allocator, bbox.Vertices, JSON::GeometryType::Surface, Handle->Graphs[Handle->CurrentRenderGraph].Nodes[c].BatchDimension, 1);
+            Node.Update = true;
+            Handle->Graphs[Handle->CurrentRenderGraph].Nodes.push_back(Node);
+            Handle->Graphs[Handle->CurrentRenderGraph].Update = true;
+            ReloadRenderGraph(Handle->vkContext.vkDevice, Handle->GraphConstruct.RenderPass, Handle->Resources, Handle->Graphs[Handle->CurrentRenderGraph]);
+        } else if (key == GLFW_KEY_A) {
+            if (Handle->CurrentRenderGraph == 0) return;
+            Handle->CurrentRenderGraph -= 1;
+        } else if (key == GLFW_KEY_D) {
+            Handle->CurrentRenderGraph = std::min((unsigned long int)Handle->CurrentRenderGraph + 1, Handle->Graphs.size() - 1);
         }
     }
     Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.ViewProj =
@@ -87,7 +126,7 @@ void Instance::initGFLWCallbacks( ) {
 }
 
 void Instance::Events( ) {
-    if (glfwGetMouseButton(m_Window.Handle, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+    if (glfwGetMouseButton(m_Window.Handle, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS && Graphs[CurrentRenderGraph].Cam.Type == CameraType::_3D) {
         double cMouseX, cMouseY;
         glfwGetCursorPos(m_Window.Handle, &cMouseX, &cMouseY);
 

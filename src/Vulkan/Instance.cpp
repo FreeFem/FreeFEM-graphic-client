@@ -144,7 +144,7 @@ void Instance::destroy( ) {
 void Instance::run(std::shared_ptr<std::deque<std::string>> SharedQueue) {
     RenderGraph Graph;
     while (!ffWindowShouldClose(m_Window)) {
-        Events( );
+        if (Graphs.size() != 0) Events( );
         if (!SharedQueue->empty( )) {
             JSON::SceneLayout Layout = JSON::JSONString_to_SceneLayout(SharedQueue->at(0));
             SharedQueue->pop_front( );

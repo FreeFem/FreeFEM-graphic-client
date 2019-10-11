@@ -22,6 +22,7 @@ struct RenderGraphNode {
     VkPipelineLayout Layout;
     JSON::GeometryType GeoType;
     JSON::Dimension BatchDimension;
+    VkPolygonMode PolygonMode = VK_POLYGON_MODE_LINE;
 
     uint8_t LineWidth = 1;
     Batch CPUMeshData;
@@ -59,6 +60,9 @@ void DestroyRenderGraph(const VkDevice& Device, const VmaAllocator& Allocator, R
 
 
 void ReloadRenderGraph(const Device& D, const VkRenderPass& RenderPass, const Resource& r, RenderGraph& Graph);
+
+
+RenderGraphNode FillRenderGraphNode(const VmaAllocator& Allocator, Array& Data, JSON::GeometryType GeoType, JSON::Dimension n, int LineWidth);
 
 }    // namespace Vulkan
 }    // namespace ffGraph

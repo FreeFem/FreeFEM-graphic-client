@@ -1,10 +1,10 @@
-#include "GraphConstructor.h"
+#include "RenderGraph.h"
 #include "Logger.h"
 
 namespace ffGraph {
 namespace Vulkan {
 
-static RenderGraphNode FillRenderGraphNode(const VmaAllocator& Allocator, JSON::SceneObject& Obj) {
+static RenderGraphNode FillRenderGraphNode(JSON::SceneObject& Obj) {
     RenderGraphNode Node;
 
     Node.GeoType = Obj.GeoType;
@@ -16,7 +16,7 @@ static RenderGraphNode FillRenderGraphNode(const VmaAllocator& Allocator, JSON::
     return Node;
 }
 
-RenderGraphNode FillRenderGraphNode(const VmaAllocator& Allocator, Array& Data, JSON::GeometryType GeoType, JSON::Dimension n, int LineWidth) {
+RenderGraphNode FillRenderGraphNode(Array& Data, JSON::GeometryType GeoType, JSON::Dimension n, int LineWidth) {
     RenderGraphNode Node;
 
     Node.Layout = VK_NULL_HANDLE;
@@ -25,14 +25,15 @@ RenderGraphNode FillRenderGraphNode(const VmaAllocator& Allocator, Array& Data, 
     Node.GeoType = GeoType;
     Node.BatchDimension = n;
     Node.to_render = (Node.GeoType == JSON::GeometryType::Volume) ? false : true;
-    Node.CPUMeshData = newBatch({Data}, (n == JSON::Dimension::Mesh2D) ? VK_PRIMITIVE_TOPOLOGY_LINE_LIST : VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+    Node.CPUMeshData = newBatch(
+        {Data}, (n == JSON::Dimension::Mesh2D) ? VK_PRIMITIVE_TOPOLOGY_LINE_LIST : VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
     Node.LineWidth = LineWidth;
 
     return Node;
 }
 
-static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderPass& Renderpass, const Resource& r, RenderGraphNode& Node) {
-
+static RenderGraphNode ConstructRenderGraphNode(RenderGraphCreateInfos CreateInfos, const VkShaderModule Shaders[2],
+                                                RenderGraphNode& Node) {
     VkPushConstantRange PushConstantRange = {};
     PushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     PushConstantRange.offset = 0;
@@ -44,24 +45,17 @@ static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderP
     PipelineLayoutInfo.pushConstantRangeCount = 1;
     PipelineLayoutInfo.pPushConstantRanges = &PushConstantRange;
 
-    vkCreatePipelineLayout(D.Handle, &PipelineLayoutInfo, 0, &Node.Layout);
+    vkCreatePipelineLayout(CreateInfos.Device, &PipelineLayoutInfo, 0, &Node.Layout);
 
     VkPipelineShaderStageCreateInfo ShaderStageInfo[2] = {};
-    if (Node.BatchDimension == JSON::Dimension::Mesh2D) {
-        ShaderStageInfo[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        ShaderStageInfo[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-        ShaderStageInfo[0].module = r.Shaders[0].Module;
-        ShaderStageInfo[0].pName = "main";
-    } else {
-        ShaderStageInfo[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        ShaderStageInfo[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-        ShaderStageInfo[0].module = r.Shaders[1].Module;
-        ShaderStageInfo[0].pName = "main";
-    }
+    ShaderStageInfo[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    ShaderStageInfo[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+    ShaderStageInfo[0].module = Shaders[0];
+    ShaderStageInfo[0].pName = "main";
 
     ShaderStageInfo[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     ShaderStageInfo[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    ShaderStageInfo[1].module = r.Shaders[2].Module;
+    ShaderStageInfo[1].module = Shaders[1];
     ShaderStageInfo[1].pName = "main";
 
     int BindingInput = 0;
@@ -172,7 +166,7 @@ static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderP
 
     VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo = {};
     multisampleStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-    multisampleStateCreateInfo.rasterizationSamples = D.PhysicalHandleCapabilities.msaaSamples;
+    multisampleStateCreateInfo.rasterizationSamples = CreateInfos.msaaSamples;
     multisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
 
     VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = {};
@@ -188,30 +182,35 @@ static RenderGraphNode ConstructRenderGraphNode(const Device& D, const VkRenderP
     graphicsPipelineCreateInfo.pDepthStencilState = &depthStencilStateCreateInfo;
     graphicsPipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;
     graphicsPipelineCreateInfo.layout = Node.Layout;
-    graphicsPipelineCreateInfo.renderPass = Renderpass;
+    graphicsPipelineCreateInfo.renderPass = CreateInfos.RenderPass;
     graphicsPipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
     graphicsPipelineCreateInfo.basePipelineIndex = -1;
 
-    if (vkCreateGraphicsPipelines(D.Handle, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, 0, &Node.Handle)) {
+    if (vkCreateGraphicsPipelines(CreateInfos.Device, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, 0,
+                                  &Node.Handle)) {
         LogError(GetCurrentLogLocation( ), "Failed to create VkPipeline.");
         return Node;
     }
+    memcpy(Node.Modules, Shaders, sizeof(VkShaderModule) * 2);
     return Node;
 }
 
-RenderGraph ConstructRenderGraph(const Device& D, const VkRenderPass& Renderpass, const VmaAllocator& Allocator,
-                                 JSON::SceneLayout& Layout, const Resource& r) {
+RenderGraph ConstructRenderGraph(RenderGraphCreateInfos CreateInfos, const VmaAllocator& Allocator,
+                                 JSON::SceneLayout& Layout, const ShaderLibrary& Shaders) {
     RenderGraph n;
 
     uint32_t sMax = 0;
     JSON::Dimension Dim;
     for (auto& obj : Layout.MeshArrays) {
-        RenderGraphNode tmp = FillRenderGraphNode(Allocator, obj);
+        RenderGraphNode tmp = FillRenderGraphNode(obj);
         Dim = tmp.BatchDimension;
-        n.Nodes.push_back(ConstructRenderGraphNode(D, Renderpass, r, tmp));
+        VkShaderModule Modules[2] = {
+            FindShader(Shaders, (Dim == JSON::Dimension::Mesh2D) ? "Geo2D.vert" : "Geo3D.vert"),
+            FindShader(Shaders, "Color.frag")};
+        n.Nodes.push_back(ConstructRenderGraphNode(CreateInfos, Modules, tmp));
+        sMax = std::max(
+            sMax, (uint32_t)(tmp.CPUMeshData.BatchedMeshes.ElementCount * tmp.CPUMeshData.BatchedMeshes.ElementSize));
     }
-    for (auto& Node : n.Nodes)
-        sMax = std::max(sMax, (uint32_t)(Node.CPUMeshData.BatchedMeshes.ElementCount * Node.CPUMeshData.BatchedMeshes.ElementSize));
     BufferCreateInfo bCreateInfo = {};
     bCreateInfo.vkData.SharingMode = VK_SHARING_MODE_EXCLUSIVE;
     bCreateInfo.vkData.Size = sMax;
@@ -221,8 +220,7 @@ RenderGraph ConstructRenderGraph(const Device& D, const VkRenderPass& Renderpass
     bCreateInfo.vmaData.Usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
     n.PushBuffer = CreateBuffer(Allocator, bCreateInfo);
 
-    if (n.PushBuffer.Handle == VK_NULL_HANDLE)
-        return n;
+    if (n.PushBuffer.Handle == VK_NULL_HANDLE) return n;
 
     n.Layout = Layout;
     n.PushCamera.Model = glm::mat4(1.0f);
@@ -240,19 +238,18 @@ void DestroyRenderGraph(const VkDevice& Device, const VmaAllocator& Allocator, R
     DestroyBuffer(Allocator, Graph.PushBuffer);
 }
 
-void ReloadRenderGraph(const Device& D, const VkRenderPass& RenderPass, const Resource& r, RenderGraph& Graph) {
-    if (!Graph.Update)
-        return;
-    vkDeviceWaitIdle(D.Handle);
+void ReloadRenderGraph(RenderGraphCreateInfos CreateInfos, RenderGraph& Graph) {
+    if (!Graph.Update) return;
+    vkDeviceWaitIdle(CreateInfos.Device);
     for (auto& Node : Graph.Nodes) {
         if (Node.Update) {
             if (Node.Handle != VK_NULL_HANDLE && Node.Layout != VK_NULL_HANDLE) {
-                vkDestroyPipeline(D.Handle, Node.Handle, 0);
-                vkDestroyPipelineLayout(D.Handle, Node.Layout, 0);
+                vkDestroyPipeline(CreateInfos.Device, Node.Handle, 0);
+                vkDestroyPipelineLayout(CreateInfos.Device, Node.Layout, 0);
                 Node.Handle = VK_NULL_HANDLE;
                 Node.Layout = VK_NULL_HANDLE;
             }
-            ConstructRenderGraphNode(D, RenderPass, r, Node);
+            ConstructRenderGraphNode(CreateInfos, Node.Modules, Node);
             Node.Update = false;
         }
     }

@@ -213,7 +213,7 @@ Vertex *FillColorSpace(Vertex *v, size_t count, float r, float g, float b, float
     return v;
 }
 
-BoundingBox ComputeBatchBoundingBox(Batch& b, bool asRenderableArray, JSON::Dimension Dimension) {
+BoundingBox ComputeBatchBoundingBox(Batch &b, bool asRenderableArray, JSON::Dimension Dimension) {
     Vertex *v = (Vertex *)b.BatchedMeshes.Data;
     float *f = (float *)b.BatchedMeshes.Data;
     BoundingBox bbox = {};
@@ -230,15 +230,13 @@ BoundingBox ComputeBatchBoundingBox(Batch& b, bool asRenderableArray, JSON::Dime
     if (asRenderableArray) {
         if (Dimension == JSON::Dimension::Mesh2D) {
             bbox.Vertices = ffNewArray(8, sizeof(float) * 6);
-            if (bbox.Vertices.Data == 0)
-                return {bbox.A, bbox.B, {0, 0, 0}};
-            //v = FillColorSpace(v, bbox.Vertices.ElementCount, 0.1, 0.5, 0.5,
+            if (bbox.Vertices.Data == 0) return {bbox.A, bbox.B, {0, 0, 0}};
+            // v = FillColorSpace(v, bbox.Vertices.ElementCount, 0.1, 0.5, 0.5,
             //                   0.4);    // BoundingBox will be rendered in a blue color.
             bbox.Vertices.Data = FillCoordinates2DSpace(bbox.Vertices.Data, bbox.A, bbox.B);
         } else {
             bbox.Vertices = ffNewArray(24, sizeof(float) * 7);
-            if (bbox.Vertices.Data == 0)
-                return {bbox.A, bbox.B, {0, 0, 0}};
+            if (bbox.Vertices.Data == 0) return {bbox.A, bbox.B, {0, 0, 0}};
             v = CastArrayToVertices(bbox.Vertices);
             v = FillColorSpace(v, bbox.Vertices.ElementCount, 0.1, 0.5, 0.5,
                                0.4);    // BoundingBox will be rendered in a blue color.

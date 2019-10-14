@@ -2,26 +2,22 @@ add_subdirectory(Window)
 
 add_library(ffGraph_Vulkan
     ${CMAKE_SOURCE_DIR}/src/Vulkan/Instance.cpp
+    ${CMAKE_SOURCE_DIR}/src/Vulkan/Environment.cpp
+    ${CMAKE_SOURCE_DIR}/src/Vulkan/GraphicManager.cpp
     ${CMAKE_SOURCE_DIR}/src/Vulkan/InstanceReload.cpp
     ${CMAKE_SOURCE_DIR}/src/Vulkan/InstanceEvent.cpp
     ${CMAKE_SOURCE_DIR}/src/Vulkan/vmaDeclaration.cpp
+    ${CMAKE_SOURCE_DIR}/src/Vulkan/Frame.cpp
 
-    ${CMAKE_SOURCE_DIR}/src/Vulkan/Context/Context.cpp
-    ${CMAKE_SOURCE_DIR}/src/Vulkan/Context/Device.cpp
-    ${CMAKE_SOURCE_DIR}/src/Vulkan/Context/Swapchain.cpp
+    ${CMAKE_SOURCE_DIR}/src/Vulkan/RenderGraph.cpp
 
-    ${CMAKE_SOURCE_DIR}/src/Vulkan/RenderGraph/GraphConstructor.cpp
-    ${CMAKE_SOURCE_DIR}/src/Vulkan/RenderGraph/RenderGraph.cpp
-
-    ${CMAKE_SOURCE_DIR}/src/Vulkan/Resource/Resource.cpp
     ${CMAKE_SOURCE_DIR}/src/Vulkan/Resource/Image/Image.cpp
-    ${CMAKE_SOURCE_DIR}/src/Vulkan/Resource/Shader/Shader.cpp
+    ${CMAKE_SOURCE_DIR}/src/Vulkan/Resource/Shader.cpp
     ${CMAKE_SOURCE_DIR}/src/Vulkan/Resource/Mesh/Mesh.cpp
     ${CMAKE_SOURCE_DIR}/src/Vulkan/Resource/Buffer/Buffer.cpp
     ${CMAKE_SOURCE_DIR}/src/Vulkan/Resource/Camera/Camera.cpp
     ${CMAKE_SOURCE_DIR}/src/Vulkan/Resource/Camera/CameraController.cpp
 
-    ${CMAKE_SOURCE_DIR}/src/Vulkan/Renderer/Renderer.cpp
 )
 
 target_include_directories(ffGraph_Vulkan PRIVATE ${Vulkan_INCLUDE_DIR})

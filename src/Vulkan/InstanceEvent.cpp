@@ -10,19 +10,18 @@ static void FramebufferResizeCallback(GLFWwindow *Window, int width, int height)
     Instance *Handle = static_cast<Instance *>(glfwGetWindowUserPointer(Window));
 
     Handle->m_Window.WindowSize = {(uint32_t)width, (uint32_t)height};
-    for (auto& Graph : Handle->Graphs) {
+    for (auto &Graph : Handle->Graphs) {
         Graph.Update = true;
-        for (auto& Node : Graph.Nodes) {
+        for (auto &Node : Graph.Nodes) {
             Node.Update = true;
         }
     }
     Handle->reload( );
 }
 
-int FindArraySurface(std::vector<RenderGraphNode> Nodes)
-{
+int FindArraySurface(std::vector<RenderGraphNode> Nodes) {
     int i = 0;
-    for (auto& Node : Nodes) {
+    for (auto &Node : Nodes) {
         if (Node.GeoType == JSON::GeometryType::Surface) {
             return i;
         }
@@ -34,71 +33,65 @@ int FindArraySurface(std::vector<RenderGraphNode> Nodes)
 static void KeyCallback(GLFWwindow *Window, int key, UNUSED_PARAM(int scancode), int action, UNUSED_PARAM(int mods)) {
     Instance *Handle = static_cast<Instance *>(glfwGetWindowUserPointer(Window));
 
-    if (key == GLFW_KEY_KP_4) {
-        Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model = glm::rotate(
-            Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model, glm::radians(2.f), glm::vec3(0.f, 1.f, 0.f));
-    } else if (key == GLFW_KEY_KP_6) {
-        Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model = glm::rotate(
-            Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model, glm::radians(2.f), glm::vec3(0.f, -1.f, 0.f));
-    } else if (key == GLFW_KEY_KP_8) {
-        Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model = glm::rotate(
-            Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model, glm::radians(2.f), glm::vec3(1.f, 0.f, 0.f));
-    } else if (key == GLFW_KEY_KP_2) {
-        Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model = glm::rotate(
-            Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model, glm::radians(2.f), glm::vec3(-1.f, 0.f, 0.f));
-    } else if (key == GLFW_KEY_KP_7) {
-        Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model = glm::rotate(
-            Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model, glm::radians(2.f), glm::vec3(0.f, 0.f, -1.f));
-    } else if (key == GLFW_KEY_KP_9) {
-        Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model = glm::rotate(
-            Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model, glm::radians(2.f), glm::vec3(0.f, 0.f, 1.f));
-    }
-    if (action == GLFW_PRESS) {
-        CameraKeyEvents(Handle->Graphs[Handle->CurrentRenderGraph].Cam, key);
-        if (key == GLFW_KEY_V) {
-            for (auto &Node : Handle->Graphs[Handle->CurrentRenderGraph].Nodes) {
-                if (Node.GeoType == JSON::GeometryType::Volume) {
-                    std::cout << "Removing one Node from the rendering queue.\n";
-                    Node.to_render = !Node.to_render;
-                }
-            }
-        } else if (key == GLFW_KEY_S) {
-            for (auto &Node : Handle->Graphs[Handle->CurrentRenderGraph].Nodes) {
-                if (Node.GeoType == JSON::GeometryType::Surface) {
-                    std::cout << "Removing one Node from the rendering queue.\n";
-                    Node.to_render = !Node.to_render;
-                }
-            }
-        } else if (key == GLFW_KEY_L) {
-            for (auto &Node : Handle->Graphs[Handle->CurrentRenderGraph].Nodes) {
-                    Node.PolygonMode = (Node.PolygonMode == VK_POLYGON_MODE_LINE) ? VK_POLYGON_MODE_FILL : VK_POLYGON_MODE_LINE;
-                    Node.Update = true;
-            }
-            Handle->Graphs[Handle->CurrentRenderGraph].Update = true;
-            ReloadRenderGraph(Handle->vkContext.vkDevice, Handle->GraphConstruct.RenderPass, Handle->Resources, Handle->Graphs[Handle->CurrentRenderGraph]);
-        } else if (key == GLFW_KEY_N) {
-            int c = FindArraySurface(Handle->Graphs[Handle->CurrentRenderGraph].Nodes);
-            if (c == -1)
-                return;
-            BoundingBox bbox = ComputeBatchBoundingBox(Handle->Graphs[Handle->CurrentRenderGraph].Nodes[c].CPUMeshData, true,  Handle->Graphs[Handle->CurrentRenderGraph].Nodes[c].BatchDimension);
-            if (bbox.Vertices.Data == 0) {
-                LogWarning("EventKey", "Failed to create boundingbox data.\n");
-                return;
-            }
-            RenderGraphNode Node = FillRenderGraphNode(Handle->Allocator, bbox.Vertices, JSON::GeometryType::Surface, Handle->Graphs[Handle->CurrentRenderGraph].Nodes[c].BatchDimension, 1);
-            Node.Update = true;
-            Handle->Graphs[Handle->CurrentRenderGraph].Nodes.push_back(Node);
-            Handle->Graphs[Handle->CurrentRenderGraph].Update = true;
-            ReloadRenderGraph(Handle->vkContext.vkDevice, Handle->GraphConstruct.RenderPass, Handle->Resources, Handle->Graphs[Handle->CurrentRenderGraph]);
-        } else if (key == GLFW_KEY_A) {
-            if (Handle->CurrentRenderGraph == 0) return;
-            Handle->CurrentRenderGraph -= 1;
-        } else if (key == GLFW_KEY_D) {
-            Handle->CurrentRenderGraph = std::min((unsigned long int)Handle->CurrentRenderGraph + 1, Handle->Graphs.size() - 1);
-        }
-    }
-    Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.ViewProj =
-        Handle->Graphs[Handle->CurrentRenderGraph].Cam.Handle.ViewProjMatrix;
+    // if (key == GLFW_KEY_KP_4) {
+    //     Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model = glm::rotate(
+    //         Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model, glm::radians(2.f), glm::vec3(0.f, 1.f,
+    //         0.f));
+    // } else if (key == GLFW_KEY_KP_6) {
+    //     Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model = glm::rotate(
+    //         Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model, glm::radians(2.f), glm::vec3(0.f, -1.f,
+    //         0.f));
+    // } else if (key == GLFW_KEY_KP_8) {
+    //     Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model = glm::rotate(
+    //         Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model, glm::radians(2.f), glm::vec3(1.f, 0.f,
+    //         0.f));
+    // } else if (key == GLFW_KEY_KP_2) {
+    //     Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model = glm::rotate(
+    //         Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model, glm::radians(2.f), glm::vec3(-1.f, 0.f,
+    //         0.f));
+    // } else if (key == GLFW_KEY_KP_7) {
+    //     Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model = glm::rotate(
+    //         Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model, glm::radians(2.f), glm::vec3(0.f, 0.f,
+    //         -1.f));
+    // } else if (key == GLFW_KEY_KP_9) {
+    //     Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model = glm::rotate(
+    //         Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model, glm::radians(2.f), glm::vec3(0.f,
+    //         0.f, 1.f));
+    // }
+    // if (action == GLFW_PRESS) {
+    //     CameraKeyEvents(Handle->Graphs[Handle->CurrentRenderGraph].Cam, key);
+    //     if (key == GLFW_KEY_V) {
+    //         for (auto &Node : Handle->Graphs[Handle->CurrentRenderGraph].Nodes) {
+    //             if (Node.GeoType == JSON::GeometryType::Volume) {
+    //                 std::cout << "Removing one Node from the rendering queue.\n";
+    //                 Node.to_render = !Node.to_render;
+    //             }
+    //         }
+    //     } else if (key == GLFW_KEY_S) {
+    //         for (auto &Node : Handle->Graphs[Handle->CurrentRenderGraph].Nodes) {
+    //             if (Node.GeoType == JSON::GeometryType::Surface) {
+    //                 std::cout << "Removing one Node from the rendering queue.\n";
+    //                 Node.to_render = !Node.to_render;
+    //             }
+    //         }
+    //     } else if (key == GLFW_KEY_L) {
+    //         for (auto &Node : Handle->Graphs[Handle->CurrentRenderGraph].Nodes) {
+    //                 Node.PolygonMode = (Node.PolygonMode == VK_POLYGON_MODE_LINE) ? VK_POLYGON_MODE_FILL :
+    //                 VK_POLYGON_MODE_LINE; Node.Update = true;
+    //         }
+    //         Handle->Graphs[Handle->CurrentRenderGraph].Update = true;
+    //         // ReloadRenderGraph(Handle->vkContext.vkDevice, Handle->GraphConstruct.RenderPass, Handle->Resources,
+    //         Handle->Graphs[Handle->CurrentRenderGraph]);
+    //     } else if (key == GLFW_KEY_A) {
+    //         if (Handle->CurrentRenderGraph == 0) return;
+    //         Handle->CurrentRenderGraph -= 1;
+    //     } else if (key == GLFW_KEY_D) {
+    //         Handle->CurrentRenderGraph = std::min((unsigned long int)Handle->CurrentRenderGraph + 1,
+    //         Handle->Graphs.size() - 1);
+    //     }
+    // }
+    // Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.ViewProj =
+    //     Handle->Graphs[Handle->CurrentRenderGraph].Cam.Handle.ViewProjMatrix;
 }
 
 static void MouseScroolCallback(GLFWwindow *Window, UNUSED_PARAM(double xOffset), double yOffset) {
@@ -118,6 +111,7 @@ static void MousePressCallback(GLFWwindow *Window, int button, int action, UNUSE
 }
 
 void Instance::initGFLWCallbacks( ) {
+    glfwSetWindowUserPointer(m_Window.Handle, this);
     glfwSetInputMode(m_Window.Handle, GLFW_STICKY_KEYS, GLFW_TRUE);
     glfwSetKeyCallback(m_Window.Handle, &KeyCallback);
     glfwSetScrollCallback(m_Window.Handle, &MouseScroolCallback);
@@ -126,7 +120,8 @@ void Instance::initGFLWCallbacks( ) {
 }
 
 void Instance::Events( ) {
-    if (glfwGetMouseButton(m_Window.Handle, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS && Graphs[CurrentRenderGraph].Cam.Type == CameraType::_3D) {
+    if (glfwGetMouseButton(m_Window.Handle, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS &&
+        Graphs[CurrentRenderGraph].Cam.Type == CameraType::_3D) {
         double cMouseX, cMouseY;
         glfwGetCursorPos(m_Window.Handle, &cMouseX, &cMouseY);
 

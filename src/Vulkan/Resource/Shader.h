@@ -6,6 +6,8 @@
 #define FF_SHADER_H_
 
 #include <vulkan/vulkan.h>
+#include <vector>
+#include <cstring>
 
 namespace ffGraph {
 namespace Vulkan {
@@ -14,9 +16,12 @@ namespace Vulkan {
  * @brief Stores a ShaderModule
  */
 struct Shader {
+    char Name[64];
     VkShaderStageFlags Stage;
     VkShaderModule Module;
 };
+
+using ShaderLibrary = std::vector<Shader>;
 
 /**
  * @brief Look if the ffGraph::Vulkan::Shader creation was successful.
@@ -36,7 +41,7 @@ inline bool ffIsShaderReady(Shader Shader) { return (Shader.Module == VK_NULL_HA
  * @return ffGraph::Vulkan::Shader - A new ffGraph::Vulkan::Shader (use ffGraph::Vulkan::ffIsShaderReady to check return
  * value).
  */
-Shader CreateShader(const char* FilePath, const VkDevice& Device, VkShaderStageFlags Stage);
+Shader ImportShader(const char* FilePath, const VkDevice& Device, VkShaderStageFlags Stage);
 
 /**
  * @brief Destroy a ffGraph::Vulkan::Shader, releasing it's memory.
@@ -47,6 +52,16 @@ Shader CreateShader(const char* FilePath, const VkDevice& Device, VkShaderStageF
  * @return void
  */
 void DestroyShader(const VkDevice Device, Shader Shader);
+
+/**
+ * @brief Search for a shader using its name.
+ */
+inline VkShaderModule FindShader(const ShaderLibrary& Library, const char* Name) {
+    for (size_t i = 0; i < Library.size( ); ++i) {
+        if (strcmp(Name, Library[i].Name) == 0) return Library[i].Module;
+    }
+    return VK_NULL_HANDLE;
+}
 
 }    // namespace Vulkan
 }    // namespace ffGraph

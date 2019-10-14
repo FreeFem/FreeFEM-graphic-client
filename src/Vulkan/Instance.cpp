@@ -25,6 +25,14 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugMessengerCallback(VkDebugUtilsMessage
     return VK_FALSE;
 }
 
+static bool ImportShaders(ShaderLibrary &Shaders, const VkDevice &Device) {
+    Shaders.resize(3);
+    Shaders[0] = ImportShader("./shaders/Color.frag.spirv", Device, VK_SHADER_STAGE_FRAGMENT_BIT);
+    Shaders[1] = ImportShader("./shaders/Geo2D.vert.spirv", Device, VK_SHADER_STAGE_VERTEX_BIT);
+    Shaders[2] = ImportShader("./shaders/Geo3D.vert.spirv", Device, VK_SHADER_STAGE_VERTEX_BIT);
+    return true;
+}
+
 Instance::Instance( ) {}
 
 Instance::Instance(NativeWindow &Window) : m_Window(Window) {}
@@ -41,6 +49,7 @@ void Instance::load(const std::string &AppName, unsigned int width, unsigned int
     if (m_Window.Handle == NULL) {
         m_Window = ffNewWindow({width, height});
     }
+    initGFLWCallbacks( );
     VkApplicationInfo AppInfo = {};
     AppInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     AppInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
@@ -95,47 +104,26 @@ void Instance::load(const std::string &AppName, unsigned int width, unsigned int
     if (DebugUtilMessenger) DebugUtilMessenger(m_Handle, &MessengerCreateInfo, 0, &m_DebugMessenger);
 #endif
 
-    memset(&vkContext, 0, sizeof(Context));
-    newContext(vkContext, m_Handle, m_Window);
-
-    if (vkContext.vkDevice.Handle == VK_NULL_HANDLE) {
-        LogError(GetCurrentLogLocation( ), "Failed to create Context");
-        return;
-    }
-    VmaAllocatorCreateInfo AllocatorCreateInfo = {};
-    AllocatorCreateInfo.physicalDevice = vkContext.vkDevice.PhysicalHandle;
-    AllocatorCreateInfo.device = vkContext.vkDevice.Handle;
-
-    if (vmaCreateAllocator(&AllocatorCreateInfo, &Allocator)) {
-        LogError(GetCurrentLogLocation( ), "Failed to create VmaAllocator.");
-        return;
-    }
-
-    GraphConstruct = newGraphConstructor(vkContext.vkDevice, Allocator, vkContext.SurfaceFormat.format,
-                                         m_Window.WindowSize, vkContext.vkSwapchain.Views);
-
-    Resources = NewResources(vkContext.vkDevice.Handle);
-
-    vkRenderer = NewRenderer(vkContext.vkDevice.Handle, &vkContext.vkDevice.Queue[DEVICE_GRAPH_QUEUE],
-                             vkContext.vkDevice.QueueIndex[DEVICE_GRAPH_QUEUE]);
-
-    pushInitCmdBuffer(vkContext.vkDevice, GraphConstruct.DepthImage, GraphConstruct.ColorImage, vkRenderer.CommandPool);
-
-    glfwSetWindowUserPointer(m_Window.Handle, this);
-    initGFLWCallbacks( );
+    if (CreateEnvironment(Env, m_Handle, m_Window) == false) return;
+    if (CreatePerFrameData(Env.GPUInfos.Device, Env.GraphManager.CommandPool, 2, FrameData) == false) return;
+    if (ImportShaders(Shaders, Env.GPUInfos.Device) == false) return;
 }
 
 void Instance::destroy( ) {
-    vkDeviceWaitIdle(vkContext.vkDevice.Handle);
-    for (auto &RenderG : Graphs) DestroyRenderGraph(vkContext.vkDevice.Handle, Allocator, RenderG);
-    DestroyResources(vkContext.vkDevice.Handle, Resources);
-    DestroyRenderer(vkContext.vkDevice.Handle, vkRenderer);
-    DestroyGraphConstructor(vkContext.vkDevice.Handle, Allocator, GraphConstruct);
-    destroyContext(vkContext, m_Handle);
+    vkDeviceWaitIdle(Env.GPUInfos.Device);
+
+    for (size_t i = 0; i < Graphs.size( ); ++i) {
+        DestroyRenderGraph(Env.GPUInfos.Device, Env.Allocator, Graphs[i]);
+    }
+    for (size_t i = 0; i < Shaders.size( ); ++i) {
+        DestroyShader(Env.GPUInfos.Device, Shaders[i]);
+    }
 #ifdef _DEBUG
     auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_Handle, "vkDestroyDebugUtilsMessengerEXT");
     if (func) func(m_Handle, m_DebugMessenger, 0);
 #endif
+    DestroyPerFrameData(Env.GPUInfos.Device, Env.GraphManager.CommandPool, 2, FrameData);
+    DestroyEnvironment(Env, m_Handle);
     vkDestroyInstance(m_Handle, 0);
     ffDestroyWindow(m_Window);
     ffTerminateGLFW( );
@@ -144,20 +132,20 @@ void Instance::destroy( ) {
 void Instance::run(std::shared_ptr<std::deque<std::string>> SharedQueue) {
     RenderGraph Graph;
     while (!ffWindowShouldClose(m_Window)) {
-        if (Graphs.size() != 0) Events( );
+        if (Graphs.size( ) != 0) Events( );
         if (!SharedQueue->empty( )) {
             JSON::SceneLayout Layout = JSON::JSONString_to_SceneLayout(SharedQueue->at(0));
             SharedQueue->pop_front( );
-            Graphs.push_back(
-                ConstructRenderGraph(vkContext.vkDevice, GraphConstruct.RenderPass, Allocator, Layout, Resources));
+            RenderGraphCreateInfos CreateInfos = {Env.GPUInfos.Device, Env.GraphManager.RenderPass,
+                                                  Env.GPUInfos.Capabilities.msaaSamples};
+            Graphs.push_back(ConstructRenderGraph(CreateInfos, Env.Allocator, Layout, Shaders));
             InitCameraController((*(Graphs.end( ) - 1)).Cam,
                                  (float)m_Window.WindowSize.width / (float)m_Window.WindowSize.height, 90.f,
                                  CameraType::_2D);
             (*(Graphs.end( ) - 1)).PushCamera.ViewProj = (*(Graphs.end( ) - 1)).Cam.Handle.ViewProjMatrix;
         }
         if (!Graphs.empty( )) {
-            Render(vkContext, GraphConstruct.RenderPass, GraphConstruct.Framebuffers, vkRenderer,
-                   Graphs[CurrentRenderGraph], m_Window.WindowSize);
+            render( );
         }
     }
 }

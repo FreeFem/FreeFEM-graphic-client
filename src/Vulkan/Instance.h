@@ -6,11 +6,10 @@
 #include <memory>
 #include <deque>
 #include "vk_mem_alloc.h"
-#include "Window/NativeWindow.h"
-#include "Context/Context.h"
-#include "RenderGraph/GraphConstructor.h"
-#include "Resource/Resource.h"
-#include "Renderer/Renderer.h"
+#include "Environment.h"
+#include "Frame.h"
+#include "Resource/Shader.h"
+#include "RenderGraph.h"
 
 namespace ffGraph {
 namespace Vulkan {
@@ -21,11 +20,10 @@ class Instance {
     VkInstance m_Handle;
     std::vector<const char*> Extensions;
 
-    Context vkContext;
-    VmaAllocator Allocator;
-    GraphConstructor GraphConstruct;
-    Resource Resources;
-    Renderer vkRenderer;
+    Environment Env;
+    uint32_t CurrentFrameData = 0;
+    PerFrame FrameData[2];
+    ShaderLibrary Shaders;
 
     uint32_t CurrentRenderGraph = 0;
     std::vector<RenderGraph> Graphs = {};
@@ -44,11 +42,15 @@ class Instance {
     void reload( );
     void destroy( );
     void run(std::shared_ptr<std::deque<std::string>> SharedQueue);
+    void render( );
 
    private:
     void initGFLWCallbacks( );
     void Events( );
 };
+
+bool pushInitCmdBuffer(const VkDevice& Device, const VkQueue& Queue, const Image DepthImage, const Image ColorImage,
+                       const VkCommandPool& Pool);
 
 }    // namespace Vulkan
 }    // namespace ffGraph

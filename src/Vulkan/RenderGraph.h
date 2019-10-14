@@ -5,12 +5,11 @@
 #include <vector>
 #include "vk_mem_alloc.h"
 #include "deserializer.h"
+#include "Resource/Shader.h"
 #include "Resource/Image/Image.h"
-#include "Resource/Resource.h"
 #include "Resource/Mesh/Mesh.h"
 #include "Resource/Buffer/Buffer.h"
 #include "Resource/Camera/CameraController.h"
-#include "Context/Device.h"
 
 namespace ffGraph {
 namespace Vulkan {
@@ -20,12 +19,20 @@ struct RenderGraphNode {
     bool to_render;
     VkPipeline Handle;
     VkPipelineLayout Layout;
+    VkShaderModule Modules[2];
     JSON::GeometryType GeoType;
     JSON::Dimension BatchDimension;
     VkPolygonMode PolygonMode = VK_POLYGON_MODE_LINE;
 
     uint8_t LineWidth = 1;
     Batch CPUMeshData;
+};
+
+struct RenderGraphCreateInfos {
+    VkDevice Device;
+    VkRenderPass RenderPass;
+
+    VkSampleCountFlagBits msaaSamples;
 };
 
 struct RenderGraph {
@@ -38,31 +45,14 @@ struct RenderGraph {
     CameraController Cam;
 };
 
-struct GraphConstructor {
-    VkRenderPass RenderPass;
-    std::vector<VkFramebuffer> Framebuffers;
-
-    std::vector<RenderGraph> Graphs;
-
-    Image DepthImage;
-    Image ColorImage;
-};
-
-GraphConstructor newGraphConstructor(const Device& D, const VmaAllocator& Allocator, VkFormat SurfaceFormat,
-                                     VkExtent2D WindowSize, std::vector<VkImageView> SwapchainViews);
-
-void DestroyGraphConstructor(const VkDevice& Device, const VmaAllocator& Allocator, GraphConstructor& Graph);
-
-RenderGraph ConstructRenderGraph(const Device& D, const VkRenderPass& Renderpass, const VmaAllocator& Allocator,
-                                 JSON::SceneLayout& Layout, const Resource& r);
+RenderGraph ConstructRenderGraph(RenderGraphCreateInfos CreateInfos, const VmaAllocator& Allocator,
+                                 JSON::SceneLayout& Layout, const ShaderLibrary& Shaders);
 
 void DestroyRenderGraph(const VkDevice& Device, const VmaAllocator& Allocator, RenderGraph Graph);
 
+void ReloadRenderGraph(RenderGraphCreateInfos CreateInfos, RenderGraph& Graph);
 
-void ReloadRenderGraph(const Device& D, const VkRenderPass& RenderPass, const Resource& r, RenderGraph& Graph);
-
-
-RenderGraphNode FillRenderGraphNode(const VmaAllocator& Allocator, Array& Data, JSON::GeometryType GeoType, JSON::Dimension n, int LineWidth);
+RenderGraphNode FillRenderGraphNode(Array& Data, JSON::GeometryType GeoType, JSON::Dimension n, int LineWidth);
 
 }    // namespace Vulkan
 }    // namespace ffGraph

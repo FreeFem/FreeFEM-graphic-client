@@ -1,6 +1,5 @@
 #include <array>
 #include "Environment.h"
-#include "GlobalEnvironment.h"
 #include "Logger.h"
 
 namespace ffGraph {
@@ -290,7 +289,6 @@ bool CreateEnvironment(Environment& Env, const VkInstance& Instance, const Nativ
     AllocatorCreateInfo.physicalDevice = Env.GPUInfos.PhysicalDevice;
     if (vmaCreateAllocator(&AllocatorCreateInfo, &Env.Allocator)) return false;
     if (CreateGraphicInformations(Env.GraphManager, Env, Window) == false) return false;
-    GlobalEnvironmentPTR = &Env;
     LogInfo("CreateEnvironment", "Done creating Vulkan environment.");
     return true;
 }

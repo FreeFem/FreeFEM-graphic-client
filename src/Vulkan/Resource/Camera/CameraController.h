@@ -25,17 +25,17 @@ struct CameraController {
     CameraHandle Handle;
 
     void UpdateCameraViewMatrix( ) {
-        if (Type == CameraType::_2D) {
+        // if (Type == CameraType::_2D) {
             glm::mat4 transform = glm::translate(glm::mat4(1.0f), Position) *
                                   glm::rotate(glm::mat4(1.0f), glm::radians(Rotation.x), glm::vec3(1, 0, 0)) *
                                   glm::rotate(glm::mat4(1.0f), glm::radians(Rotation.y), glm::vec3(0, 1, 0)) *
                                   glm::rotate(glm::mat4(1.0f), glm::radians(Rotation.z), glm::vec3(0, 0, 1));
 
             Handle.ViewMatrix = glm::scale(glm::inverse(transform), glm::vec3(1.f, -1.f, 1.f));
-        } else {
-            Handle.ViewMatrix = glm::scale(glm::lookAt(Position, glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 1.f, 0.f)),
-                                           glm::vec3(1.f, -1.f, 1.f));
-        }
+        // } else {
+        //     Handle.ViewMatrix = glm::scale(glm::lookAt(Position, glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 1.f, 0.f)),
+        //                                    glm::vec3(1.f, -1.f, 1.f));
+        // }
         UpdateCameraHandle(Handle);
     }
 

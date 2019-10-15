@@ -138,7 +138,8 @@ void Instance::render( ) {
         vkCmdPushConstants(CurrentFrame.CmdBuffer, Node.Layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(CameraUniform),
                            &Graphs[CurrentRenderGraph].PushCamera);
         if (Node.DescriptorPool != VK_NULL_HANDLE)
-            vkCmdBindDescriptorSets(CurrentFrame.CmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Node.Layout, 0, 1, &Node.DescriptorSet, 0, 0);
+            vkCmdBindDescriptorSets(CurrentFrame.CmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Node.Layout, 0, 1,
+                                    &Node.DescriptorSet, 0, 0);
         std::vector<VkDeviceSize> Offsets = {};
         for (uint32_t i = 0; i < Node.CPUMeshData.Layouts.size( ); ++i)
             Offsets.push_back(Node.CPUMeshData.Layouts[i].offset);
@@ -149,7 +150,7 @@ void Instance::render( ) {
         vkCmdDraw(CurrentFrame.CmdBuffer, VerticesCount, 1, 0, 0);
     }
 
-    renderUI();
+    renderUI( );
 
     vkCmdEndRenderPass(CurrentFrame.CmdBuffer);
 
@@ -184,37 +185,40 @@ void Instance::render( ) {
 void Instance::renderUI( ) {
     PerFrame& CurrentFrame = FrameData[CurrentFrameData];
     RenderGraph& rGraph = Graphs[CurrentRenderGraph];
-    ImGuiIO& io  = ImGui::GetIO();
+    ImGuiIO& io = ImGui::GetIO( );
 
     UpdateUIBuffers(rGraph.UiNode);
 
-    vkCmdBindDescriptorSets(CurrentFrame.CmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, rGraph.UiNode.Layout, 0, 1, &rGraph.UiNode.DescriptorSet, 0, 0);
+    vkCmdBindDescriptorSets(CurrentFrame.CmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, rGraph.UiNode.Layout, 0, 1,
+                            &rGraph.UiNode.DescriptorSet, 0, 0);
     vkCmdBindPipeline(CurrentFrame.CmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, rGraph.UiNode.Handle);
 
-    rGraph.UiNode.ImGuiData.Scale = glm::vec2(2.0f / (float)m_Window.WindowSize.width, 2.0f / (float)m_Window.WindowSize.height);
+    rGraph.UiNode.ImGuiData.Scale =
+        glm::vec2(2.0f / (float)m_Window.WindowSize.width, 2.0f / (float)m_Window.WindowSize.height);
     rGraph.UiNode.ImGuiData.Translate = glm::vec2(-1.f);
 
-    vkCmdPushConstants(CurrentFrame.CmdBuffer, rGraph.UiNode.Layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(RenderUiNode::ImGuiInfos), &rGraph.UiNode.ImGuiData);
+    vkCmdPushConstants(CurrentFrame.CmdBuffer, rGraph.UiNode.Layout, VK_SHADER_STAGE_VERTEX_BIT, 0,
+                       sizeof(RenderUiNode::ImGuiInfos), &rGraph.UiNode.ImGuiData);
 
-    ImDrawData *imDraw = ImGui::GetDrawData();
+    ImDrawData* imDraw = ImGui::GetDrawData( );
     int32_t vertexOffset = 0;
     uint32_t indexOffset = 0;
 
     if (imDraw->CmdListsCount > 0) {
-        VkDeviceSize offset = { 0 };
+        VkDeviceSize offset = {0};
 
         vkCmdBindVertexBuffers(CurrentFrame.CmdBuffer, 0, 1, &rGraph.UiNode.ImGuiBufferVertices.Handle, &offset);
         vkCmdBindIndexBuffer(CurrentFrame.CmdBuffer, rGraph.UiNode.ImGuiBufferIndices.Handle, 0, VK_INDEX_TYPE_UINT16);
         for (uint32_t i = 0; i < imDraw->CmdListsCount; ++i) {
-            const ImDrawList *cmd_list = imDraw->CmdLists[i];
+            const ImDrawList* cmd_list = imDraw->CmdLists[i];
             for (uint32_t j = 0; j < cmd_list->CmdBuffer.Size; ++j) {
-				const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[j];
-				VkRect2D scissorRect;
-				scissorRect.offset.x = std::max((int32_t)(pcmd->ClipRect.x), 0);
-				scissorRect.offset.y = std::max((int32_t)(pcmd->ClipRect.y), 0);
-				scissorRect.extent.width = (uint32_t)(pcmd->ClipRect.z - pcmd->ClipRect.x);
-				scissorRect.extent.height = (uint32_t)(pcmd->ClipRect.w - pcmd->ClipRect.y);
-				vkCmdSetScissor(CurrentFrame.CmdBuffer, 0, 1, &scissorRect);
+                const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[j];
+                VkRect2D scissorRect;
+                scissorRect.offset.x = std::max((int32_t)(pcmd->ClipRect.x), 0);
+                scissorRect.offset.y = std::max((int32_t)(pcmd->ClipRect.y), 0);
+                scissorRect.extent.width = (uint32_t)(pcmd->ClipRect.z - pcmd->ClipRect.x);
+                scissorRect.extent.height = (uint32_t)(pcmd->ClipRect.w - pcmd->ClipRect.y);
+                vkCmdSetScissor(CurrentFrame.CmdBuffer, 0, 1, &scissorRect);
 
                 VkViewport viewport = {};
                 viewport.x = 0.0f;
@@ -227,13 +231,12 @@ void Instance::renderUI( ) {
                 vkCmdSetViewport(CurrentFrame.CmdBuffer, 0, 1, &viewport);
 
                 vkCmdDrawIndexed(CurrentFrame.CmdBuffer, pcmd->ElemCount, 1, indexOffset, vertexOffset, 0);
-				indexOffset += pcmd->ElemCount;
+                indexOffset += pcmd->ElemCount;
             }
             vertexOffset += cmd_list->VtxBuffer.Size;
         }
     }
 }
-
 
 }    // namespace Vulkan
 }    // namespace ffGraph

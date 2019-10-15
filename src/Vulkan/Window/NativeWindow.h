@@ -72,7 +72,9 @@ inline void ffTerminateGLFW( ) { glfwTerminate( ); }
  */
 VkSurfaceKHR ffGetSurface(const VkInstance& Instance, const NativeWindow& Window);
 
-inline float GetAspectRatio(const NativeWindow& Window) { return (float)Window.WindowSize.width / (float)Window.WindowSize.height; }
+inline float GetAspectRatio(const NativeWindow& Window) {
+    return (float)Window.WindowSize.width / (float)Window.WindowSize.height;
+}
 
 /**
  * @brief Check if ffGraph::Vulkan::NativeWindow::Handle should close.

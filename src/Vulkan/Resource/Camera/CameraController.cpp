@@ -9,7 +9,7 @@ namespace Vulkan {
 static void InitCameraControllerInternal(CameraController& Cam, CameraType Type) {
     Cam.Handle.ProjectionMatrix = glm::ortho(-Cam.AspectRatio * Cam.ZoomLevel, Cam.AspectRatio * Cam.ZoomLevel,
                                              -Cam.ZoomLevel, Cam.ZoomLevel, -10000.f, 10000.f);
-    Cam.UpdateCameraViewMatrix();
+    Cam.UpdateCameraViewMatrix( );
     UpdateCameraHandle(Cam.Handle);
 }
 

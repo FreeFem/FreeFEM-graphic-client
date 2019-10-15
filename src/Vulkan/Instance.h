@@ -28,7 +28,7 @@ class Instance {
     uint32_t CurrentRenderGraph = 0;
     std::vector<RenderGraph> Graphs = {};
 
-    bool PressedButton[5] = { false, false, false, false, false };
+    bool PressedButton[5] = {false, false, false, false, false};
 
 #ifdef _DEBUG
     VkDebugUtilsMessengerEXT m_DebugMessenger;
@@ -47,7 +47,7 @@ class Instance {
     void render( );
     void renderUI( );
 
-    void UpdateImGuiButton();
+    void UpdateImGuiButton( );
 
    private:
     void initGFLWCallbacks( );

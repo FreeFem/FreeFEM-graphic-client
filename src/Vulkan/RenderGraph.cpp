@@ -32,22 +32,18 @@ RenderGraphNode FillRenderGraphNode(Array& Data, JSON::GeometryType GeoType, JSO
     return Node;
 }
 
-static uint32_t CountDescriptor(std::vector<DescriptorInfos> Infos, VkDescriptorType Type)
-{
+static uint32_t CountDescriptor(std::vector<DescriptorInfos> Infos, VkDescriptorType Type) {
     uint32_t count = 0;
 
-    for (size_t i = 0; i < Infos.size(); ++i) {
-        if (Infos[i].Type == Type)
-            ++count;
+    for (size_t i = 0; i < Infos.size( ); ++i) {
+        if (Infos[i].Type == Type) ++count;
     }
     return count;
 }
 
-static bool CreateDescriptorPool(RenderGraphCreateInfos CreateInfos, RenderGraphNode& Node)
-{
+static bool CreateDescriptorPool(RenderGraphCreateInfos CreateInfos, RenderGraphNode& Node) {
     Node.DescriptorPool = VK_NULL_HANDLE;
-    if (CreateInfos.Descriptors.size() == 0)
-        return true;
+    if (CreateInfos.Descriptors.size( ) == 0) return true;
     VkDescriptorPoolSize PoolSize[2] = {};
     PoolSize[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     PoolSize[0].descriptorCount = CountDescriptor(CreateInfos.Descriptors, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
@@ -59,20 +55,17 @@ static bool CreateDescriptorPool(RenderGraphCreateInfos CreateInfos, RenderGraph
     CreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     CreateInfo.poolSizeCount = 1;
     CreateInfo.pPoolSizes = PoolSize;
-    CreateInfo.maxSets = CreateInfos.Descriptors.size();
+    CreateInfo.maxSets = CreateInfos.Descriptors.size( );
 
-    if (vkCreateDescriptorPool(CreateInfos.Device, &CreateInfo, 0, &Node.DescriptorPool))
-        return false;
+    if (vkCreateDescriptorPool(CreateInfos.Device, &CreateInfo, 0, &Node.DescriptorPool)) return false;
     return true;
 }
 
-static bool CreateDescriptorSetLayout(RenderGraphCreateInfos CreateInfos, RenderGraphNode& Node)
-{
-    if (CreateInfos.Descriptors.size() == 0)
-        return true;
+static bool CreateDescriptorSetLayout(RenderGraphCreateInfos CreateInfos, RenderGraphNode& Node) {
+    if (CreateInfos.Descriptors.size( ) == 0) return true;
     std::vector<VkDescriptorSetLayoutBinding> Binding;
-    Binding.resize(CreateInfos.Descriptors.size());
-    for (size_t i = 0; i < CreateInfos.Descriptors.size(); ++i) {
+    Binding.resize(CreateInfos.Descriptors.size( ));
+    for (size_t i = 0; i < CreateInfos.Descriptors.size( ); ++i) {
         Binding[i].binding = i;
         Binding[i].descriptorType = CreateInfos.Descriptors[i].Type;
         Binding[i].descriptorCount = 1;
@@ -81,11 +74,10 @@ static bool CreateDescriptorSetLayout(RenderGraphCreateInfos CreateInfos, Render
 
     VkDescriptorSetLayoutCreateInfo CreateInfo = {};
     CreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    CreateInfo.bindingCount = Binding.size();
-    CreateInfo.pBindings = Binding.data();
+    CreateInfo.bindingCount = Binding.size( );
+    CreateInfo.pBindings = Binding.data( );
 
-    if (vkCreateDescriptorSetLayout(CreateInfos.Device, &CreateInfo, 0, &Node.DescriptorSetLayout))
-        return false;
+    if (vkCreateDescriptorSetLayout(CreateInfos.Device, &CreateInfo, 0, &Node.DescriptorSetLayout)) return false;
 
     VkDescriptorSetAllocateInfo AllocInfo = {};
     AllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -93,11 +85,10 @@ static bool CreateDescriptorSetLayout(RenderGraphCreateInfos CreateInfos, Render
     AllocInfo.descriptorSetCount = 1;
     AllocInfo.pSetLayouts = &Node.DescriptorSetLayout;
 
-    if (vkAllocateDescriptorSets(CreateInfos.Device, &AllocInfo, &Node.DescriptorSet))
-        return false;
+    if (vkAllocateDescriptorSets(CreateInfos.Device, &AllocInfo, &Node.DescriptorSet)) return false;
 
     std::vector<VkWriteDescriptorSet> WriteDescriptors;
-    WriteDescriptors.resize(CreateInfos.Descriptors.size());
+    WriteDescriptors.resize(CreateInfos.Descriptors.size( ));
     std::vector<VkDescriptorBufferInfo> BufferInfos;
     BufferInfos.resize(CountDescriptor(CreateInfos.Descriptors, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER));
     std::vector<VkDescriptorImageInfo> ImageInfos;
@@ -105,9 +96,9 @@ static bool CreateDescriptorSetLayout(RenderGraphCreateInfos CreateInfos, Render
     uint32_t BCount = 0;
     uint32_t ICount = 0;
 
-    for (size_t i = 0; i < CreateInfos.Descriptors.size(); ++i) {
+    for (size_t i = 0; i < CreateInfos.Descriptors.size( ); ++i) {
         WriteDescriptors[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        WriteDescriptors[i].descriptorCount = CreateInfos.Descriptors.size();
+        WriteDescriptors[i].descriptorCount = CreateInfos.Descriptors.size( );
         WriteDescriptors[i].descriptorType = CreateInfos.Descriptors[i].Type;
         WriteDescriptors[i].dstSet = Node.DescriptorSet;
         if (CreateInfos.Descriptors[i].Type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) {
@@ -129,11 +120,12 @@ static bool CreateDescriptorSetLayout(RenderGraphCreateInfos CreateInfos, Render
         }
     }
 
-    vkUpdateDescriptorSets(CreateInfos.Device, WriteDescriptors.size(), WriteDescriptors.data(), 0, 0);
+    vkUpdateDescriptorSets(CreateInfos.Device, WriteDescriptors.size( ), WriteDescriptors.data( ), 0, 0);
     return true;
 }
 
-static RenderGraphNode ConstructRenderGraphNode(RenderGraphCreateInfos CreateInfos, const VkShaderModule Shaders[2], RenderGraphNode& Node) {
+static RenderGraphNode ConstructRenderGraphNode(RenderGraphCreateInfos CreateInfos, const VkShaderModule Shaders[2],
+                                                RenderGraphNode& Node) {
     CreateDescriptorPool(CreateInfos, Node);
     CreateDescriptorSetLayout(CreateInfos, Node);
 
@@ -147,7 +139,7 @@ static RenderGraphNode ConstructRenderGraphNode(RenderGraphCreateInfos CreateInf
     PipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     PipelineLayoutInfo.pushConstantRangeCount = 1;
     PipelineLayoutInfo.pPushConstantRanges = &PushConstantRange;
-    if (CreateInfos.Descriptors.size() != 0) {
+    if (CreateInfos.Descriptors.size( ) != 0) {
         PipelineLayoutInfo.setLayoutCount = 1;
         PipelineLayoutInfo.pSetLayouts = &Node.DescriptorSetLayout;
     }
@@ -335,7 +327,8 @@ RenderGraph ConstructRenderGraph(RenderGraphCreateInfos CreateInfos, const VmaAl
     n.Layout = Layout;
     n.PushCamera.Model = glm::mat4(1.0f);
     n.PushCamera.ViewProj = glm::mat4(1.0f);
-    InitCameraController(n.Cam, CreateInfos.AspectRatio, 90.f, (Dim == JSON::Dimension::Mesh2D) ? CameraType::_2D : CameraType::_3D);
+    InitCameraController(n.Cam, CreateInfos.AspectRatio, 90.f,
+                         (Dim == JSON::Dimension::Mesh2D) ? CameraType::_2D : CameraType::_3D);
     return n;
 }
 

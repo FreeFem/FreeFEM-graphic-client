@@ -9,7 +9,7 @@ namespace Vulkan {
 
 static void FramebufferResizeCallback(GLFWwindow *Window, int width, int height) {
     Instance *Handle = static_cast<Instance *>(glfwGetWindowUserPointer(Window));
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO &io = ImGui::GetIO( );
 
     io.DisplaySize = ImVec2(width, height);
     Handle->m_Window.WindowSize = {(uint32_t)width, (uint32_t)height};
@@ -33,14 +33,11 @@ int FindArraySurface(std::vector<RenderGraphNode> Nodes) {
     return -1;
 }
 
-static void Imgui_Key(int key, int action)
-{
-    ImGuiIO& io = ImGui::GetIO();
+static void Imgui_Key(int key, int action) {
+    ImGuiIO &io = ImGui::GetIO( );
 
-    if (action == GLFW_PRESS)
-        io.KeysDown[key] = true;
-    if (action == GLFW_RELEASE)
-        io.KeysDown[key] = false;
+    if (action == GLFW_PRESS) io.KeysDown[key] = true;
+    if (action == GLFW_RELEASE) io.KeysDown[key] = false;
 
     io.KeyCtrl = io.KeysDown[GLFW_KEY_LEFT_CONTROL] || io.KeysDown[GLFW_KEY_RIGHT_CONTROL];
     io.KeyShift = io.KeysDown[GLFW_KEY_LEFT_SHIFT] || io.KeysDown[GLFW_KEY_RIGHT_SHIFT];
@@ -54,28 +51,22 @@ static void KeyCallback(GLFWwindow *Window, int key, UNUSED_PARAM(int scancode),
     Imgui_Key(key, action);
     if (key == GLFW_KEY_KP_4) {
         Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model = glm::rotate(
-            Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model, glm::radians(2.f), glm::vec3(0.f, 1.f,
-            0.f));
+            Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model, glm::radians(2.f), glm::vec3(0.f, 1.f, 0.f));
     } else if (key == GLFW_KEY_KP_6) {
         Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model = glm::rotate(
-            Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model, glm::radians(2.f), glm::vec3(0.f, -1.f,
-            0.f));
+            Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model, glm::radians(2.f), glm::vec3(0.f, -1.f, 0.f));
     } else if (key == GLFW_KEY_KP_8) {
         Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model = glm::rotate(
-            Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model, glm::radians(2.f), glm::vec3(1.f, 0.f,
-            0.f));
+            Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model, glm::radians(2.f), glm::vec3(1.f, 0.f, 0.f));
     } else if (key == GLFW_KEY_KP_2) {
         Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model = glm::rotate(
-            Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model, glm::radians(2.f), glm::vec3(-1.f, 0.f,
-            0.f));
+            Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model, glm::radians(2.f), glm::vec3(-1.f, 0.f, 0.f));
     } else if (key == GLFW_KEY_KP_7) {
         Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model = glm::rotate(
-            Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model, glm::radians(2.f), glm::vec3(0.f, 0.f,
-            -1.f));
+            Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model, glm::radians(2.f), glm::vec3(0.f, 0.f, -1.f));
     } else if (key == GLFW_KEY_KP_9) {
         Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model = glm::rotate(
-            Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model, glm::radians(2.f), glm::vec3(0.f,
-            0.f, 1.f));
+            Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model, glm::radians(2.f), glm::vec3(0.f, 0.f, 1.f));
     }
     if (action == GLFW_PRESS) {
         CameraKeyEvents(Handle->Graphs[Handle->CurrentRenderGraph].Cam, key);
@@ -95,8 +86,9 @@ static void KeyCallback(GLFWwindow *Window, int key, UNUSED_PARAM(int scancode),
             }
         } else if (key == GLFW_KEY_L) {
             for (auto &Node : Handle->Graphs[Handle->CurrentRenderGraph].Nodes) {
-                    Node.PolygonMode = (Node.PolygonMode == VK_POLYGON_MODE_LINE) ? VK_POLYGON_MODE_FILL :
-                    VK_POLYGON_MODE_LINE; Node.Update = true;
+                Node.PolygonMode =
+                    (Node.PolygonMode == VK_POLYGON_MODE_LINE) ? VK_POLYGON_MODE_FILL : VK_POLYGON_MODE_LINE;
+                Node.Update = true;
             }
             Handle->Graphs[Handle->CurrentRenderGraph].Update = true;
             RenderGraphCreateInfos CreateInfos;
@@ -112,8 +104,8 @@ static void KeyCallback(GLFWwindow *Window, int key, UNUSED_PARAM(int scancode),
             if (Handle->CurrentRenderGraph == 0) return;
             Handle->CurrentRenderGraph -= 1;
         } else if (key == GLFW_KEY_D) {
-            Handle->CurrentRenderGraph = std::min((unsigned long int)Handle->CurrentRenderGraph + 1,
-            Handle->Graphs.size() - 1);
+            Handle->CurrentRenderGraph =
+                std::min((unsigned long int)Handle->CurrentRenderGraph + 1, Handle->Graphs.size( ) - 1);
         }
     }
     Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.ViewProj =
@@ -128,8 +120,7 @@ static void MouseScroolCallback(GLFWwindow *Window, UNUSED_PARAM(double xOffset)
         Handle->Graphs[Handle->CurrentRenderGraph].Cam.Handle.ViewProjMatrix;
 }
 
-static void imgui_Mouse(Instance* Instance, int button, int action)
-{
+static void imgui_Mouse(Instance *Instance, int button, int action) {
     if (action == GLFW_PRESS && button >= 0 && button < 5) {
         Instance->PressedButton[button] = true;
     }
@@ -154,7 +145,7 @@ void Instance::initGFLWCallbacks( ) {
 }
 
 void Instance::Events(bool render) {
-    for (size_t i = 0; i < Graphs[CurrentRenderGraph].Nodes.size(); ++i) {
+    for (size_t i = 0; i < Graphs[CurrentRenderGraph].Nodes.size( ); ++i) {
         Graphs[CurrentRenderGraph].Nodes[i].to_render = render;
     }
     if (glfwGetMouseButton(m_Window.Handle, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS &&
@@ -167,7 +158,8 @@ void Instance::Events(bool render) {
             // float y = cMouseY - m_Window.MouseY;
 
             // Graphs[CurrentRenderGraph].PushCamera.Model = glm::rotate(
-            //     Graphs[CurrentRenderGraph].PushCamera.Model, glm::radians(y * 0.25f), glm::cross(Graphs[CurrentRenderGraph].Cam.Position, glm::vec3(1.f, 0.f, 0.f)));
+            //     Graphs[CurrentRenderGraph].PushCamera.Model, glm::radians(y * 0.25f),
+            //     glm::cross(Graphs[CurrentRenderGraph].Cam.Position, glm::vec3(1.f, 0.f, 0.f)));
             Graphs[CurrentRenderGraph].PushCamera.Model = glm::rotate(
                 Graphs[CurrentRenderGraph].PushCamera.Model, glm::radians(x * 0.25f), glm::vec3(0.f, 1.0f, 0.f));
             m_Window.MouseX = cMouseX;
@@ -176,9 +168,8 @@ void Instance::Events(bool render) {
     }
 }
 
-void Instance::UpdateImGuiButton()
-{
-    ImGuiIO& io = ImGui::GetIO();
+void Instance::UpdateImGuiButton( ) {
+    ImGuiIO &io = ImGui::GetIO( );
 
     for (int i = 0; i < 5; ++i) {
         io.MouseDown[i] = PressedButton[i] || glfwGetMouseButton(m_Window.Handle, i) != 0;
@@ -189,14 +180,10 @@ void Instance::UpdateImGuiButton()
     io.MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
     const bool focused = true;
 
-    if (focused)
-    {
-        if (io.WantSetMousePos)
-        {
+    if (focused) {
+        if (io.WantSetMousePos) {
             glfwSetCursorPos(m_Window.Handle, (double)mouse_pos_backup.x, (double)mouse_pos_backup.y);
-        }
-        else
-        {
+        } else {
             double mouse_x, mouse_y;
             glfwGetCursorPos(m_Window.Handle, &mouse_x, &mouse_y);
             io.MousePos = ImVec2((float)mouse_x, (float)mouse_y);

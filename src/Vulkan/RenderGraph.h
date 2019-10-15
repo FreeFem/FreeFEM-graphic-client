@@ -62,11 +62,11 @@ struct DescriptorInfos {
 
     VkShaderStageFlags Stage;
 
-    VkBuffer *Uniform;
+    VkBuffer* Uniform;
     VkDeviceSize Size;
 
-    VkSampler *Sampler;
-    VkImageView *View;
+    VkSampler* Sampler;
+    VkImageView* View;
 };
 
 struct RenderGraphCreateInfos {
@@ -74,11 +74,10 @@ struct RenderGraphCreateInfos {
     VkRenderPass RenderPass;
 
     VkDeviceSize PushConstantSize;
-    void *PushConstantPTR;
+    void* PushConstantPTR;
     VkShaderStageFlags Stage;
 
     std::vector<DescriptorInfos> Descriptors;
-
 
     VkSampleCountFlagBits msaaSamples;
     float AspectRatio;

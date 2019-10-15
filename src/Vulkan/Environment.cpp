@@ -149,7 +149,7 @@ static bool CreateDeviceInfos(Environment& Env, const VkInstance& Instance) {
     QueueCreateInfo[0].pQueuePriorities = &QueuePriority;
     Count += 1;
     if (Env.GPUInfos.QueueIndex[Env.GPUInfos.GraphicQueueIndex] !=
-        Env.GPUInfos.QueueIndex[Env.GPUInfos.PresentQueueIndex] &&
+            Env.GPUInfos.QueueIndex[Env.GPUInfos.PresentQueueIndex] &&
         Env.GPUInfos.QueueIndex[Env.GPUInfos.PresentQueueIndex] != UINT32_MAX) {
         QueueCreateInfo[Count].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         QueueCreateInfo[Count].queueFamilyIndex = Env.GPUInfos.QueueIndex[Env.GPUInfos.PresentQueueIndex];
@@ -169,7 +169,8 @@ static bool CreateDeviceInfos(Environment& Env, const VkInstance& Instance) {
         QueueCreateInfo[Count].pQueuePriorities = &QueuePriority;
         Count += 1;
     } else {
-        Env.GPUInfos.QueueIndex[Env.GPUInfos.TransferQueueIndex] = Env.GPUInfos.QueueIndex[Env.GPUInfos.GraphicQueueIndex];
+        Env.GPUInfos.QueueIndex[Env.GPUInfos.TransferQueueIndex] =
+            Env.GPUInfos.QueueIndex[Env.GPUInfos.GraphicQueueIndex];
     }
     VkDeviceCreateInfo DeviceCreateInfo = {};
     DeviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;

@@ -38,22 +38,21 @@ static bool ImportShaders(ShaderLibrary &Shaders, const VkDevice &Device) {
     return true;
 }
 
-static void InitImGui(int width, int height)
-{
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
+static void InitImGui(int width, int height) {
+    IMGUI_CHECKVERSION( );
+    ImGui::CreateContext( );
 
-	ImGuiStyle& style = ImGui::GetStyle();
-	style.Colors[ImGuiCol_TitleBg] = ImVec4(1.0f, 0.0f, 0.0f, 0.6f);
-	style.Colors[ImGuiCol_TitleBgActive] = ImVec4(1.0f, 0.0f, 0.0f, 0.8f);
-	style.Colors[ImGuiCol_MenuBarBg] = ImVec4(1.0f, 0.0f, 0.0f, 0.4f);
-	style.Colors[ImGuiCol_Header] = ImVec4(1.0f, 0.0f, 0.0f, 0.4f);
-	style.Colors[ImGuiCol_CheckMark] = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
-	// Dimensions
-	ImGuiIO& io = ImGui::GetIO();
-    ImFont *font1 = io.Fonts->AddFontDefault();
-	io.DisplaySize = ImVec2(width, height);
-	io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
+    ImGuiStyle &style = ImGui::GetStyle( );
+    style.Colors[ImGuiCol_TitleBg] = ImVec4(1.0f, 0.0f, 0.0f, 0.6f);
+    style.Colors[ImGuiCol_TitleBgActive] = ImVec4(1.0f, 0.0f, 0.0f, 0.8f);
+    style.Colors[ImGuiCol_MenuBarBg] = ImVec4(1.0f, 0.0f, 0.0f, 0.4f);
+    style.Colors[ImGuiCol_Header] = ImVec4(1.0f, 0.0f, 0.0f, 0.4f);
+    style.Colors[ImGuiCol_CheckMark] = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
+    // Dimensions
+    ImGuiIO &io = ImGui::GetIO( );
+    ImFont *font1 = io.Fonts->AddFontDefault( );
+    io.DisplaySize = ImVec2(width, height);
+    io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
 
     io.KeyMap[ImGuiKey_Tab] = GLFW_KEY_TAB;
     io.KeyMap[ImGuiKey_LeftArrow] = GLFW_KEY_LEFT;
@@ -171,7 +170,7 @@ void Instance::load(const std::string &AppName, unsigned int width, unsigned int
 void Instance::destroy( ) {
     vkDeviceWaitIdle(Env.GPUInfos.Device);
 
-    ImGui::DestroyContext();
+    ImGui::DestroyContext( );
     for (size_t i = 0; i < Graphs.size( ); ++i) {
         DestroyRenderGraph(Env.GPUInfos.Device, Env.Allocator, Graphs[i]);
     }
@@ -189,14 +188,13 @@ void Instance::destroy( ) {
     ffTerminateGLFW( );
 }
 
-static void newFrame(bool *render)
-{
-	ImGui::NewFrame();
+static void newFrame(bool *render) {
+    ImGui::NewFrame( );
 
     ImGui::TextUnformatted("Some text");
     ImGui::Checkbox("Render objects", render);
 
-	ImGui::Render();
+    ImGui::Render( );
 }
 
 void Instance::run(std::shared_ptr<std::deque<std::string>> SharedQueue) {
@@ -204,7 +202,10 @@ void Instance::run(std::shared_ptr<std::deque<std::string>> SharedQueue) {
     bool r = true;
 
     while (!ffWindowShouldClose(m_Window)) {
-        if (Graphs.size( ) != 0) { Events(r); UpdateImGuiButton(); }
+        if (Graphs.size( ) != 0) {
+            Events(r);
+            UpdateImGuiButton( );
+        }
         if (!SharedQueue->empty( )) {
             JSON::SceneLayout Layout = JSON::JSONString_to_SceneLayout(SharedQueue->at(0));
             SharedQueue->pop_front( );

@@ -8,22 +8,18 @@
 namespace ffGraph {
 namespace Vulkan {
 
-static uint32_t CountDescriptor(std::vector<DescriptorInfos> Infos, VkDescriptorType Type)
-{
+static uint32_t CountDescriptor(std::vector<DescriptorInfos> Infos, VkDescriptorType Type) {
     uint32_t count = 0;
 
-    for (size_t i = 0; i < Infos.size(); ++i) {
-        if (Infos[i].Type == Type)
-            ++count;
+    for (size_t i = 0; i < Infos.size( ); ++i) {
+        if (Infos[i].Type == Type) ++count;
     }
     return count;
 }
 
-static bool CreateDescriptorPool(RenderGraphCreateInfos CreateInfos, RenderUiNode& Node)
-{
+static bool CreateDescriptorPool(RenderGraphCreateInfos CreateInfos, RenderUiNode& Node) {
     Node.DescriptorPool = VK_NULL_HANDLE;
-    if (CreateInfos.Descriptors.size() == 0)
-        return true;
+    if (CreateInfos.Descriptors.size( ) == 0) return true;
     VkDescriptorPoolSize PoolSize[1] = {};
     PoolSize[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     PoolSize[0].descriptorCount = CountDescriptor(CreateInfos.Descriptors, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
@@ -32,20 +28,17 @@ static bool CreateDescriptorPool(RenderGraphCreateInfos CreateInfos, RenderUiNod
     CreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     CreateInfo.poolSizeCount = 1;
     CreateInfo.pPoolSizes = PoolSize;
-    CreateInfo.maxSets = CreateInfos.Descriptors.size();
+    CreateInfo.maxSets = CreateInfos.Descriptors.size( );
 
-    if (vkCreateDescriptorPool(CreateInfos.Device, &CreateInfo, 0, &Node.DescriptorPool))
-        return false;
+    if (vkCreateDescriptorPool(CreateInfos.Device, &CreateInfo, 0, &Node.DescriptorPool)) return false;
     return true;
 }
 
-static bool CreateDescriptorSetLayout(RenderGraphCreateInfos CreateInfos, RenderUiNode& Node)
-{
-    if (CreateInfos.Descriptors.size() == 0)
-        return true;
+static bool CreateDescriptorSetLayout(RenderGraphCreateInfos CreateInfos, RenderUiNode& Node) {
+    if (CreateInfos.Descriptors.size( ) == 0) return true;
     std::vector<VkDescriptorSetLayoutBinding> Binding;
-    Binding.resize(CreateInfos.Descriptors.size());
-    for (size_t i = 0; i < CreateInfos.Descriptors.size(); ++i) {
+    Binding.resize(CreateInfos.Descriptors.size( ));
+    for (size_t i = 0; i < CreateInfos.Descriptors.size( ); ++i) {
         Binding[i].binding = i;
         Binding[i].descriptorType = CreateInfos.Descriptors[i].Type;
         Binding[i].descriptorCount = 1;
@@ -54,11 +47,10 @@ static bool CreateDescriptorSetLayout(RenderGraphCreateInfos CreateInfos, Render
 
     VkDescriptorSetLayoutCreateInfo CreateInfo = {};
     CreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    CreateInfo.bindingCount = Binding.size();
-    CreateInfo.pBindings = Binding.data();
+    CreateInfo.bindingCount = Binding.size( );
+    CreateInfo.pBindings = Binding.data( );
 
-    if (vkCreateDescriptorSetLayout(CreateInfos.Device, &CreateInfo, 0, &Node.DescriptorSetLayout))
-        return false;
+    if (vkCreateDescriptorSetLayout(CreateInfos.Device, &CreateInfo, 0, &Node.DescriptorSetLayout)) return false;
 
     VkDescriptorSetAllocateInfo AllocInfo = {};
     AllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -66,11 +58,10 @@ static bool CreateDescriptorSetLayout(RenderGraphCreateInfos CreateInfos, Render
     AllocInfo.descriptorSetCount = 1;
     AllocInfo.pSetLayouts = &Node.DescriptorSetLayout;
 
-    if (vkAllocateDescriptorSets(CreateInfos.Device, &AllocInfo, &Node.DescriptorSet))
-        return false;
+    if (vkAllocateDescriptorSets(CreateInfos.Device, &AllocInfo, &Node.DescriptorSet)) return false;
 
     std::vector<VkWriteDescriptorSet> WriteDescriptors;
-    WriteDescriptors.resize(CreateInfos.Descriptors.size());
+    WriteDescriptors.resize(CreateInfos.Descriptors.size( ));
     std::vector<VkDescriptorBufferInfo> BufferInfos;
     BufferInfos.resize(CountDescriptor(CreateInfos.Descriptors, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER));
     std::vector<VkDescriptorImageInfo> ImageInfos;
@@ -78,10 +69,10 @@ static bool CreateDescriptorSetLayout(RenderGraphCreateInfos CreateInfos, Render
     uint32_t BCount = 0;
     uint32_t ICount = 0;
 
-    for (size_t i = 0; i < CreateInfos.Descriptors.size(); ++i) {
+    for (size_t i = 0; i < CreateInfos.Descriptors.size( ); ++i) {
         memset(&WriteDescriptors[i], 0, sizeof(VkWriteDescriptorSet));
         WriteDescriptors[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        WriteDescriptors[i].descriptorCount = CreateInfos.Descriptors.size();
+        WriteDescriptors[i].descriptorCount = CreateInfos.Descriptors.size( );
         WriteDescriptors[i].descriptorType = CreateInfos.Descriptors[i].Type;
         WriteDescriptors[i].dstSet = Node.DescriptorSet;
         WriteDescriptors[i].dstArrayElement = 0;
@@ -107,7 +98,8 @@ static bool CreateDescriptorSetLayout(RenderGraphCreateInfos CreateInfos, Render
     return true;
 }
 
-static RenderUiNode ConstructRenderGraphNode(RenderGraphCreateInfos CreateInfos, const VkShaderModule Shaders[2], RenderUiNode& Node) {
+static RenderUiNode ConstructRenderGraphNode(RenderGraphCreateInfos CreateInfos, const VkShaderModule Shaders[2],
+                                             RenderUiNode& Node) {
     CreateDescriptorPool(CreateInfos, Node);
     CreateDescriptorSetLayout(CreateInfos, Node);
 
@@ -121,7 +113,7 @@ static RenderUiNode ConstructRenderGraphNode(RenderGraphCreateInfos CreateInfos,
     PipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     PipelineLayoutInfo.pushConstantRangeCount = 1;
     PipelineLayoutInfo.pPushConstantRanges = &PushConstantRange;
-    if (CreateInfos.Descriptors.size() != 0) {
+    if (CreateInfos.Descriptors.size( ) != 0) {
         PipelineLayoutInfo.setLayoutCount = 1;
         PipelineLayoutInfo.pSetLayouts = &Node.DescriptorSetLayout;
     }
@@ -262,11 +254,10 @@ static RenderUiNode ConstructRenderGraphNode(RenderGraphCreateInfos CreateInfos,
     return Node;
 }
 
-static bool InitImGuiResource(RenderUiNode& Node)
-{
-    ImGuiIO& io = ImGui::GetIO();
+static bool InitImGuiResource(RenderUiNode& Node) {
+    ImGuiIO& io = ImGui::GetIO( );
 
-    unsigned char *fontData;
+    unsigned char* fontData;
     int texWidth, texHeight = 0;
     io.Fonts->GetTexDataAsRGBA32(&fontData, &texWidth, &texHeight);
     VkDeviceSize UploadSize = texWidth * texHeight * 4 * sizeof(char);
@@ -282,14 +273,14 @@ static bool InitImGuiResource(RenderUiNode& Node)
     Info.Usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
     Info.ViewInfos.AspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     Info.QueueIndexCount = 1;
-    Info.QueueIndices[0] = GetGraphicQueueIndex();
+    Info.QueueIndices[0] = GetGraphicQueueIndex( );
 
     VmaAllocationCreateInfo VmaInfo = {};
     VmaInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
     VmaInfo.requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
     VmaInfo.preferredFlags = VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
-    Node.FontImage = CreateImage(GetAllocator(), GetLogicalDevice(), Info, VmaInfo);
+    Node.FontImage = CreateImage(GetAllocator( ), GetLogicalDevice( ), Info, VmaInfo);
 
     BufferCreateInfo bInfo = {};
     bInfo.vkData.Size = UploadSize;
@@ -300,7 +291,7 @@ static bool InitImGuiResource(RenderUiNode& Node)
     bInfo.vmaData.Usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
     bInfo.vmaData.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
-    Buffer StagingBuffer = CreateBuffer(GetAllocator(), bInfo);
+    Buffer StagingBuffer = CreateBuffer(GetAllocator( ), bInfo);
 
     memcpy(StagingBuffer.Infos.pMappedData, fontData, UploadSize);
 
@@ -308,9 +299,9 @@ static bool InitImGuiResource(RenderUiNode& Node)
     VkCommandBufferAllocateInfo cmdAllocInfo = {};
     cmdAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    cmdAllocInfo.commandPool = GetCommandPool();
+    cmdAllocInfo.commandPool = GetCommandPool( );
     cmdAllocInfo.commandBufferCount = 1;
-    vkAllocateCommandBuffers(GetLogicalDevice(), &cmdAllocInfo, &copyCmd);
+    vkAllocateCommandBuffers(GetLogicalDevice( ), &cmdAllocInfo, &copyCmd);
 
     VkCommandBufferBeginInfo BeginInfo = {};
     BeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -327,23 +318,18 @@ static bool InitImGuiResource(RenderUiNode& Node)
     imageMemoryBarrier.srcAccessMask = 0;
     imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 
-    vkCmdPipelineBarrier(copyCmd, VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, 0, 0, 0, 1, &imageMemoryBarrier);
+    vkCmdPipelineBarrier(copyCmd, VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, 0, 0, 0, 1,
+                         &imageMemoryBarrier);
 
-	VkBufferImageCopy bufferCopyRegion = {};
-	bufferCopyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	bufferCopyRegion.imageSubresource.layerCount = 1;
-	bufferCopyRegion.imageExtent.width = texWidth;
-	bufferCopyRegion.imageExtent.height = texHeight;
-	bufferCopyRegion.imageExtent.depth = 1;
+    VkBufferImageCopy bufferCopyRegion = {};
+    bufferCopyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    bufferCopyRegion.imageSubresource.layerCount = 1;
+    bufferCopyRegion.imageExtent.width = texWidth;
+    bufferCopyRegion.imageExtent.height = texHeight;
+    bufferCopyRegion.imageExtent.depth = 1;
 
-	vkCmdCopyBufferToImage(
-		copyCmd,
-		StagingBuffer.Handle,
-		Node.FontImage.Handle,
-		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-		1,
-		&bufferCopyRegion
-	);
+    vkCmdCopyBufferToImage(copyCmd, StagingBuffer.Handle, Node.FontImage.Handle, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                           1, &bufferCopyRegion);
 
     VkImageMemoryBarrier imageMemoryBarrier2 = {};
     imageMemoryBarrier2.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -356,7 +342,8 @@ static bool InitImGuiResource(RenderUiNode& Node)
     imageMemoryBarrier2.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
     imageMemoryBarrier2.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-    vkCmdPipelineBarrier(copyCmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, 0, 0, 0, 1, &imageMemoryBarrier2);
+    vkCmdPipelineBarrier(copyCmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, 0, 0, 0,
+                         1, &imageMemoryBarrier2);
 
     vkEndCommandBuffer(copyCmd);
 
@@ -369,29 +356,28 @@ static bool InitImGuiResource(RenderUiNode& Node)
     fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 
     VkFence fence;
-    vkCreateFence(GetLogicalDevice(), &fenceInfo, 0, &fence);
-    vkQueueSubmit(GetGraphicQueue(), 1, &submitInfo, fence);
-    vkWaitForFences(GetLogicalDevice(), 1, &fence, VK_TRUE, UINT64_MAX);
+    vkCreateFence(GetLogicalDevice( ), &fenceInfo, 0, &fence);
+    vkQueueSubmit(GetGraphicQueue( ), 1, &submitInfo, fence);
+    vkWaitForFences(GetLogicalDevice( ), 1, &fence, VK_TRUE, UINT64_MAX);
 
-    vkDestroyFence(GetLogicalDevice(), fence, 0);
-    vkFreeCommandBuffers(GetLogicalDevice(), GetCommandPool(), 1, &copyCmd);
+    vkDestroyFence(GetLogicalDevice( ), fence, 0);
+    vkFreeCommandBuffers(GetLogicalDevice( ), GetCommandPool( ), 1, &copyCmd);
 
-    DestroyBuffer(GetAllocator(), StagingBuffer);
+    DestroyBuffer(GetAllocator( ), StagingBuffer);
 
     VkSamplerCreateInfo samplerInfo = {};
     samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-	samplerInfo.magFilter = VK_FILTER_LINEAR;
-	samplerInfo.minFilter = VK_FILTER_LINEAR;
-	samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-	samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-	samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-	samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-	samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-    vkCreateSampler(GetLogicalDevice(), &samplerInfo, 0, &Node.Sampler);
+    samplerInfo.magFilter = VK_FILTER_LINEAR;
+    samplerInfo.minFilter = VK_FILTER_LINEAR;
+    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+    vkCreateSampler(GetLogicalDevice( ), &samplerInfo, 0, &Node.Sampler);
 }
 
-bool ConstructUiNode(RenderGraphCreateInfos CreateInfos, const ShaderLibrary& Library, RenderUiNode& Node)
-{
+bool ConstructUiNode(RenderGraphCreateInfos CreateInfos, const ShaderLibrary& Library, RenderUiNode& Node) {
     InitImGuiResource(Node);
 
     CreateInfos.Descriptors.resize(1);
@@ -408,107 +394,100 @@ bool ConstructUiNode(RenderGraphCreateInfos CreateInfos, const ShaderLibrary& Li
     ConstructRenderGraphNode(CreateInfos, Shaders, Node);
 }
 
-void DestroyUiNode(RenderUiNode& Node)
-{
-    DestroyBuffer(GetAllocator(), Node.ImGuiBufferIndices);
-    DestroyBuffer(GetAllocator(), Node.ImGuiBufferVertices);
-    vkDestroySampler(GetLogicalDevice(), Node.Sampler, 0);
-    DestroyImage(GetAllocator(), GetLogicalDevice(), Node.FontImage);
-    vkDestroyDescriptorSetLayout(GetLogicalDevice(), Node.DescriptorSetLayout, 0);
-    vkDestroyDescriptorPool(GetLogicalDevice(), Node.DescriptorPool, 0);
-    vkDestroyPipeline(GetLogicalDevice(), Node.Handle, 0);
-    vkDestroyPipelineLayout(GetLogicalDevice(), Node.Layout, 0);
+void DestroyUiNode(RenderUiNode& Node) {
+    DestroyBuffer(GetAllocator( ), Node.ImGuiBufferIndices);
+    DestroyBuffer(GetAllocator( ), Node.ImGuiBufferVertices);
+    vkDestroySampler(GetLogicalDevice( ), Node.Sampler, 0);
+    DestroyImage(GetAllocator( ), GetLogicalDevice( ), Node.FontImage);
+    vkDestroyDescriptorSetLayout(GetLogicalDevice( ), Node.DescriptorSetLayout, 0);
+    vkDestroyDescriptorPool(GetLogicalDevice( ), Node.DescriptorPool, 0);
+    vkDestroyPipeline(GetLogicalDevice( ), Node.Handle, 0);
+    vkDestroyPipelineLayout(GetLogicalDevice( ), Node.Layout, 0);
 }
 
-void UpdateUIBuffers(RenderUiNode& Node)
-{
-    vkDeviceWaitIdle(GetLogicalDevice());
-		ImDrawData* imDrawData = ImGui::GetDrawData();
+void UpdateUIBuffers(RenderUiNode& Node) {
+    vkDeviceWaitIdle(GetLogicalDevice( ));
+    ImDrawData* imDrawData = ImGui::GetDrawData( );
 
-		// Note: Alignment is done inside buffer creation
-        if (imDrawData == 0)
-            return;
-		VkDeviceSize vertexBufferSize = imDrawData->TotalVtxCount * sizeof(ImDrawVert);
-		VkDeviceSize indexBufferSize = imDrawData->TotalIdxCount * sizeof(ImDrawIdx);
+    // Note: Alignment is done inside buffer creation
+    if (imDrawData == 0) return;
+    VkDeviceSize vertexBufferSize = imDrawData->TotalVtxCount * sizeof(ImDrawVert);
+    VkDeviceSize indexBufferSize = imDrawData->TotalIdxCount * sizeof(ImDrawIdx);
 
-		if ((vertexBufferSize == 0) || (indexBufferSize == 0)) {
-			return;
-		}
+    if ((vertexBufferSize == 0) || (indexBufferSize == 0)) {
+        return;
+    }
 
-		// Update buffers only if vertex or index count has been changed compared to current buffer size
+    // Update buffers only if vertex or index count has been changed compared to current buffer size
 
-		// Vertex buffer
-		if ((Node.ImGuiBufferVertices.Handle == VK_NULL_HANDLE) || (Node.vertexCount != imDrawData->TotalVtxCount)) {
-            DestroyBuffer(GetAllocator(), Node.ImGuiBufferVertices);
+    // Vertex buffer
+    if ((Node.ImGuiBufferVertices.Handle == VK_NULL_HANDLE) || (Node.vertexCount != imDrawData->TotalVtxCount)) {
+        DestroyBuffer(GetAllocator( ), Node.ImGuiBufferVertices);
 
-            BufferCreateInfo vInfo = {};
-            vInfo.vkData.Usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-            vInfo.vkData.Size = vertexBufferSize;
-            vInfo.vkData.SharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        BufferCreateInfo vInfo = {};
+        vInfo.vkData.Usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        vInfo.vkData.Size = vertexBufferSize;
+        vInfo.vkData.SharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-            vInfo.vmaData.Usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
-            vInfo.vmaData.requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
-            vInfo.vmaData.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+        vInfo.vmaData.Usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+        vInfo.vmaData.requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+        vInfo.vmaData.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
-            Node.ImGuiBufferVertices = CreateBuffer(GetAllocator(), vInfo);
-			Node.vertexCount = imDrawData->TotalVtxCount;
-		}
+        Node.ImGuiBufferVertices = CreateBuffer(GetAllocator( ), vInfo);
+        Node.vertexCount = imDrawData->TotalVtxCount;
+    }
 
-		// Index buffer
-		VkDeviceSize indexSize = imDrawData->TotalIdxCount * sizeof(ImDrawIdx);
-		if ((Node.ImGuiBufferIndices.Handle == VK_NULL_HANDLE) || (Node.indexCount < imDrawData->TotalIdxCount)) {
-            DestroyBuffer(GetAllocator(), Node.ImGuiBufferIndices);
+    // Index buffer
+    VkDeviceSize indexSize = imDrawData->TotalIdxCount * sizeof(ImDrawIdx);
+    if ((Node.ImGuiBufferIndices.Handle == VK_NULL_HANDLE) || (Node.indexCount < imDrawData->TotalIdxCount)) {
+        DestroyBuffer(GetAllocator( ), Node.ImGuiBufferIndices);
 
-            BufferCreateInfo vInfo = {};
-            vInfo.vkData.Usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-            vInfo.vkData.Size = indexBufferSize;
-            vInfo.vkData.SharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        BufferCreateInfo vInfo = {};
+        vInfo.vkData.Usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+        vInfo.vkData.Size = indexBufferSize;
+        vInfo.vkData.SharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-            vInfo.vmaData.Usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
-            vInfo.vmaData.requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
-            vInfo.vmaData.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+        vInfo.vmaData.Usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+        vInfo.vmaData.requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+        vInfo.vmaData.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
-            Node.ImGuiBufferIndices = CreateBuffer(GetAllocator(), vInfo);
+        Node.ImGuiBufferIndices = CreateBuffer(GetAllocator( ), vInfo);
 
-			Node.indexCount = imDrawData->TotalIdxCount;
-		}
+        Node.indexCount = imDrawData->TotalIdxCount;
+    }
 
-		// Upload data
-		ImDrawVert* vtxDst = (ImDrawVert*)Node.ImGuiBufferVertices.Infos.pMappedData;
-		ImDrawIdx* idxDst = (ImDrawIdx*)Node.ImGuiBufferIndices.Infos.pMappedData;
+    // Upload data
+    ImDrawVert* vtxDst = (ImDrawVert*)Node.ImGuiBufferVertices.Infos.pMappedData;
+    ImDrawIdx* idxDst = (ImDrawIdx*)Node.ImGuiBufferIndices.Infos.pMappedData;
 
-		for (int n = 0; n < imDrawData->CmdListsCount; n++) {
-			const ImDrawList* cmd_list = imDrawData->CmdLists[n];
-			memcpy(vtxDst, cmd_list->VtxBuffer.Data, cmd_list->VtxBuffer.Size * sizeof(ImDrawVert));
-			memcpy(idxDst, cmd_list->IdxBuffer.Data, cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx));
-			vtxDst += cmd_list->VtxBuffer.Size;
-			idxDst += cmd_list->IdxBuffer.Size;
-		}
+    for (int n = 0; n < imDrawData->CmdListsCount; n++) {
+        const ImDrawList* cmd_list = imDrawData->CmdLists[n];
+        memcpy(vtxDst, cmd_list->VtxBuffer.Data, cmd_list->VtxBuffer.Size * sizeof(ImDrawVert));
+        memcpy(idxDst, cmd_list->IdxBuffer.Data, cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx));
+        vtxDst += cmd_list->VtxBuffer.Size;
+        idxDst += cmd_list->IdxBuffer.Size;
+    }
 
-		// Flush to make writes visible to GPU
-        VkMappedMemoryRange mappedRange[2] = {};
-		mappedRange[0].sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-		mappedRange[0].memory = Node.ImGuiBufferVertices.Infos.deviceMemory;
-		mappedRange[0].offset = 0;
-		mappedRange[0].size = VK_WHOLE_SIZE;
+    // Flush to make writes visible to GPU
+    VkMappedMemoryRange mappedRange[2] = {};
+    mappedRange[0].sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    mappedRange[0].memory = Node.ImGuiBufferVertices.Infos.deviceMemory;
+    mappedRange[0].offset = 0;
+    mappedRange[0].size = VK_WHOLE_SIZE;
 
-		mappedRange[1].sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-		mappedRange[1].memory = Node.ImGuiBufferIndices.Infos.deviceMemory;
-		mappedRange[1].offset = 0;
-		mappedRange[1].size = VK_WHOLE_SIZE;
-		vkFlushMappedMemoryRanges(GetLogicalDevice(), 2, mappedRange);
+    mappedRange[1].sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    mappedRange[1].memory = Node.ImGuiBufferIndices.Infos.deviceMemory;
+    mappedRange[1].offset = 0;
+    mappedRange[1].size = VK_WHOLE_SIZE;
+    vkFlushMappedMemoryRanges(GetLogicalDevice( ), 2, mappedRange);
 }
 
-void ReloadUINode(RenderGraphCreateInfos CreateInfos, RenderUiNode& Node)
-{
-    if (Node.Layout != VK_NULL_HANDLE)
-        vkDestroyPipelineLayout(GetLogicalDevice(), Node.Layout, 0);
-    if (Node.Handle != VK_NULL_HANDLE)
-        vkDestroyPipeline(GetLogicalDevice(), Node.Handle, 0);
+void ReloadUINode(RenderGraphCreateInfos CreateInfos, RenderUiNode& Node) {
+    if (Node.Layout != VK_NULL_HANDLE) vkDestroyPipelineLayout(GetLogicalDevice( ), Node.Layout, 0);
+    if (Node.Handle != VK_NULL_HANDLE) vkDestroyPipeline(GetLogicalDevice( ), Node.Handle, 0);
     if (Node.DescriptorSetLayout != VK_NULL_HANDLE)
-        vkDestroyDescriptorSetLayout(GetLogicalDevice(), Node.DescriptorSetLayout, 0);
-    if (Node.DescriptorPool != VK_NULL_HANDLE)
-        vkDestroyDescriptorPool(GetLogicalDevice(), Node.DescriptorPool, 0);
+        vkDestroyDescriptorSetLayout(GetLogicalDevice( ), Node.DescriptorSetLayout, 0);
+    if (Node.DescriptorPool != VK_NULL_HANDLE) vkDestroyDescriptorPool(GetLogicalDevice( ), Node.DescriptorPool, 0);
 
     CreateInfos.Descriptors.resize(1);
 
@@ -520,6 +499,5 @@ void ReloadUINode(RenderGraphCreateInfos CreateInfos, RenderUiNode& Node)
     ConstructRenderGraphNode(CreateInfos, Node.Modules, Node);
 }
 
-}
-}
-
+}    // namespace Vulkan
+}    // namespace ffGraph

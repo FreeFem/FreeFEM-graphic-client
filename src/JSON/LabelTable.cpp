@@ -47,13 +47,6 @@ void AddLabelToTable(LabelTable& Table, Label l) {
     Table.UniqueLabels.push_back(l);
 }
 
-static void printColor(Color c) {
-    float tmpr = (c.r * 255.f);
-    float tmpg = (c.g * 255.f);
-    float tmpb = (c.b * 255.f);
-    std::cout << "Color : " << tmpr << " " << tmpg << " " << tmpb << "\n";
-}
-
 void GenerateColorFromLabels(LabelTable& Table) {
     Table.UniqueColors.resize(Table.UniqueLabels.size( ));
     float Delta = 359.f / (float)Table.UniqueLabels.size( );

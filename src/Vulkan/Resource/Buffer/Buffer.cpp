@@ -32,6 +32,8 @@ Buffer CreateBuffer(VmaAllocator Allocator, BufferCreateInfo pCreateInfo) {
 }
 
 void DestroyBuffer(VmaAllocator Allocator, Buffer toDestroy) {
+    if (toDestroy.Handle == VK_NULL_HANDLE)
+        return;
     vmaDestroyBuffer(Allocator, toDestroy.Handle, toDestroy.Memory);
 }
 

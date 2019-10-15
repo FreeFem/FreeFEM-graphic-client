@@ -8,6 +8,7 @@ add_library(ffGraph_Vulkan
     ${CMAKE_SOURCE_DIR}/src/Vulkan/InstanceEvent.cpp
     ${CMAKE_SOURCE_DIR}/src/Vulkan/vmaDeclaration.cpp
     ${CMAKE_SOURCE_DIR}/src/Vulkan/Frame.cpp
+    ${CMAKE_SOURCE_DIR}/src/Vulkan/UI.cpp
 
     ${CMAKE_SOURCE_DIR}/src/Vulkan/RenderGraph.cpp
 
@@ -18,11 +19,18 @@ add_library(ffGraph_Vulkan
     ${CMAKE_SOURCE_DIR}/src/Vulkan/Resource/Camera/Camera.cpp
     ${CMAKE_SOURCE_DIR}/src/Vulkan/Resource/Camera/CameraController.cpp
 
+    #ImGui
+    ${CMAKE_SOURCE_DIR}/extern/imgui/imgui.cpp
+    ${CMAKE_SOURCE_DIR}/extern/imgui/imgui_widgets.cpp
+    ${CMAKE_SOURCE_DIR}/extern/imgui/imgui_draw.cpp
+    ${CMAKE_SOURCE_DIR}/extern/imgui/imgui_demo.cpp
+
 )
 
 target_include_directories(ffGraph_Vulkan PRIVATE ${Vulkan_INCLUDE_DIR})
 target_include_directories(ffGraph_Vulkan SYSTEM PRIVATE ${CMAKE_SOURCE_DIR}/extern/VulkanMemoryAllocator/src)
 target_include_directories(ffGraph_Vulkan PRIVATE ${CMAKE_SOURCE_DIR}/extern/glfw/include)
+target_include_directories(ffGraph_Vulkan PRIVATE ${CMAKE_SOURCE_DIR}/extern/imgui)
 target_include_directories(ffGraph_Vulkan PRIVATE ${CMAKE_SOURCE_DIR}/src/util)
 target_include_directories(ffGraph_Vulkan PRIVATE ${CMAKE_SOURCE_DIR}/src/JSON)
 target_include_directories(ffGraph_Vulkan PRIVATE ${CMAKE_SOURCE_DIR}/src/Vulkan)

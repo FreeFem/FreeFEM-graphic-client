@@ -249,7 +249,7 @@ void DestroyGraphicManager(Environment::GraphicInformations& GInfos, const Envir
     DestroyImage(Env.Allocator, Env.GPUInfos.Device, GInfos.ColorImage);
 
     vkDestroyCommandPool(Env.GPUInfos.Device, GInfos.CommandPool, 0);
-    // vkDestroyDescriptorPool(Env.GPUInfos.Device, GInfos.DescriptorPool, 0);
+    vkDestroyDescriptorPool(Env.GPUInfos.Device, GInfos.DescriptorPool, 0);
 }
 
 }    // namespace Vulkan

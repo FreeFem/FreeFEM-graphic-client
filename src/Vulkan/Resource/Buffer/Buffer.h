@@ -25,7 +25,7 @@ struct BufferCreateInfo {
 };
 
 struct Buffer {
-    VkBuffer Handle;
+    VkBuffer Handle = VK_NULL_HANDLE;
     VmaAllocation Memory;
     VmaAllocationInfo Infos;
 };

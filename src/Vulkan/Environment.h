@@ -41,6 +41,7 @@ struct Environment {
     } ScreenInfos;
 
     VmaAllocator Allocator = 0;
+    VkCommandPool TransfertCommandPool = VK_NULL_HANDLE;
 
     struct GraphicInformations {
         VkRenderPass RenderPass = VK_NULL_HANDLE;

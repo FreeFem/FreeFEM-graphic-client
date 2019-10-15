@@ -12,7 +12,6 @@ static bool getQueueFamilyIndices(VkPhysicalDevice PhysicalDevice, VkSurfaceKHR 
     std::vector<VkQueueFamilyProperties> QueueFamilyPropertiesArray(queueCount);
     vkGetPhysicalDeviceQueueFamilyProperties(PhysicalDevice, &queueCount, QueueFamilyPropertiesArray.data( ));
 
-    std::cout << "Nb of Queue : " << queueCount << "\n";
     VkBool32 SurfaceSupported = false;
     int count = 0;
     for (uint32_t i = 0; i < queueCount; i += 1) {
@@ -152,10 +151,10 @@ static bool CreateDeviceInfos(Environment& Env, const VkInstance& Instance) {
     if (Env.GPUInfos.QueueIndex[Env.GPUInfos.GraphicQueueIndex] !=
         Env.GPUInfos.QueueIndex[Env.GPUInfos.PresentQueueIndex] &&
         Env.GPUInfos.QueueIndex[Env.GPUInfos.PresentQueueIndex] != UINT32_MAX) {
-        QueueCreateInfo[1].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        QueueCreateInfo[1].queueFamilyIndex = Env.GPUInfos.QueueIndex[Env.GPUInfos.PresentQueueIndex];
-        QueueCreateInfo[1].queueCount = 1;
-        QueueCreateInfo[1].pQueuePriorities = &QueuePriority;
+        QueueCreateInfo[Count].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        QueueCreateInfo[Count].queueFamilyIndex = Env.GPUInfos.QueueIndex[Env.GPUInfos.PresentQueueIndex];
+        QueueCreateInfo[Count].queueCount = 1;
+        QueueCreateInfo[Count].pQueuePriorities = &QueuePriority;
         Count += 1;
     }
 
@@ -164,10 +163,10 @@ static bool CreateDeviceInfos(Environment& Env, const VkInstance& Instance) {
         Env.GPUInfos.QueueIndex[Env.GPUInfos.TransferQueueIndex] !=
             Env.GPUInfos.QueueIndex[Env.GPUInfos.GraphicQueueIndex] &&
         Env.GPUInfos.QueueIndex[Env.GPUInfos.TransferQueueIndex] != UINT32_MAX) {
-        QueueCreateInfo[2].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        QueueCreateInfo[2].queueFamilyIndex = Env.GPUInfos.QueueIndex[Env.GPUInfos.TransferQueueIndex];
-        QueueCreateInfo[2].queueCount = 1;
-        QueueCreateInfo[2].pQueuePriorities = &QueuePriority;
+        QueueCreateInfo[Count].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        QueueCreateInfo[Count].queueFamilyIndex = Env.GPUInfos.QueueIndex[Env.GPUInfos.TransferQueueIndex];
+        QueueCreateInfo[Count].queueCount = 1;
+        QueueCreateInfo[Count].pQueuePriorities = &QueuePriority;
         Count += 1;
     } else {
         Env.GPUInfos.QueueIndex[Env.GPUInfos.TransferQueueIndex] = Env.GPUInfos.QueueIndex[Env.GPUInfos.GraphicQueueIndex];
@@ -299,7 +298,7 @@ bool CreateEnvironment(Environment& Env, const VkInstance& Instance, const Nativ
 
 void DestroyEnvironment(Environment& Env, const VkInstance& Instance) {
     DestroyGraphicManager(Env.GraphManager, Env);
-
+    vkDestroyCommandPool(Env.GPUInfos.Device, Env.TransfertCommandPool, 0);
     for (uint32_t i = 0; i < Env.ScreenInfos.Views.size( ); ++i) {
         vkDestroyImageView(Env.GPUInfos.Device, Env.ScreenInfos.Views[i], 0);
     }

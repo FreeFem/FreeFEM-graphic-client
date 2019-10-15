@@ -22,6 +22,10 @@ Image CreateImage(const VmaAllocator& Allocator, const VkDevice& Device, ImageCr
     vkCreateInfo.usage = pCreateInfo.Usage;
     vkCreateInfo.sharingMode = pCreateInfo.SharingMode;
     vkCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    if (pCreateInfo.QueueIndexCount > 0) {
+        vkCreateInfo.queueFamilyIndexCount = pCreateInfo.QueueIndexCount;
+        vkCreateInfo.pQueueFamilyIndices = pCreateInfo.QueueIndices;
+    }
 
     if (vmaCreateImage(Allocator, &vkCreateInfo, &pAllocationInfos, &n.Handle, &n.Memory, &n.AllocationInfos)) return n;
 

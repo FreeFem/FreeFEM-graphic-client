@@ -28,6 +28,8 @@ class Instance {
     uint32_t CurrentRenderGraph = 0;
     std::vector<RenderGraph> Graphs = {};
 
+    bool PressedButton[5] = { false, false, false, false, false };
+
 #ifdef _DEBUG
     VkDebugUtilsMessengerEXT m_DebugMessenger;
 #endif
@@ -43,10 +45,13 @@ class Instance {
     void destroy( );
     void run(std::shared_ptr<std::deque<std::string>> SharedQueue);
     void render( );
+    void renderUI( );
+
+    void UpdateImGuiButton();
 
    private:
     void initGFLWCallbacks( );
-    void Events( );
+    void Events(bool r);
 };
 
 bool pushInitCmdBuffer(const VkDevice& Device, const VkQueue& Queue, const Image DepthImage, const Image ColorImage,

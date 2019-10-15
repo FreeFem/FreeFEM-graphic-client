@@ -12,12 +12,14 @@ namespace ffGraph {
 namespace Vulkan {
 
 struct ImageCreateInfo {
+    bool AsView;
     VkExtent2D Extent;
     VkFormat Format;
     VkSampleCountFlagBits SampleCount;
     VkBufferUsageFlags Usage;
     VkSharingMode SharingMode;
-    bool AsView;
+    uint32_t QueueIndexCount;
+    uint32_t QueueIndices[3];
     struct ImageViewCreateInfo {
         VkImageAspectFlags AspectMask;
     } ViewInfos;

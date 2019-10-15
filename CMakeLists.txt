@@ -24,6 +24,8 @@ list(APPEND GLSL_SOURCE_FILES
     ${CMAKE_SOURCE_DIR}/shaders/Geo2D.vert
     ${CMAKE_SOURCE_DIR}/shaders/Geo3D.vert
     ${CMAKE_SOURCE_DIR}/shaders/Color.frag
+    ${CMAKE_SOURCE_DIR}/shaders/UI.frag
+    ${CMAKE_SOURCE_DIR}/shaders/UI.vert
 )
 
 foreach(GLSL ${GLSL_SOURCE_FILES})

@@ -7,6 +7,7 @@ add_library(ffGraph_Vulkan
     ${CMAKE_SOURCE_DIR}/src/Vulkan/InstanceReload.cpp
     ${CMAKE_SOURCE_DIR}/src/Vulkan/InstanceEvent.cpp
     ${CMAKE_SOURCE_DIR}/src/Vulkan/vmaDeclaration.cpp
+    ${CMAKE_SOURCE_DIR}/src/Vulkan/ImGui_Impl.cpp
     ${CMAKE_SOURCE_DIR}/src/Vulkan/Frame.cpp
     ${CMAKE_SOURCE_DIR}/src/Vulkan/UI.cpp
 

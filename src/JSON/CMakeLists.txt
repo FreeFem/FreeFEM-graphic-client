@@ -5,4 +5,5 @@ add_library(ffGraph_JSON
 )
 
 target_include_directories(ffGraph_JSON PRIVATE ${CMAKE_SOURCE_DIR}/extern/json/include)
+target_include_directories(ffGraph_JSON PRIVATE ${CMAKE_SOURCE_DIR}/extern/CTPL)
 target_include_directories(ffGraph_JSON PRIVATE ${CMAKE_SOURCE_DIR}/src/util)

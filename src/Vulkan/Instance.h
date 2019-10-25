@@ -10,6 +10,7 @@
 #include "Frame.h"
 #include "Resource/Shader.h"
 #include "RenderGraph.h"
+#include "ImGui_Impl.h"
 
 namespace ffGraph {
 namespace Vulkan {
@@ -27,6 +28,7 @@ class Instance {
 
     uint32_t CurrentRenderGraph = 0;
     std::vector<RenderGraph> Graphs = {};
+    UiPipeline Ui;
 
     bool PressedButton[5] = {false, false, false, false, false};
 

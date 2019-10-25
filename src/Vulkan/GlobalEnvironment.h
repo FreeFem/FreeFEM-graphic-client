@@ -30,6 +30,10 @@ inline uint32_t GetGraphicQueueIndex( ) {
     return GlobalEnvironmentPTR->GPUInfos.QueueIndex[GlobalEnvironmentPTR->GPUInfos.GraphicQueueIndex];
 }
 
+inline VkRenderPass GetRenderPass( ) {
+    return GlobalEnvironmentPTR->GraphManager.RenderPass;
+}
+
 }    // namespace Vulkan
 }    // namespace ffGraph
 

@@ -3,6 +3,7 @@
 
 #include <nlohmann/json.hpp>
 #include "LabelTable.h"
+#include "ThreadQueue.h"
 #include "Array.h"
 
 namespace ffGraph {

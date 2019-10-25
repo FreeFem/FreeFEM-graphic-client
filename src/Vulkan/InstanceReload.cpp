@@ -110,45 +110,45 @@ void Instance::render( ) {
 
     vkCmdBeginRenderPass(CurrentFrame.CmdBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-    for (auto& Node : Graphs[CurrentRenderGraph].Nodes) {
-        if (!Node.to_render) continue;
-        memcpy(Graphs[CurrentRenderGraph].PushBuffer.Infos.pMappedData, Node.CPUMeshData.BatchedMeshes.Data,
-               Node.CPUMeshData.BatchedMeshes.ElementCount * Node.CPUMeshData.BatchedMeshes.ElementSize);
+    // for (auto& Node : Graphs[CurrentRenderGraph].Nodes) {
+    //     if (!Node.to_render) continue;
+    //     memcpy(Graphs[CurrentRenderGraph].PushBuffer.Infos.pMappedData, Node.CPUMeshData.BatchedMeshes.Data,
+    //            Node.CPUMeshData.BatchedMeshes.ElementCount * Node.CPUMeshData.BatchedMeshes.ElementSize);
 
-        vkCmdBindPipeline(CurrentFrame.CmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Node.Handle);
+    //     vkCmdBindPipeline(CurrentFrame.CmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Node.Handle);
 
-        VkViewport viewport = {};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = (float)m_Window.WindowSize.width;
-        viewport.height = (float)m_Window.WindowSize.height;
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
+    //     VkViewport viewport = {};
+    //     viewport.x = 0.0f;
+    //     viewport.y = 0.0f;
+    //     viewport.width = (float)m_Window.WindowSize.width;
+    //     viewport.height = (float)m_Window.WindowSize.height;
+    //     viewport.minDepth = 0.0f;
+    //     viewport.maxDepth = 1.0f;
 
-        vkCmdSetViewport(CurrentFrame.CmdBuffer, 0, 1, &viewport);
+    //     vkCmdSetViewport(CurrentFrame.CmdBuffer, 0, 1, &viewport);
 
-        VkRect2D scissor = {};
+    //     VkRect2D scissor = {};
 
-        scissor.offset.x = 0;
-        scissor.offset.y = 0;
-        scissor.extent.width = m_Window.WindowSize.width;
-        scissor.extent.height = m_Window.WindowSize.height;
-        vkCmdSetScissor(CurrentFrame.CmdBuffer, 0, 1, &scissor);
+    //     scissor.offset.x = 0;
+    //     scissor.offset.y = 0;
+    //     scissor.extent.width = m_Window.WindowSize.width;
+    //     scissor.extent.height = m_Window.WindowSize.height;
+    //     vkCmdSetScissor(CurrentFrame.CmdBuffer, 0, 1, &scissor);
 
-        vkCmdPushConstants(CurrentFrame.CmdBuffer, Node.Layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(CameraUniform),
-                           &Graphs[CurrentRenderGraph].PushCamera);
-        if (Node.DescriptorPool != VK_NULL_HANDLE)
-            vkCmdBindDescriptorSets(CurrentFrame.CmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Node.Layout, 0, 1,
-                                    &Node.DescriptorSet, 0, 0);
-        std::vector<VkDeviceSize> Offsets = {};
-        for (uint32_t i = 0; i < Node.CPUMeshData.Layouts.size( ); ++i)
-            Offsets.push_back(Node.CPUMeshData.Layouts[i].offset);
-        vkCmdBindVertexBuffers(CurrentFrame.CmdBuffer, 0, 1, &Graphs[CurrentRenderGraph].PushBuffer.Handle,
-                               Offsets.data( ));
+    //     vkCmdPushConstants(CurrentFrame.CmdBuffer, Node.Layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(CameraUniform),
+    //                        &Graphs[CurrentRenderGraph].PushCamera);
+    //     if (Node.DescriptorPool != VK_NULL_HANDLE)
+    //         vkCmdBindDescriptorSets(CurrentFrame.CmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Node.Layout, 0, 1,
+    //                                 &Node.DescriptorSet, 0, 0);
+    //     std::vector<VkDeviceSize> Offsets = {};
+    //     for (uint32_t i = 0; i < Node.CPUMeshData.Layouts.size( ); ++i)
+    //         Offsets.push_back(Node.CPUMeshData.Layouts[i].offset);
+    //     vkCmdBindVertexBuffers(CurrentFrame.CmdBuffer, 0, 1, &Graphs[CurrentRenderGraph].PushBuffer.Handle,
+    //                            Offsets.data( ));
 
-        uint32_t VerticesCount = Node.CPUMeshData.BatchedMeshes.ElementCount;
-        vkCmdDraw(CurrentFrame.CmdBuffer, VerticesCount, 1, 0, 0);
-    }
+    //     uint32_t VerticesCount = Node.CPUMeshData.BatchedMeshes.ElementCount;
+    //     vkCmdDraw(CurrentFrame.CmdBuffer, VerticesCount, 1, 0, 0);
+    // }
 
     renderUI( );
 
@@ -184,21 +184,17 @@ void Instance::render( ) {
 
 void Instance::renderUI( ) {
     PerFrame& CurrentFrame = FrameData[CurrentFrameData];
-    RenderGraph& rGraph = Graphs[CurrentRenderGraph];
-    ImGuiIO& io = ImGui::GetIO( );
 
-    UpdateUIBuffers(rGraph.UiNode);
+    vkCmdBindDescriptorSets(CurrentFrame.CmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Ui.Layout, 0, 1,
+                            &Ui.DescriptorSet, 0, 0);
+    vkCmdBindPipeline(CurrentFrame.CmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Ui.Handle);
 
-    vkCmdBindDescriptorSets(CurrentFrame.CmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, rGraph.UiNode.Layout, 0, 1,
-                            &rGraph.UiNode.DescriptorSet, 0, 0);
-    vkCmdBindPipeline(CurrentFrame.CmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, rGraph.UiNode.Handle);
-
-    rGraph.UiNode.ImGuiData.Scale =
+    Ui.ImGuiPushConstant.Scale =
         glm::vec2(2.0f / (float)m_Window.WindowSize.width, 2.0f / (float)m_Window.WindowSize.height);
-    rGraph.UiNode.ImGuiData.Translate = glm::vec2(-1.f);
+    Ui.ImGuiPushConstant.Translate = glm::vec2(-1.f);
 
-    vkCmdPushConstants(CurrentFrame.CmdBuffer, rGraph.UiNode.Layout, VK_SHADER_STAGE_VERTEX_BIT, 0,
-                       sizeof(RenderUiNode::ImGuiInfos), &rGraph.UiNode.ImGuiData);
+    vkCmdPushConstants(CurrentFrame.CmdBuffer, Ui.Layout, VK_SHADER_STAGE_VERTEX_BIT, 0,
+                       sizeof(RenderUiNode::ImGuiInfos), &Ui.ImGuiPushConstant);
 
     ImDrawData* imDraw = ImGui::GetDrawData( );
     int32_t vertexOffset = 0;
@@ -207,8 +203,8 @@ void Instance::renderUI( ) {
     if (imDraw->CmdListsCount > 0) {
         VkDeviceSize offset = {0};
 
-        vkCmdBindVertexBuffers(CurrentFrame.CmdBuffer, 0, 1, &rGraph.UiNode.ImGuiBufferVertices.Handle, &offset);
-        vkCmdBindIndexBuffer(CurrentFrame.CmdBuffer, rGraph.UiNode.ImGuiBufferIndices.Handle, 0, VK_INDEX_TYPE_UINT16);
+        vkCmdBindVertexBuffers(CurrentFrame.CmdBuffer, 0, 1, &Ui.ImGuiVertices.Handle, &offset);
+        vkCmdBindIndexBuffer(CurrentFrame.CmdBuffer, Ui.ImGuiIndices.Handle, 0, VK_INDEX_TYPE_UINT16);
         for (uint32_t i = 0; i < imDraw->CmdListsCount; ++i) {
             const ImDrawList* cmd_list = imDraw->CmdLists[i];
             for (uint32_t j = 0; j < cmd_list->CmdBuffer.Size; ++j) {

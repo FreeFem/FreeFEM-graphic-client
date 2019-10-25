@@ -165,10 +165,17 @@ void Instance::load(const std::string &AppName, unsigned int width, unsigned int
 
     if (CreatePerFrameData(Env.GPUInfos.Device, Env.GraphManager.CommandPool, 2, FrameData) == false) return;
     if (ImportShaders(Shaders, Env.GPUInfos.Device) == false) return;
+
+    VkShaderModule ShadersData[2];
+    ShadersData[0] = FindShader(Shaders, "UI.vert");
+    ShadersData[1] = FindShader(Shaders, "UI.frag");
+
+    Ui = NewUiPipeline(ShadersData);
 }
 
 void Instance::destroy( ) {
     vkDeviceWaitIdle(Env.GPUInfos.Device);
+    DestroyUiPipeline(Ui);
 
     ImGui::DestroyContext( );
     for (size_t i = 0; i < Graphs.size( ); ++i) {
@@ -191,8 +198,7 @@ void Instance::destroy( ) {
 static void newFrame(bool *render) {
     ImGui::NewFrame( );
 
-    ImGui::TextUnformatted("Some text");
-    ImGui::Checkbox("Render objects", render);
+    ImGui::ShowDemoWindow();
 
     ImGui::Render( );
 }
@@ -202,29 +208,33 @@ void Instance::run(std::shared_ptr<std::deque<std::string>> SharedQueue) {
     bool r = true;
 
     while (!ffWindowShouldClose(m_Window)) {
-        if (Graphs.size( ) != 0) {
-            Events(r);
-            UpdateImGuiButton( );
-        }
-        if (!SharedQueue->empty( )) {
-            JSON::SceneLayout Layout = JSON::JSONString_to_SceneLayout(SharedQueue->at(0));
-            SharedQueue->pop_front( );
+        // if (Graphs.size( ) != 0) {
+        //     Events(r);
+        //     UpdateImGuiButton( );
+        // }
+        UpdateImGuiButton( );
+        // if (!SharedQueue->empty( )) {
+        //     JSON::SceneLayout Layout = JSON::JSONString_to_SceneLayout(SharedQueue->at(0));
+        //     SharedQueue->pop_front( );
 
-            RenderGraphCreateInfos CreateInfos;
-            CreateInfos.Device = Env.GPUInfos.Device;
-            CreateInfos.RenderPass = Env.GraphManager.RenderPass;
-            CreateInfos.msaaSamples = Env.GPUInfos.Capabilities.msaaSamples;
-            CreateInfos.PushConstantPTR = 0;
-            CreateInfos.PushConstantSize = 0;
-            CreateInfos.Stage = 0;
-            CreateInfos.AspectRatio = GetAspectRatio(m_Window);
-            Graphs.push_back(ConstructRenderGraph(CreateInfos, Env.Allocator, Layout, Shaders));
-        }
-        if (!Graphs.empty( )) {
-            newFrame(&r);
-            UpdateUIBuffers(Graphs[CurrentRenderGraph].UiNode);
-            render( );
-        }
+        //     RenderGraphCreateInfos CreateInfos;
+        //     CreateInfos.Device = Env.GPUInfos.Device;
+        //     CreateInfos.RenderPass = Env.GraphManager.RenderPass;
+        //     CreateInfos.msaaSamples = Env.GPUInfos.Capabilities.msaaSamples;
+        //     CreateInfos.PushConstantPTR = 0;
+        //     CreateInfos.PushConstantSize = 0;
+        //     CreateInfos.Stage = 0;
+        //     CreateInfos.AspectRatio = GetAspectRatio(m_Window);
+        //     Graphs.push_back(ConstructRenderGraph(CreateInfos, Env.Allocator, Layout, Shaders));
+        // }
+        // if (!Graphs.empty( )) {
+        //     newFrame(&r);
+        //     UpdateUIBuffers(Graphs[CurrentRenderGraph].UiNode);
+        //     render( );
+        // }
+        newFrame(&r);
+        UpdateUiPipeline(Ui);
+        render( );
     }
 }
 

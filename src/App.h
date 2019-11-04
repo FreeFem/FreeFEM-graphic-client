@@ -4,7 +4,7 @@
 #include <thread>
 #include "ffClient.h"
 #include "Vulkan/Instance.h"
-
+#include "JSON/ThreadQueue.h"
 namespace ffGraph {
 
 struct ffAppCreateInfos {
@@ -16,7 +16,9 @@ struct ffAppCreateInfos {
 
 struct ffApp {
     std::shared_ptr<std::deque<std::string>> SharedQueue;
+    JSON::ThreadSafeQueue GeometryQueue;
     std::thread ClientThread;
+    uint16_t GeometryInternID = 0;
     Vulkan::Instance vkInstance;
 };
 

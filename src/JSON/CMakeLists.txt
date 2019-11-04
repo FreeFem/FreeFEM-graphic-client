@@ -1,6 +1,6 @@
 add_library(ffGraph_JSON
-    ${CMAKE_SOURCE_DIR}/src/JSON/deserializer.cpp
-    ${CMAKE_SOURCE_DIR}/src/JSON/ImportGeometry.cpp
+    ${CMAKE_SOURCE_DIR}/src/JSON/ThreadQueue.cpp
+    ${CMAKE_SOURCE_DIR}/src/JSON/Import.cpp
     ${CMAKE_SOURCE_DIR}/src/JSON/LabelTable.cpp
 )
 

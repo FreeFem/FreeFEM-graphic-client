@@ -178,9 +178,6 @@ void Instance::destroy( ) {
     DestroyUiPipeline(Ui);
 
     ImGui::DestroyContext( );
-    for (size_t i = 0; i < Graphs.size( ); ++i) {
-        DestroyRenderGraph(Env.GPUInfos.Device, Env.Allocator, Graphs[i]);
-    }
     for (size_t i = 0; i < Shaders.size( ); ++i) {
         DestroyShader(Env.GPUInfos.Device, Shaders[i]);
     }
@@ -193,49 +190,6 @@ void Instance::destroy( ) {
     vkDestroyInstance(m_Handle, 0);
     ffDestroyWindow(m_Window);
     ffTerminateGLFW( );
-}
-
-static void newFrame(bool *render) {
-    ImGui::NewFrame( );
-
-    ImGui::ShowDemoWindow();
-
-    ImGui::Render( );
-}
-
-void Instance::run(std::shared_ptr<std::deque<std::string>> SharedQueue) {
-    RenderGraph Graph;
-    bool r = true;
-
-    while (!ffWindowShouldClose(m_Window)) {
-        // if (Graphs.size( ) != 0) {
-        //     Events(r);
-        //     UpdateImGuiButton( );
-        // }
-        UpdateImGuiButton( );
-        // if (!SharedQueue->empty( )) {
-        //     JSON::SceneLayout Layout = JSON::JSONString_to_SceneLayout(SharedQueue->at(0));
-        //     SharedQueue->pop_front( );
-
-        //     RenderGraphCreateInfos CreateInfos;
-        //     CreateInfos.Device = Env.GPUInfos.Device;
-        //     CreateInfos.RenderPass = Env.GraphManager.RenderPass;
-        //     CreateInfos.msaaSamples = Env.GPUInfos.Capabilities.msaaSamples;
-        //     CreateInfos.PushConstantPTR = 0;
-        //     CreateInfos.PushConstantSize = 0;
-        //     CreateInfos.Stage = 0;
-        //     CreateInfos.AspectRatio = GetAspectRatio(m_Window);
-        //     Graphs.push_back(ConstructRenderGraph(CreateInfos, Env.Allocator, Layout, Shaders));
-        // }
-        // if (!Graphs.empty( )) {
-        //     newFrame(&r);
-        //     UpdateUIBuffers(Graphs[CurrentRenderGraph].UiNode);
-        //     render( );
-        // }
-        newFrame(&r);
-        UpdateUiPipeline(Ui);
-        render( );
-    }
 }
 
 Environment *GlobalEnvironmentPTR = {};

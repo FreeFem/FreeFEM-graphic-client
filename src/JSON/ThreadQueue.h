@@ -1,14 +1,10 @@
 #ifndef THREAD_QUEUE_H_
 #define THREAD_QUEUE_H_
 
-#include <vector>
-#include <string>
-#include <cstdint>
-#include <ctpl.h>
 #include <queue>
+#include <condition_variable>
 #include <mutex>
-#include "Array.h"
-#include "Mesh.h"
+#include "Geometry.h"
 #include "LabelTable.h"
 
 namespace ffGraph {
@@ -16,13 +12,15 @@ namespace JSON {
 
 class ThreadSafeQueue {
     public:
-        Geometry pop();
-        void pop(Geometry& item);
-        void push(const Geometry& item);
-        void push(Geometry&& item);
+        ConstructedGeometry pop();
+        void pop(ConstructedGeometry& item);
+        void push(const ConstructedGeometry& item);
+        void push(ConstructedGeometry&& item);
 
         bool empty();
+        size_t size();
 
+        // delete copy constructor
         ThreadSafeQueue(const ThreadSafeQueue&) = delete;
         ThreadSafeQueue& operator=(const ThreadSafeQueue&) = delete;
 
@@ -30,7 +28,7 @@ class ThreadSafeQueue {
 
     private:
 
-        std::queue<Geometry> Queue;
+        std::queue<ConstructedGeometry> Queue;
         std::mutex Mutex;
         std::condition_variable Conditional;
 };

@@ -8,7 +8,7 @@ namespace JSON {
 
 using json = nlohmann::json;
 
-Geometry ThreadSafeQueue::pop()
+ConstructedGeometry ThreadSafeQueue::pop()
 {
     std::unique_lock<std::mutex> lock(Mutex);
     while (Queue.empty()) {
@@ -19,7 +19,7 @@ Geometry ThreadSafeQueue::pop()
     return item;
 }
 
-void ThreadSafeQueue::pop(Geometry& item)
+void ThreadSafeQueue::pop(ConstructedGeometry& item)
 {
     std::unique_lock<std::mutex> lock(Mutex);
     while (Queue.empty()) {
@@ -29,7 +29,7 @@ void ThreadSafeQueue::pop(Geometry& item)
     Queue.pop();
 }
 
-void ThreadSafeQueue::push(const Geometry& item)
+void ThreadSafeQueue::push(const ConstructedGeometry& item)
 {
     std::unique_lock<std::mutex> lock(Mutex);
     Queue.push(item);
@@ -37,7 +37,7 @@ void ThreadSafeQueue::push(const Geometry& item)
     Conditional.notify_one();
 }
 
-void ThreadSafeQueue::push(Geometry&& item)
+void ThreadSafeQueue::push(ConstructedGeometry&& item)
 {
     std::unique_lock<std::mutex> lock(Mutex);
     Queue.push(item);
@@ -49,6 +49,14 @@ bool ThreadSafeQueue::empty()
 {
     std::unique_lock<std::mutex> lock(Mutex);
     bool r = Queue.empty();
+    lock.unlock();
+    return r;
+}
+
+size_t ThreadSafeQueue::size()
+{
+    std::unique_lock<std::mutex> lock(Mutex);
+    size_t r = Queue.size();
     lock.unlock();
     return r;
 }

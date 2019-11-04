@@ -2,6 +2,7 @@
 #define IMPORT_H_
 
 #include <nlohmann/json.hpp>
+#include <vector>
 #include "LabelTable.h"
 #include "ThreadQueue.h"
 #include "Array.h"
@@ -11,14 +12,9 @@ namespace JSON {
 
 using json = nlohmann::json;
 
-typedef Array (*FP_Import)(nlohmann::json Geometry, LabelTable& Colors);
-
-Array ImportTetrahedronMesh3D(json Geometry, LabelTable& Colors);
-Array ImportLineMesh3D(json Geometry, LabelTable& Colors);
-Array ImportTriangleMesh2D(json Geometry, LabelTable& Colors);
-Array ImportTriangleMesh3D(json Geometry, LabelTable& Colors);
-Array ImportLineMesh2D(json Geometry, LabelTable& Colors);
-Array ImportLineMesh3D(json Geometry, LabelTable& Colors);
+//Geometry ConstructGeometry(std::vector<float> Vertices, std::vector<uint32_t> Indices, std::vector<int> Labels);
+//void ImportGeometry(json GeoJSON, ThreadSafeQueue& Queue, uint16_t PlotID);
+void AsyncImport(std::string CompressedJSON, ThreadSafeQueue& Queue);
 
 }    // namespace JSON
 }    // namespace ffGraph

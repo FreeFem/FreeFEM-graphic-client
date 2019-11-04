@@ -11,7 +11,7 @@ namespace ffGraph {
 namespace Vulkan {
 
 struct PipelineExecData {
-    uint32_t PipielineID;
+    uint32_t PipelineID;
 
     std::vector<Geometry> Geometries;
 };
@@ -25,6 +25,8 @@ struct Root {
     std::vector<Plot> Plots;
 };
 
+void AddToGraph(Root& r, ConstructedGeometry& g);
+void GraphTraversal(Root r);
 }
 }
 

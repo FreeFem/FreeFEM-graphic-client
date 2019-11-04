@@ -2,7 +2,6 @@
 #include "Instance.h"
 #include "utils.h"
 #include "Logger.h"
-#include "Resource/Mesh/Mesh.h"
 
 namespace ffGraph {
 namespace Vulkan {
@@ -13,12 +12,12 @@ static void FramebufferResizeCallback(GLFWwindow *Window, int width, int height)
 
     io.DisplaySize = ImVec2(width, height);
     Handle->m_Window.WindowSize = {(uint32_t)width, (uint32_t)height};
-    for (auto &Graph : Handle->Graphs) {
-        Graph.Update = true;
-        for (auto &Node : Graph.Nodes) {
-            Node.Update = true;
-        }
-    }
+    // for (auto &Graph : Handle->Graphs) {
+    //     Graph.Update = true;
+    //     for (auto &Node : Graph.Nodes) {
+    //         Node.Update = true;
+    //     }
+    // }
     Handle->reload( );
 }
 
@@ -101,12 +100,16 @@ static void KeyCallback(GLFWwindow *Window, int key, UNUSED_PARAM(int scancode),
     //     Handle->Graphs[Handle->CurrentRenderGraph].Cam.Handle.ViewProjMatrix;
 }
 
-static void MouseScroolCallback(GLFWwindow *Window, UNUSED_PARAM(double xOffset), double yOffset) {
+static void MouseScroolCallback(GLFWwindow *Window, double xOffset, double yOffset) {
     // Instance *Handle = static_cast<Instance *>(glfwGetWindowUserPointer(Window));
 
     // CameraScroolEvents(Handle->Graphs[Handle->CurrentRenderGraph].Cam, yOffset);
     // Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.ViewProj =
     //     Handle->Graphs[Handle->CurrentRenderGraph].Cam.Handle.ViewProjMatrix;
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.MouseWheelH += (float)xOffset;
+    io.MouseWheel += (float)yOffset;
 }
 
 static void imgui_Mouse(Instance *Instance, int button, int action) {
@@ -134,27 +137,27 @@ void Instance::initGFLWCallbacks( ) {
 }
 
 void Instance::Events(bool render) {
-    for (size_t i = 0; i < Graphs[CurrentRenderGraph].Nodes.size( ); ++i) {
-        Graphs[CurrentRenderGraph].Nodes[i].to_render = render;
-    }
-    if (glfwGetMouseButton(m_Window.Handle, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS &&
-        Graphs[CurrentRenderGraph].Cam.Type == CameraType::_3D) {
-        double cMouseX, cMouseY;
-        glfwGetCursorPos(m_Window.Handle, &cMouseX, &cMouseY);
+    // for (size_t i = 0; i < Graphs[CurrentRenderGraph].Nodes.size( ); ++i) {
+    //     Graphs[CurrentRenderGraph].Nodes[i].to_render = render;
+    // }
+    // if (glfwGetMouseButton(m_Window.Handle, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS &&
+    //     Graphs[CurrentRenderGraph].Cam.Type == CameraType::_3D) {
+    //     double cMouseX, cMouseY;
+    //     glfwGetCursorPos(m_Window.Handle, &cMouseX, &cMouseY);
 
-        if (m_Window.MouseX != cMouseX || m_Window.MouseY != cMouseY) {
-            float x = cMouseX - m_Window.MouseX;
-            // float y = cMouseY - m_Window.MouseY;
+    //     if (m_Window.MouseX != cMouseX || m_Window.MouseY != cMouseY) {
+    //         float x = cMouseX - m_Window.MouseX;
+    //         // float y = cMouseY - m_Window.MouseY;
 
-            // Graphs[CurrentRenderGraph].PushCamera.Model = glm::rotate(
-            //     Graphs[CurrentRenderGraph].PushCamera.Model, glm::radians(y * 0.25f),
-            //     glm::cross(Graphs[CurrentRenderGraph].Cam.Position, glm::vec3(1.f, 0.f, 0.f)));
-            Graphs[CurrentRenderGraph].PushCamera.Model = glm::rotate(
-                Graphs[CurrentRenderGraph].PushCamera.Model, glm::radians(x * 0.25f), glm::vec3(0.f, 1.0f, 0.f));
-            m_Window.MouseX = cMouseX;
-            m_Window.MouseY = cMouseY;
-        }
-    }
+    //         // Graphs[CurrentRenderGraph].PushCamera.Model = glm::rotate(
+    //         //     Graphs[CurrentRenderGraph].PushCamera.Model, glm::radians(y * 0.25f),
+    //         //     glm::cross(Graphs[CurrentRenderGraph].Cam.Position, glm::vec3(1.f, 0.f, 0.f)));
+    //         Graphs[CurrentRenderGraph].PushCamera.Model = glm::rotate(
+    //             Graphs[CurrentRenderGraph].PushCamera.Model, glm::radians(x * 0.25f), glm::vec3(0.f, 1.0f, 0.f));
+    //         m_Window.MouseX = cMouseX;
+    //         m_Window.MouseY = cMouseY;
+    //     }
+    // }
 }
 
 void Instance::UpdateImGuiButton( ) {

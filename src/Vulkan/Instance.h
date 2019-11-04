@@ -9,7 +9,7 @@
 #include "Environment.h"
 #include "Frame.h"
 #include "Resource/Shader.h"
-#include "RenderGraph.h"
+#include "ThreadQueue.h"
 #include "ImGui_Impl.h"
 
 namespace ffGraph {
@@ -26,8 +26,6 @@ class Instance {
     PerFrame FrameData[2];
     ShaderLibrary Shaders;
 
-    uint32_t CurrentRenderGraph = 0;
-    std::vector<RenderGraph> Graphs = {};
     UiPipeline Ui;
 
     bool PressedButton[5] = {false, false, false, false, false};
@@ -45,7 +43,7 @@ class Instance {
     void load(const std::string& AppName, unsigned int width, unsigned int height);
     void reload( );
     void destroy( );
-    void run(std::shared_ptr<std::deque<std::string>> SharedQueue);
+    void run(std::shared_ptr<std::deque<std::string>> SharedQueue, JSON::ThreadSafeQueue& GeometryQueue);
     void render( );
     void renderUI( );
 

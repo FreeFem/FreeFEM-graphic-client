@@ -9,13 +9,10 @@ add_library(ffGraph_Vulkan
     ${CMAKE_SOURCE_DIR}/src/Vulkan/vmaDeclaration.cpp
     ${CMAKE_SOURCE_DIR}/src/Vulkan/ImGui_Impl.cpp
     ${CMAKE_SOURCE_DIR}/src/Vulkan/Frame.cpp
-    ${CMAKE_SOURCE_DIR}/src/Vulkan/UI.cpp
-
-    ${CMAKE_SOURCE_DIR}/src/Vulkan/RenderGraph.cpp
+    ${CMAKE_SOURCE_DIR}/src/Vulkan/Loop.cpp
 
     ${CMAKE_SOURCE_DIR}/src/Vulkan/Resource/Image/Image.cpp
     ${CMAKE_SOURCE_DIR}/src/Vulkan/Resource/Shader.cpp
-    ${CMAKE_SOURCE_DIR}/src/Vulkan/Resource/Mesh/Mesh.cpp
     ${CMAKE_SOURCE_DIR}/src/Vulkan/Resource/Buffer/Buffer.cpp
     ${CMAKE_SOURCE_DIR}/src/Vulkan/Resource/Camera/Camera.cpp
     ${CMAKE_SOURCE_DIR}/src/Vulkan/Resource/Camera/CameraController.cpp
@@ -25,6 +22,8 @@ add_library(ffGraph_Vulkan
     ${CMAKE_SOURCE_DIR}/extern/imgui/imgui_widgets.cpp
     ${CMAKE_SOURCE_DIR}/extern/imgui/imgui_draw.cpp
     ${CMAKE_SOURCE_DIR}/extern/imgui/imgui_demo.cpp
+
+    ${CMAKE_SOURCE_DIR}/src/Vulkan/Graph/Graph.cpp
 
 )
 

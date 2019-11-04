@@ -15,23 +15,6 @@ static void cleanup_for_reload(Instance* Handle) {
     }
     Env.GraphManager.Framebuffers.clear( );
 
-    for (size_t i = 0; i < Handle->Graphs.size( ); ++i) {
-        for (size_t j = 0; j < Handle->Graphs[i].Nodes.size( ); ++j) {
-            vkDestroyPipelineLayout(Env.GPUInfos.Device, Handle->Graphs[i].Nodes[j].Layout, 0);
-            vkDestroyPipeline(Env.GPUInfos.Device, Handle->Graphs[i].Nodes[j].Handle, 0);
-            Handle->Graphs[i].Nodes[j].Layout = VK_NULL_HANDLE;
-            Handle->Graphs[i].Nodes[j].Handle = VK_NULL_HANDLE;
-        }
-        vkDestroyPipelineLayout(Env.GPUInfos.Device, Handle->Graphs[i].UiNode.Layout, 0);
-        vkDestroyPipeline(Env.GPUInfos.Device, Handle->Graphs[i].UiNode.Handle, 0);
-        vkDestroyDescriptorSetLayout(Env.GPUInfos.Device, Handle->Graphs[i].UiNode.DescriptorSetLayout, 0);
-        vkDestroyDescriptorPool(Env.GPUInfos.Device, Handle->Graphs[i].UiNode.DescriptorPool, 0);
-        Handle->Graphs[i].UiNode.Layout = VK_NULL_HANDLE;
-        Handle->Graphs[i].UiNode.Handle = VK_NULL_HANDLE;
-        Handle->Graphs[i].UiNode.DescriptorSetLayout = VK_NULL_HANDLE;
-        Handle->Graphs[i].UiNode.DescriptorPool = VK_NULL_HANDLE;
-    }
-
     vkDestroyRenderPass(Env.GPUInfos.Device, Env.GraphManager.RenderPass, 0);
 
     for (auto& view : Env.ScreenInfos.Views) {
@@ -50,17 +33,6 @@ void Instance::reload( ) {
 
     CreateScreenInfos(Env, m_Window);
     CreateGraphicInformations(Env.GraphManager, Env, m_Window);
-    RenderGraphCreateInfos CreateInfos;
-    CreateInfos.Device = Env.GPUInfos.Device;
-    CreateInfos.RenderPass = Env.GraphManager.RenderPass;
-    CreateInfos.msaaSamples = Env.GPUInfos.Capabilities.msaaSamples;
-    CreateInfos.PushConstantPTR = 0;
-    CreateInfos.PushConstantSize = 0;
-    CreateInfos.Stage = 0;
-    CreateInfos.AspectRatio = GetAspectRatio(m_Window);
-    for (auto& Graph : Graphs) {
-        ReloadRenderGraph(CreateInfos, Graph);
-    }
 }
 
 void Instance::render( ) {
@@ -194,7 +166,7 @@ void Instance::renderUI( ) {
     Ui.ImGuiPushConstant.Translate = glm::vec2(-1.f);
 
     vkCmdPushConstants(CurrentFrame.CmdBuffer, Ui.Layout, VK_SHADER_STAGE_VERTEX_BIT, 0,
-                       sizeof(RenderUiNode::ImGuiInfos), &Ui.ImGuiPushConstant);
+                       sizeof(UiPipeline::ImGuiPushConst), &Ui.ImGuiPushConstant);
 
     ImDrawData* imDraw = ImGui::GetDrawData( );
     int32_t vertexOffset = 0;

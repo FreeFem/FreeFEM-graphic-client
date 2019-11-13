@@ -6,27 +6,32 @@
 #include <glm/mat4x4.hpp>
 #include "Plot.h"
 #include "Pipeline.h"
+#include "Geometry.h"
+#include "Resource/Buffer/Buffer.h"
+#include "Resource/Camera/CameraController.h"
 
 namespace ffGraph {
 namespace Vulkan {
 
-struct PipelineExecData {
-    uint32_t PipelineID;
-
-    std::vector<Geometry> Geometries;
-};
-
 struct Root {
     glm::mat4 Transform;
+    bool Update = true;
 
     bool UpdateExecutionData = false;
     std::vector<Pipeline> Pipelines;
-    std::vector<PipelineExecData> ExecData;
     std::vector<Plot> Plots;
+    std::vector<Geometry *> Geometries;
+    std::vector<Geometry *> RenderedGeometries;
+    Buffer RenderBuffer;
+    CameraController Cam;
+    CameraUniform CamUniform;
 };
 
 void AddToGraph(Root& r, ConstructedGeometry& g);
 void GraphTraversal(Root r);
+void ConstructCurrentGraphPipelines(Root& r, VkShaderModule Shaders[2]);
+void DestroyGraph(Root& r);
+
 }
 }
 

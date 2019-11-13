@@ -176,6 +176,7 @@ void Instance::load(const std::string &AppName, unsigned int width, unsigned int
 void Instance::destroy( ) {
     vkDeviceWaitIdle(Env.GPUInfos.Device);
     DestroyUiPipeline(Ui);
+    DestroyGraph(RenderGraph);
 
     ImGui::DestroyContext( );
     for (size_t i = 0; i < Shaders.size( ); ++i) {

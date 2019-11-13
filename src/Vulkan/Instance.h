@@ -11,6 +11,7 @@
 #include "Resource/Shader.h"
 #include "ThreadQueue.h"
 #include "ImGui_Impl.h"
+#include "Graph/Root.h"
 
 namespace ffGraph {
 namespace Vulkan {
@@ -27,6 +28,7 @@ class Instance {
     ShaderLibrary Shaders;
 
     UiPipeline Ui;
+    Root RenderGraph;
 
     bool PressedButton[5] = {false, false, false, false, false};
 

@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <vulkan/vulkan.h>
+#include <string>
 #include "Array.h"
 
 namespace ffGraph
@@ -31,6 +32,7 @@ struct GeometryDescriptor {
     uint LineWith = 2;
     uint16_t PrimitiveTopology = GEO_PRIMITIVE_TOPOLOGY_COUNT;
     uint8_t PolygonMode = GEO_POLYGON_MODE_COUNT;
+    uint16_t PipelineID;
 };
 
 struct Geometry {
@@ -38,14 +40,15 @@ struct Geometry {
     Array Data;
 
     GeometryDescriptor Description;
+    VkDeviceSize BufferOffset;
 
-    inline Vertex& operator[](size_t index) { return ((Vertex *)(Data.Data))[index]; }
     inline size_t count() { return Data.ElementCount; }
     inline size_t size() { return Data.ElementCount * Data.ElementSize; }
 };
 
 struct ConstructedGeometry {
     uint16_t PlotID;
+    std::string Name;
     uint16_t MeshID;
 
     ConstructedGeometry(uint16_t pID, uint16_t mID) : PlotID(pID), MeshID(mID) {}

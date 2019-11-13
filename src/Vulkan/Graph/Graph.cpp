@@ -22,7 +22,7 @@ static int SearchForMesh(Plot p, uint16_t MeshID)
     return -1;
 }
 
-static void CreateMesh(Plot& p, ConstructedGeometry& g)
+static void CreateMesh(Root& r, Plot& p, ConstructedGeometry& g)
 {
     Mesh n;
 
@@ -33,6 +33,7 @@ static void CreateMesh(Plot& p, ConstructedGeometry& g)
     n.Tranform = glm::mat4(1.0f);
 
     p.Meshes.push_back(n);
+    r.Geometries.push_back(&n.Geometries[n.Geometries.size() - 1]);
 }
 
 static void CreatePlot(Root& r, ConstructedGeometry& g)
@@ -42,37 +43,39 @@ static void CreatePlot(Root& r, ConstructedGeometry& g)
     n.PlotID = g.PlotID;
     n.Transform = glm::mat4(1.0f);
 
-    CreateMesh(n, g);
+    CreateMesh(r, n, g);
 
     r.Plots.push_back(n);
 }
 
-static void AddToMesh(Mesh& m, ConstructedGeometry& g)
+static void AddToMesh(Root& r, Mesh& m, ConstructedGeometry& g)
 {
     m.Geometries.push_back(g.Geo);
     GeoUiData tmp;
     m.UiInfos.push_back(tmp);
+    r.Geometries.push_back(&m.Geometries[m.Geometries.size() - 1]);
 }
 
-static void AddToPlot(Plot& p, ConstructedGeometry& g)
+static void AddToPlot(Root& r, Plot& p, ConstructedGeometry& g)
 {
     int MeshIndex = SearchForMesh(p, g.MeshID);
 
     if (MeshIndex == -1) {
-        CreateMesh(p, g);
+        CreateMesh(r, p, g);
     } else {
-        AddToMesh(p.Meshes[MeshIndex], g);
+        AddToMesh(r, p.Meshes[MeshIndex], g);
     }
 }
 
 void AddToGraph(Root& r, ConstructedGeometry& g)
 {
     int PlotIndex = SearchForPlot(r, g.PlotID);
+    r.Update = true;
 
     if (PlotIndex == -1) {
         CreatePlot(r, g);
     } else {
-        AddToPlot(r.Plots[PlotIndex], g);
+        AddToPlot(r, r.Plots[PlotIndex], g);
     }
 }
 

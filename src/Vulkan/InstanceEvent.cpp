@@ -21,7 +21,7 @@ static void FramebufferResizeCallback(GLFWwindow *Window, int width, int height)
     Handle->reload( );
 }
 
-static void Imgui_Key(int key, int action) {
+static void Imgui_Key(int key, int action, GLFWwindow *Window) {
     ImGuiIO &io = ImGui::GetIO( );
 
     if (action == GLFW_PRESS) io.KeysDown[key] = true;
@@ -36,7 +36,7 @@ static void Imgui_Key(int key, int action) {
 static void KeyCallback(GLFWwindow *Window, int key, UNUSED_PARAM(int scancode), int action, UNUSED_PARAM(int mods)) {
     Instance *Handle = static_cast<Instance *>(glfwGetWindowUserPointer(Window));
 
-    Imgui_Key(key, action);
+    Imgui_Key(key, action, Window);
     // if (key == GLFW_KEY_KP_4) {
     //     Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model = glm::rotate(
     //         Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model, glm::radians(2.f), glm::vec3(0.f, 1.f, 0.f));

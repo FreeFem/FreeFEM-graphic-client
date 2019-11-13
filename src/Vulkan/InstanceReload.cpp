@@ -82,45 +82,38 @@ void Instance::render( ) {
 
     vkCmdBeginRenderPass(CurrentFrame.CmdBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-    // for (auto& Node : Graphs[CurrentRenderGraph].Nodes) {
-    //     if (!Node.to_render) continue;
-    //     memcpy(Graphs[CurrentRenderGraph].PushBuffer.Infos.pMappedData, Node.CPUMeshData.BatchedMeshes.Data,
-    //            Node.CPUMeshData.BatchedMeshes.ElementCount * Node.CPUMeshData.BatchedMeshes.ElementSize);
+    if (!RenderGraph.Pipelines.empty()) {
+        for (size_t i = 0; i < RenderGraph.RenderedGeometries.size(); ++i) {
+            const Pipeline p = RenderGraph.Pipelines[RenderGraph.RenderedGeometries[i]->Description.PipelineID];
+            vkCmdBindPipeline(CurrentFrame.CmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, p.Handle);
 
-    //     vkCmdBindPipeline(CurrentFrame.CmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Node.Handle);
+            VkViewport viewport = {};
+            viewport.x = 0.0f;
+            viewport.y = 0.0f;
+            viewport.width = (float)m_Window.WindowSize.width;
+            viewport.height = (float)m_Window.WindowSize.height;
+            viewport.minDepth = 0.0f;
+            viewport.maxDepth = 1.0f;
 
-    //     VkViewport viewport = {};
-    //     viewport.x = 0.0f;
-    //     viewport.y = 0.0f;
-    //     viewport.width = (float)m_Window.WindowSize.width;
-    //     viewport.height = (float)m_Window.WindowSize.height;
-    //     viewport.minDepth = 0.0f;
-    //     viewport.maxDepth = 1.0f;
+            vkCmdSetViewport(CurrentFrame.CmdBuffer, 0, 1, &viewport);
 
-    //     vkCmdSetViewport(CurrentFrame.CmdBuffer, 0, 1, &viewport);
+            RenderGraph.CamUniform.ViewProj = RenderGraph.Cam.Handle.ViewProjMatrix;
+            vkCmdPushConstants(CurrentFrame.CmdBuffer, p.Layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(CameraUniform),
+                           &RenderGraph.CamUniform);
 
-    //     VkRect2D scissor = {};
+            VkRect2D scissor = {};
 
-    //     scissor.offset.x = 0;
-    //     scissor.offset.y = 0;
-    //     scissor.extent.width = m_Window.WindowSize.width;
-    //     scissor.extent.height = m_Window.WindowSize.height;
-    //     vkCmdSetScissor(CurrentFrame.CmdBuffer, 0, 1, &scissor);
+            scissor.offset.x = 0;
+            scissor.offset.y = 0;
+            scissor.extent.width = m_Window.WindowSize.width;
+            scissor.extent.height = m_Window.WindowSize.height;
+            vkCmdSetScissor(CurrentFrame.CmdBuffer, 0, 1, &scissor);
 
-    //     vkCmdPushConstants(CurrentFrame.CmdBuffer, Node.Layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(CameraUniform),
-    //                        &Graphs[CurrentRenderGraph].PushCamera);
-    //     if (Node.DescriptorPool != VK_NULL_HANDLE)
-    //         vkCmdBindDescriptorSets(CurrentFrame.CmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Node.Layout, 0, 1,
-    //                                 &Node.DescriptorSet, 0, 0);
-    //     std::vector<VkDeviceSize> Offsets = {};
-    //     for (uint32_t i = 0; i < Node.CPUMeshData.Layouts.size( ); ++i)
-    //         Offsets.push_back(Node.CPUMeshData.Layouts[i].offset);
-    //     vkCmdBindVertexBuffers(CurrentFrame.CmdBuffer, 0, 1, &Graphs[CurrentRenderGraph].PushBuffer.Handle,
-    //                            Offsets.data( ));
+            vkCmdBindVertexBuffers(CurrentFrame.CmdBuffer, 0, 1, &RenderGraph.RenderBuffer.Handle, &RenderGraph.RenderedGeometries[i]->BufferOffset);
 
-    //     uint32_t VerticesCount = Node.CPUMeshData.BatchedMeshes.ElementCount;
-    //     vkCmdDraw(CurrentFrame.CmdBuffer, VerticesCount, 1, 0, 0);
-    // }
+            vkCmdDraw(CurrentFrame.CmdBuffer, RenderGraph.RenderedGeometries[i]->count(), 1, 0, 0);
+        }
+    }
 
     renderUI( );
 

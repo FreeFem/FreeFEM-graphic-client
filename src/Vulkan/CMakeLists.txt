@@ -24,6 +24,8 @@ add_library(ffGraph_Vulkan
     ${CMAKE_SOURCE_DIR}/extern/imgui/imgui_demo.cpp
 
     ${CMAKE_SOURCE_DIR}/src/Vulkan/Graph/Graph.cpp
+    ${CMAKE_SOURCE_DIR}/src/Vulkan/Graph/Pipeline.cpp
+    ${CMAKE_SOURCE_DIR}/src/Vulkan/Graph/PipelineConstruction.cpp
 
 )
 

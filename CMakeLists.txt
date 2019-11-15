@@ -23,8 +23,7 @@ set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator")
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     # find_path(GLSL_VALIDATOR glslangValidator PATHS ${VULKAN_SDK})
     set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/macOS/bin/glslangValidator")
-    target_compile_options(ffGraph PRIVATE "-std=c++11")
-    set (CMAKE_CXX_STANDARD 11)
+    set(CMAKE_CXX_STANDARD 11)
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator.exe")
 endif()
@@ -70,7 +69,7 @@ file(COPY "${CMAKE_SOURCE_DIR}/shaders/grid.json" DESTINATION "${CMAKE_BINARY_DI
 set_target_properties(ffGraph PROPERTIES CXX_STANDARD 11)
 
 # Linking libraries with target
-target_include_directories(ffGraph PRIVATE ${Vulkan_INCLUDE_DIR})
+target_include_directories(ffGraph PRIVATE ${Vulkan_INCLUDE_DIRS})
 target_include_directories(ffGraph PRIVATE ${CMAKE_SOURCE_DIR}/extern/asio/asio/include)
 target_include_directories(ffGraph PRIVATE ${CMAKE_SOURCE_DIR}/extern/glfw/include)
 target_include_directories(ffGraph PRIVATE ${CMAKE_SOURCE_DIR}/extern/VulkanMemoryAllocator/src)

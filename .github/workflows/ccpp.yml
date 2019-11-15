@@ -26,6 +26,8 @@ jobs:
     - uses: actions/checkout@v1
       with:
         submodules: recursive
+    - name: Install
+      run: brew install boost
     - name: Get Vulkan
       run: wget --output-document=vulkan-sdk.tar.gz "https://sdk.lunarg.com/sdk/download/latest/mac/vulkan-sdk.tar.gz?Human=true" && mkdir vulkan-sdk && tar xf vulkan-sdk.tar.gz -C vulkan-sdk
     - name: Build

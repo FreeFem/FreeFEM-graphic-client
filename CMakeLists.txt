@@ -5,11 +5,18 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/CMake/Mo
 
 find_package(Threads REQUIRED)
 include(FindVulkan)
-message(${Vulkan_FOUND})
-message(${Vulkan_INCLUDE_DIRS})
-message(${Vulkan_LIBRARIES})
-message(${Vulkan_INCLUDE_DIR})
-message(${Vulkan_LIBRARY})
+
+# Compiling shaders
+if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator")
+elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+    # TODO this is not an elegant way
+    set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator")
+    set(CMAKE_CXX_STANDARD 11)
+    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++")
+elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+    set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator.exe")
+endif()
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wextra -D_DEBUG")
 
@@ -19,17 +26,6 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/src/Vulkan)
 add_subdirectory(${CMAKE_SOURCE_DIR}/extern/glfw)
 # Telling Cmake to compile a executable
 add_executable(ffGraph ${CMAKE_SOURCE_DIR}/src/main.cpp)
-
-# Compiling shaders
-if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator")
-elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
-    # TODO this is not an elegant way
-    set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++")
-elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
-    set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator.exe")
-endif()
 
 list(APPEND GLSL_SOURCE_FILES
     ${CMAKE_SOURCE_DIR}/shaders/Geo2D.vert

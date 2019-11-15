@@ -46,6 +46,6 @@ jobs:
     - name: GetVulkan
       run: wget --output-document=VulkanSDK-1.1.126.0-Installer.exe "https://sdk.lunarg.com/sdk/download/1.1.126.0/windows/VulkanSDK-1.1.126.0-Installer.exe?Human=true"
     - name: Install Vulkan
-      run: (./VulkanSDK-1.1.126.0-Installer.exe /S) ; (echo $VULKAN_SDK)
+      run: (./VulkanSDK-1.1.126.0-Installer.exe /S) ; (Write-Output $VULKAN_SDK)
     - name: Build
       run: ($Env:VULKAN_SDK += ";C:\VulkanSDK\") ; (md -Name build) ; (cd build) ; (cmake ..) ; (make)

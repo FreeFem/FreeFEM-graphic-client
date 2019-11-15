@@ -12,4 +12,4 @@ jobs:
     - name: Get Vulkan
       run: wget https://sdk.lunarg.com/sdk/download/latest/linux/vulkan-sdk.tar.gz && mkdir vulkan-sdk && tar xf vulkan-sdk.tar.gz -C vulkan-sdk
     - name: Build
-      run: source vulkan-sdk/setup-env.sh && mkdir build && cd build && cmake .. && make
+      run: source vulkan-sdk/1.1.126.0/setup-env.sh && mkdir build && cd build && cmake .. && make

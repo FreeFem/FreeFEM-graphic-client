@@ -30,3 +30,18 @@ jobs:
       run: git submodule update --init --recursive
     - name: Build
       run: mkdir build && cd build && cmake .. && make
+
+  windows-build:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install MSYS2
+      run: choco install msys2
+    - name: GetVulkan
+      run: C:\tools\msys64\usr\bin\bash -lc "wget --output-document=vulkan-sdk.tar.gz "https://sdk.lunarg.com/sdk/download/latest/linux/vulkan-sdk.tar.gz?Human=true" && mkdir vulkan-sdk && tar xf vulkan-sdk.tar.gz -C vulkan-sdk"
+    - name: Init Submodules
+      run: git submodule update --init --recursive
+    - name: Build
+      run: C:\tools\msys64\usr\bin\bash -lc "source vulkan-sdk/1.1.126.0/setup-env.sh && mkdir build && cd build && cmake .. && make"

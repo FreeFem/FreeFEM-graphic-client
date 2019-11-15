@@ -26,7 +26,7 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator")
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     # TODO this is not an elegant way
-    set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/macOS/bin/glslangValidator")
+    set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator")
     set(CMAKE_CXX_STANDARD 11)
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator.exe")

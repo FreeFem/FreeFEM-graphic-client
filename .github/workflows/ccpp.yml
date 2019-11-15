@@ -25,11 +25,11 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Get Vulkan
-      run: wget --output-document=vulkan-sdk.tar.gz "https://sdk.lunarg.com/sdk/download/latest/mac/vulkan-sdk.tar.gz?Human=true" && mkdir vulkan-sdk && tar xf vulkan-sdk.tar.gz -C vulkan-sdk && cd vulkan-sdk/vulkansdk-macos-1.1.126.0 && python install_vulkan.py && cd ../..
+      run: wget --output-document=vulkan-sdk.tar.gz "https://sdk.lunarg.com/sdk/download/latest/mac/vulkan-sdk.tar.gz?Human=true" && mkdir vulkan-sdk && tar xf vulkan-sdk.tar.gz -C vulkan-sdk
     - name: Init Submodules
       run: git submodule update --init --recursive
     - name: Build
-      run: mkdir build && cd build && cmake .. && make
+      run: cd vulkan-sdk/vulkansdk-macos-1.1.126.0 && python install_vulkan.py && cd ../.. && mkdir build && cd build && cmake .. && make
 
   windows-build:
 
@@ -40,7 +40,7 @@ jobs:
     - name: Install MSYS2
       run: choco install msys2
     - name: GetVulkan
-      run: C:\tools\msys64\usr\bin\bash -lc "ls && wget --output-document=vulkan-sdk.tar.gz \"https://sdk.lunarg.com/sdk/download/latest/linux/vulkan-sdk.tar.gz?Human=true\" && mkdir vulkan-sdk && tar xf vulkan-sdk.tar.gz -C vulkan-sdk"
+      run: C:\tools\msys64\usr\bin\bash -lc "wget --output-document=vulkan-sdk.tar.gz 'https://sdk.lunarg.com/sdk/download/latest/linux/vulkan-sdk.tar.gz?Human=true' && mkdir vulkan-sdk && tar xf vulkan-sdk.tar.gz -C vulkan-sdk"
     - name: Init Submodules
       run: git submodule update --init --recursive
     - name: Build

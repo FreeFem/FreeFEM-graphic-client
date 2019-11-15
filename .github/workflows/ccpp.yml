@@ -10,6 +10,9 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Install Vulkan
-      run: sudo apt update && sudo apt search vulkan-sdk && sudo apt install vulkan-sdk -y
+      run: wget -qO - http://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add - | echo "y" \
+        && sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-bionic.list http://packages.lunarg.com/vulkan/lunarg-vulkan-bionic.list \
+        && sudo apt update \
+        && sudo apt install vulkan-sdk \
     - name: Build
       run: mkdir build && cd build && cmake .. && make

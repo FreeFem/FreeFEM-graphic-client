@@ -9,5 +9,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+    - name: Get Vulkan
+      run: wget https://sdk.lunarg.com/sdk/download/latest/linux/vulkan-sdk.tar.gz && tar xf vulkan-sdk.tar.gz -C vulkan-sdk
     - name: Build
-      run: wget https://sdk.lunarg.com/sdk/download/latest/linux/vulkan-sdk.tar.gz && tar xf vulkan-sdk.tar.gz && cd 1.1.126.0 && source setup-env.sh && cd .. && mkdir build && cd build && cmake .. && make
+      run: source vulkan-sdk/setup-env.sh && mkdir build && cd build && cmake .. && make

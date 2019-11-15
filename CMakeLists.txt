@@ -66,6 +66,7 @@ target_include_directories(ffGraph PRIVATE ${CMAKE_SOURCE_DIR}/extern/asio/asio/
 target_include_directories(ffGraph PRIVATE ${CMAKE_SOURCE_DIR}/extern/glfw/include)
 target_include_directories(ffGraph PRIVATE ${CMAKE_SOURCE_DIR}/extern/VulkanMemoryAllocator/src)
 target_include_directories(ffGraph PRIVATE ${CMAKE_SOURCE_DIR}/extern/glm)
+target_include_directories(ffGraph PRIVATE ${CMAKE_SOURCE_DIR}/extern/json/include)
 
 target_link_libraries(ffGraph Threads::Threads)
 target_include_directories(ffGraph PRIVATE ${CMAKE_SOURCE_DIR}/src/JSON)

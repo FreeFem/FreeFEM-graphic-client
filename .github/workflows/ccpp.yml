@@ -25,6 +25,8 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Get Vulkan
-      run: wget https://sdk.lunarg.com/sdk/download/latest/mac/vulkan-sdk.tar.gz && mkdir vulkan-sdk && tar xf vulkan-sdk.tar.gz -C vulkan-sdk && ./vulkan-sdk/1.1.126.0/install_vulkan.py
+      run: wget https://sdk.lunarg.com/sdk/download/latest/mac/vulkan-sdk.tar.gz && mkdir vulkan-sdk && tar xf vulkan-sdk.tar.gz -C vulkan-sdk && ./vulkan-sdk/vulkansdk-macos-1.1.126.0/install_vulkan.py
+    - name: Init Submodules
+      run: git submodule update --init --recursive
     - name: Build
-      run: git submodule update --init --recursive && mkdir build && cd build && cmake .. && make
+      run: mkdir build && cd build && cmake .. && make

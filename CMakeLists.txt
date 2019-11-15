@@ -14,11 +14,13 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/extern/glfw)
 add_executable(ffGraph ${CMAKE_SOURCE_DIR}/src/main.cpp)
 
 # Compiling shaders
-if (UNIX)
+if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator")
-else (UNIX)
+elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+    set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/macOS/bin/glslangValidator")
+elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator.exe")
-endif(UNIX)
+endif()
 
 list(APPEND GLSL_SOURCE_FILES
     ${CMAKE_SOURCE_DIR}/shaders/Geo2D.vert

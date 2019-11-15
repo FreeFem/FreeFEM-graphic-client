@@ -61,6 +61,7 @@ file(COPY "${CMAKE_SOURCE_DIR}/shaders/grid.json" DESTINATION "${CMAKE_BINARY_DI
 set_target_properties(ffGraph PROPERTIES CXX_STANDARD 11)
 
 # Linking libraries with target
+target_include_directories(ffGraph PRIVATE ${Vulkan_INCLUDE_DIR})
 target_include_directories(ffGraph PRIVATE ${CMAKE_SOURCE_DIR}/extern/asio/asio/include)
 target_include_directories(ffGraph PRIVATE ${CMAKE_SOURCE_DIR}/extern/glfw/include)
 target_include_directories(ffGraph PRIVATE ${CMAKE_SOURCE_DIR}/extern/VulkanMemoryAllocator/src)

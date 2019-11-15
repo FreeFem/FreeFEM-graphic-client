@@ -42,7 +42,7 @@ jobs:
     - name: GetVulkan
       run: wget --output-document=VulkanSDK-1.1.126.0-Installer.exe "https://sdk.lunarg.com/sdk/download/1.1.126.0/windows/VulkanSDK-1.1.126.0-Installer.exe?Human=true"
     - name: Install Vulkan
-      run: VulkanSDK-1.1.126.0-Installer.exe \S
+      run: VulkanSDK-1.1.126.0-Installer.exe /S
     - name: Init Submodules
       run: git submodule update --init --recursive
     - name: Build

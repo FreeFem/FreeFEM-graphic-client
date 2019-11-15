@@ -6,9 +6,13 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v1
+    - name: Install Vulkan
+      run: wget https://vulkan.lunarg.com/sdk/home#sdk/downloadConfirm/latest/linux/vulkan-sdk.tar.gz \
+            && tar xf vulkan-sdk.tar.gz \
+            && cd vulkan-sdk \
+            && source setup-env.sh
     - name: Build
       run: mkdir build && cd build && cmake .. && make
-    

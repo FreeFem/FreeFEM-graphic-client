@@ -6,7 +6,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/CMake/Mo
 include(FindVulkan)
 
 find_package(Threads REQUIRED)
-find_package(Vulkan REQUIRED)
+# find_package(Vulkan REQUIRED)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wextra -D_DEBUG")
 
@@ -24,6 +24,7 @@ elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     # find_path(GLSL_VALIDATOR glslangValidator PATHS ${VULKAN_SDK})
     set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/macOS/bin/glslangValidator")
     target_compile_options(ffGraph PRIVATE "-std=c++11")
+    set (CMAKE_CXX_STANDARD 11)
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator.exe")
 endif()

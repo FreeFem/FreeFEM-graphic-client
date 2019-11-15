@@ -15,10 +15,9 @@ add_executable(ffGraph ${CMAKE_SOURCE_DIR}/src/main.cpp)
 
 # Compiling shaders
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-    set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator")
+set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator")
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
-    find_path(GLSL_VALIDATOR_MACOS_PATH ENV PATH "macOS/bin/glslangValidator")
-    set(GLSL_VALIDATOR ${GLSL_VALIDATOR_MACOS_PATH})
+    set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator")
     target_compile_options(ffGraph PRIVATE "-Wc++11-extensions")
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator.exe")

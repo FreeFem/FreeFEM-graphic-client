@@ -27,11 +27,11 @@ jobs:
       with:
         submodules: recursive
     - name: Install
-      run: brew install boost
+      run: brew install boost gcc
     - name: Get Vulkan
       run: wget --output-document=vulkan-sdk.tar.gz "https://sdk.lunarg.com/sdk/download/latest/mac/vulkan-sdk.tar.gz?Human=true" && mkdir vulkan-sdk && tar xf vulkan-sdk.tar.gz -C vulkan-sdk
     - name: Build
-      run: cd vulkan-sdk/vulkansdk-macos-1.1.126.0 && python install_vulkan.py && export VULKAN_SDK=`pwd`/macos && cd ../.. && mkdir build && cd build && cmake .. && make
+      run: cd vulkan-sdk/vulkansdk-macos-1.1.126.0 && python install_vulkan.py && export VULKAN_SDK=`pwd`/macos && cd ../.. && mkdir build && cd build && CXX=gcc cmake .. && make
 
   windows-build:
 

@@ -29,7 +29,7 @@ jobs:
     - name: Init Submodules
       run: git submodule update --init --recursive
     - name: Build
-      run: cd vulkan-sdk/vulkansdk-macos-1.1.126.0 && python install_vulkan.py && export VULKAN_SDK='vulkan-sdk/vulkansdk-macos-1.1.126.0' && cd ../.. && mkdir build && cd build && cmake .. && make
+      run: cd vulkan-sdk/vulkansdk-macos-1.1.126.0 && ls vulkan-sdk/vulkansdk-macos-1.1.126.0/macOS/bin && python install_vulkan.py && export VULKAN_SDK='vulkan-sdk/vulkansdk-macos-1.1.126.0' && cd ../.. && mkdir build && cd build && cmake .. && make
 
   windows-build:
 

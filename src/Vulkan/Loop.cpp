@@ -10,6 +10,13 @@
 namespace ffGraph {
 namespace Vulkan {
 
+static const char table[GeometryPrimitiveTopology::GEO_PRIMITIVE_TOPOLOGY_COUNT][38] = {
+    "GEO_PRIMITIVE_TOPOLOGY_POINT_LIST",
+    "GEO_PRIMITIVE_TOPOLOGY_LINE_LIST",
+    "GEO_PRIMITIVE_TOPOLOGY_LINE_STRIP",
+    "GEO_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST"
+};
+
 static void GeoParamPanel(Root& r, Plot& p, Mesh& m, Geometry& g, GeoUiData& UiData)
 {
     if (UiData.ShowParameterWindow) {
@@ -23,14 +30,15 @@ static void GeoParamPanel(Root& r, Plot& p, Mesh& m, Geometry& g, GeoUiData& UiD
         } else {
             g.Description.PolygonMode = GeometryPolygonMode::GEO_POLYGON_MODE_LINE;
         }
+        ImGui::Text("Primitive : %s.", table[g.Description.PrimitiveTopology]);
         ImGui::End();
     }
 }
 
-static void ListGeometry(Root& r, Plot& p)
+static void ListGeometry(Root& r, Plot& p, size_t index)
 {
     for (size_t i = 0; i < p.Meshes.size(); ++i) {
-        int t = (int)i;
+        int t = (int)i + index;
 
         if (ImGui::TreeNode((void *)(intptr_t)t, "Mesh %u", p.Meshes[i].MeshID)) {
 
@@ -57,35 +65,69 @@ static void ListGeometry(Root& r, Plot& p)
     }
 }
 
-static void newGraphFrame(Root& r, bool *IndentTree)
+static void newGraphFrame(Root& r)
 {
+    static glm::vec3 Rotation;
+    static float ZoomLevel;
     ImGui::NewFrame( );
 
-    ImGui::Begin("Graph");
+    ImGui::ShowDemoWindow();
 
-    ImGui::Checkbox("Toggle tree indentation", IndentTree);
+    ImGui::Begin("Plot list");
 
-    if (!IndentTree)
-        ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 0.0f);
-    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-    if (ImGui::TreeNode("Test Tree Root")) {
-        for (size_t i = 0; i < r.Plots.size(); ++i) {
-            int tmp = (int)i;
-            if (ImGui::TreeNode((void *)(intptr_t)tmp, "Plot %u", r.Plots[i].PlotID)) {
-                ListGeometry(r, r.Plots[i]);
-                ImGui::TreePop();
-            }
+    for (size_t i = 0; i < r.Plots.size(); ++i) {
+        std::string name("Plot ");
+        name.append(std::to_string(i));
+        if (ImGui::CollapsingHeader(name.c_str(), ImGuiTreeNodeFlags_None)) {
+            ListGeometry(r, r.Plots[i], i);
         }
-        ImGui::TreePop();
     }
+    if (ImGui::SliderFloat("X", &Rotation.x, 0.f, 360.f)) {
+        r.Cam.SetRotation(Rotation);
+    }
+    if (ImGui::SliderFloat("Y", &Rotation.y, 0.f, 360.f)) {
+        r.Cam.SetRotation(Rotation);
+    }
+    if (ImGui::SliderFloat("Z", &Rotation.z, 0.f, 360.f)) {
+        r.Cam.SetRotation(Rotation);
+    }
+    if (ImGui::Button("Reset rotation")) {
+        Rotation.x = Rotation.y = Rotation.z = 0.f;
+        r.Cam.SetRotation(Rotation);
+    }
+    if (ImGui::Button("Zoom +")) {
+        CameraScroolEvents(r.Cam, 1.f);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Zoom -")) {
+        CameraScroolEvents(r.Cam, -1.f);
+    }
+    ImGui::Separator();
+    if (ImGui::Button("X +"))
+        r.Cam.Translate(glm::vec3(0.25f * std::max(r.Cam.ZoomLevel, 1.f), 0.f, 0.f));
+    ImGui::SameLine();
+    if (ImGui::Button("X -"))
+        r.Cam.Translate(glm::vec3(-0.25f * std::max(r.Cam.ZoomLevel, 1.f), 0.f, 0.f));
 
+    ImGui::Separator();
+    if (ImGui::Button("Y +"))
+        r.Cam.Translate(glm::vec3(0.f, 0.25f * std::max(r.Cam.ZoomLevel, 1.f), 0.f));
+    ImGui::SameLine();
+    if (ImGui::Button("Y -"))
+        r.Cam.Translate(glm::vec3(0.f, -0.25f * std::max(r.Cam.ZoomLevel, 1.f), 0.f));
+
+    ImGui::Separator();
+    if (ImGui::Button("Z +"))
+        r.Cam.Translate(glm::vec3(0.f, 0.f, 0.25f * std::max(r.Cam.ZoomLevel, 1.f)));
+    ImGui::SameLine();
+    if (ImGui::Button("Z -"))
+        r.Cam.Translate(glm::vec3(0.f, 0.f, -0.25f * std::max(r.Cam.ZoomLevel, 1.f)));
     ImGui::End();
 
     ImGui::Render();
 }
 
 void Instance::run(std::shared_ptr<std::deque<std::string>> SharedQueue, JSON::ThreadSafeQueue& GeometryQueue) {
-    bool IndentTree = true;
     uint16_t RuntimeInternID = 0;
     VkShaderModule Modules[2] = {
         FindShader(Shaders, "Geo3D.vert"),
@@ -108,11 +150,18 @@ void Instance::run(std::shared_ptr<std::deque<std::string>> SharedQueue, JSON::T
             AddToGraph(RenderGraph, g);
             ConstructCurrentGraphPipelines(RenderGraph, Modules);
         }
-        newGraphFrame(RenderGraph, &IndentTree);
+        newGraphFrame(RenderGraph);
         UpdateUiPipeline(Ui);
         render( );
-        RenderGraph.CamUniform.Model = glm::rotate(RenderGraph.CamUniform.Model, 0.0001f, glm::vec3(0, 1, 0));
+        //RenderGraph.CamUniform.Model = glm::rotate(RenderGraph.CamUniform.Model, 0.0001f, glm::vec3(0, 1, 0));
     }
+}
+
+glm::vec2 IsoValue(glm::vec2 T[3], glm::vec2 BarycentricPoint)
+{
+    glm::mat2 mat(glm::vec2(T[1].x - T[0].x, T[1].y - T[0].y), glm::vec2(T[2].x - T[0].x, T[2].y - T[0].y));
+
+    return mat * BarycentricPoint * T[0];
 }
 
 }

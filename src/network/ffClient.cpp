@@ -48,35 +48,39 @@ void ffClient::HandleConnect(const std::error_code& Error, tcp::resolver::result
 }
 
 void ffClient::StartRead( ) {
-    // Deadline.expires_after(std::chrono::seconds(30));
-    asio::async_read(Socket, asio::dynamic_buffer(InputBuffer, 64),
-                     std::bind(&ffClient::HandleRead, this, std::placeholders::_1, std::placeholders::_2));
+    if (Stopped) return;
+
+    asio::async_read(Socket, asio::dynamic_buffer(InputBuffer, 64), asio::transfer_exactly(64),
+        std::bind(&ffClient::HandleRead, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void ffClient::HandleRead(const std::error_code& Error, std::size_t n) {
     using json = nlohmann::json;
 
-    if (Stopped) return;
-    if (!Error) {
-        std::string line(InputBuffer.substr(0, n - 1));
-        InputBuffer.erase(0, n);
-        if (!line.empty( )) {
-            auto j = json::parse(line);
-            size_t ReadSize = j["Size"];
+    if (Stopped || Error) return;
+    std::string line(InputBuffer.substr(0, 63));
+    InputBuffer.erase(0, 64);
+    if (!line.empty( )) {
+        auto j = json::parse(line);
+        size_t ReadSize = j["Size"];
 
-            std::error_code err;
-            asio::read(Socket, asio::dynamic_buffer(InputBuffer, ReadSize), err);
-            if (err)
-                StartRead( );
-            else {
-                SharedDataQueue->push_back(InputBuffer.substr(0, ReadSize));
+        std::error_code err;
+        asio::read(Socket, asio::dynamic_buffer(InputBuffer, ReadSize), asio::transfer_exactly(ReadSize), err);
+        if (err)
+            StartRead( );
+        else {
+            if (j["MaxPacket"].get<uint32_t>() != j["IDs"][1].get<uint32_t>()) {
+                OutputBuffer.append(InputBuffer.substr(0, ReadSize));
                 InputBuffer.erase(0, ReadSize);
+            } else {
+                OutputBuffer.append(InputBuffer.substr(0, ReadSize));
+                InputBuffer.erase(0, ReadSize);
+                SharedDataQueue->push_back(OutputBuffer);
+                OutputBuffer.clear();
             }
         }
-        StartRead( );
-    } else {
-        Stop( );
     }
+    StartRead( );
 }
 
 void ffClient::StartWrite( ) {

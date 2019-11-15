@@ -93,11 +93,10 @@ void ConstructCurrentGraphPipelines(Root& r, VkShaderModule Shaders[2])
 
     for (size_t i = 0; i < UniqueDescriptor.size(); ++i) {
         if (!CreatePipeline(UniqueDescriptor[i], r.Pipelines[i], Shaders)) {
-            std::cout << "Failed to create pipeline.\n";
             return;
         }
         for (size_t j = 0; j < r.RenderedGeometries.size(); ++j) {
-            if (CompareGeoPipeline(r.RenderedGeometries[j]->Description, r.Pipelines[r.Pipelines.size() - 1]))
+            if (CompareGeoPipeline(r.RenderedGeometries[j]->Description, r.Pipelines[i]))
                 r.RenderedGeometries[j]->Description.PipelineID = i;
         }
     }

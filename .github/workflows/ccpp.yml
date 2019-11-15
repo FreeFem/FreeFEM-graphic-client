@@ -10,7 +10,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Install
-      run: sudo apt update && sudo apt install xorg-dev libglu1-mesa-dev
+      run: sudo apt update && sudo apt install xorg-dev libglu1-mesa-dev -y
     - name: Get Vulkan
       run: wget https://sdk.lunarg.com/sdk/download/latest/linux/vulkan-sdk.tar.gz && mkdir vulkan-sdk && tar xf vulkan-sdk.tar.gz -C vulkan-sdk
     - name: Build

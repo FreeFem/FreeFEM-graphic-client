@@ -4,6 +4,7 @@ project(ffGraph VERSION 0.1.0 LANGUAGES CXX)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/CMake/Modules")
 
 include(FindVulkan)
+set(Vulkan_INCLUDE_DIR ${Vulkan_INCLUDE_DIRS})
 
 find_package(Threads REQUIRED)
 # find_package(Vulkan REQUIRED)
@@ -21,7 +22,7 @@ add_executable(ffGraph ${CMAKE_SOURCE_DIR}/src/main.cpp)
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator")
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
-    # find_path(GLSL_VALIDATOR glslangValidator PATHS ${VULKAN_SDK})
+    # TODO this is not an elegant way
     set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/macOS/bin/glslangValidator")
     set(CMAKE_CXX_STANDARD 11)
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
@@ -69,7 +70,7 @@ file(COPY "${CMAKE_SOURCE_DIR}/shaders/grid.json" DESTINATION "${CMAKE_BINARY_DI
 set_target_properties(ffGraph PROPERTIES CXX_STANDARD 11)
 
 # Linking libraries with target
-target_include_directories(ffGraph PRIVATE ${Vulkan_INCLUDE_DIRS})
+target_include_directories(ffGraph PRIVATE ${Vulkan_INCLUDE_DIR})
 target_include_directories(ffGraph PRIVATE ${CMAKE_SOURCE_DIR}/extern/asio/asio/include)
 target_include_directories(ffGraph PRIVATE ${CMAKE_SOURCE_DIR}/extern/glfw/include)
 target_include_directories(ffGraph PRIVATE ${CMAKE_SOURCE_DIR}/extern/VulkanMemoryAllocator/src)

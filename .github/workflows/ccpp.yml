@@ -46,4 +46,4 @@ jobs:
     - name: Init Submodules
       run: git submodule update --init --recursive
     - name: Build
-      run: DIR build && CD build && cmake .. && make"
+      run: DIR build -and CD build -and cmake .. -and make

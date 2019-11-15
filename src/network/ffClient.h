@@ -118,6 +118,7 @@ class ffClient {
     tcp::resolver::results_type Endpoints;
     tcp::socket Socket;
     std::string InputBuffer;
+    std::string OutputBuffer;
     steady_timer Deadline;
     steady_timer HeartBeat;
     std::shared_ptr<std::deque<std::string>> SharedDataQueue;

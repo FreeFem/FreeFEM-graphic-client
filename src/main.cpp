@@ -1,6 +1,8 @@
 #include <cstring>
 #include "App.h"
-#include "Vulkan/Instance.h"
+#include "JSON/Import.h"
+#include "Vulkan/Graph/Root.h"
+//#include "Vulkan/Instance.h"
 
 ffGraph::ffAppCreateInfos ffGraph::ffGetAppCreateInfos(int ac, char** av) {
     ffAppCreateInfos Infos = {"localhost", "12345", 1280, 768};
@@ -33,7 +35,7 @@ bool ffAppInitialize(ffAppCreateInfos pCreateInfos, std::shared_ptr<std::deque<s
     return true;
 }
 
-void ffAppRun(ffApp& App) { App.vkInstance.run(App.SharedQueue); }
+void ffAppRun(ffApp& App) { App.vkInstance.run(App.SharedQueue, App.GeometryQueue); }
 
 }    // namespace ffGraph
 
@@ -45,7 +47,9 @@ int main(int ac, char** av) {
     ffGraph::ffClient Client(AppCreateInfos.Host, AppCreateInfos.Port, App.SharedQueue);
 
     App.ClientThread = std::thread([&Client]( ) { Client.Start( ); });
+    int count = 0;
     ffGraph::ffAppRun(App);
+
     Client.Stop( );
     App.vkInstance.destroy( );
     App.ClientThread.join( );

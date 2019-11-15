@@ -20,6 +20,7 @@ void AddLabelToTable(LabelTable& Table, Label l);
 void GenerateColorFromLabels(LabelTable& Table);
 void ClearLabelTable(LabelTable& Table);
 
+Color NewColor(float H, float V, float Opacity);
 Color GetColor(const LabelTable& Table, const Label l);
 
 }    // namespace ffGraph

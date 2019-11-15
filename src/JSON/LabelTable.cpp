@@ -4,7 +4,7 @@
 
 namespace ffGraph {
 
-static Color NewColor(float H, float V, float Opacity) {
+Color NewColor(float H, float V, float Opacity) {
     float S = 1.f;
 
     float C = V * S;

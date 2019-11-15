@@ -54,7 +54,7 @@ void CameraKeyEvents(CameraController& Cam, int key) {
 void CameraScroolEvents(CameraController& Cam, double yOffset) {
     float ZoomSpeed = Cam.ZoomLevel * 0.15f;
     Cam.ZoomLevel -= yOffset * ZoomSpeed;
-    Cam.ZoomLevel = std::max(Cam.ZoomLevel, 0.25f);
+    Cam.ZoomLevel = std::max(Cam.ZoomLevel, 0.0025f);
     UpdateCameraControllerProjection(Cam);
 }
 

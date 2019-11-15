@@ -48,4 +48,4 @@ jobs:
     - name: Install Vulkan
       run: ./VulkanSDK-1.1.126.0-Installer.exe /S
     - name: Build
-      run: (md -Name build) ; (cd build) ; (cmake ..) ; (make)
+      run: ($Env:path += ";C:\VulkanSDK\") ; (md -Name build) ; (cd build) ; (cmake ..) ; (make)

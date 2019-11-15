@@ -13,6 +13,7 @@ message(${Vulkan_INCLUDE_DIR})
 message(${Vulkan_LIBRARY})
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wextra -D_DEBUG")
+set(CMAKE_CXX_STANDARD 11)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/JSON)
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/network)
@@ -27,7 +28,6 @@ set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator")
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     # TODO this is not an elegant way
     set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator")
-    set(CMAKE_CXX_STANDARD 11)
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator.exe")
 endif()

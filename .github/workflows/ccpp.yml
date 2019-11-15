@@ -9,12 +9,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+      with:
+        submodules: recursive
     - name: Install
       run: sudo apt update && sudo apt install xorg-dev libglu1-mesa-dev -y
     - name: Get Vulkan
       run: wget --output-document=vulkan-sdk.tar.gz "https://sdk.lunarg.com/sdk/download/latest/linux/vulkan-sdk.tar.gz?Human=true" && mkdir vulkan-sdk && tar xf vulkan-sdk.tar.gz -C vulkan-sdk
-    - name: Init Submodules
-      run: git submodule update --init --recursive
     - name: Build
       run: source vulkan-sdk/1.1.126.0/setup-env.sh && mkdir build && cd build && cmake .. && make
 
@@ -24,10 +24,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+      with:
+        submodules: recursive
     - name: Get Vulkan
       run: wget --output-document=vulkan-sdk.tar.gz "https://sdk.lunarg.com/sdk/download/latest/mac/vulkan-sdk.tar.gz?Human=true" && mkdir vulkan-sdk && tar xf vulkan-sdk.tar.gz -C vulkan-sdk
-    - name: Init Submodules
-      run: git submodule update --init --recursive
     - name: Build
       run: cd vulkan-sdk/vulkansdk-macos-1.1.126.0 && python install_vulkan.py && export VULKAN_SDK='./vulkan-sdk/vulkansdk-macos-1.1.126.0' && cd ../.. && mkdir build && cd build && cmake .. && make
 
@@ -37,13 +37,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+      with:
+        submodules: recursive
     - name: Install wget
       run: choco install wget
     - name: GetVulkan
       run: wget --output-document=VulkanSDK-1.1.126.0-Installer.exe "https://sdk.lunarg.com/sdk/download/1.1.126.0/windows/VulkanSDK-1.1.126.0-Installer.exe?Human=true"
     - name: Install Vulkan
       run: ./VulkanSDK-1.1.126.0-Installer.exe /S
-    - name: Init Submodules
-      run: git submodule update --init --recursive
     - name: Build
       run: (md -Name build) -and (cd build) -and (cmake ..) -and (make)

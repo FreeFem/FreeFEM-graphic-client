@@ -3,11 +3,14 @@ project(ffGraph VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/CMake/Modules")
 
-include(FindVulkan)
-set(Vulkan_INCLUDE_DIR ${Vulkan_INCLUDE_DIRS})
 
 find_package(Threads REQUIRED)
-# find_package(Vulkan REQUIRED)
+include(FindVulkan)
+message(${Vulkan_FOUND})
+message(${Vulkan_INCLUDE_DIRS})
+message(${Vulkan_LIBRARIES})
+message(${Vulkan_INCLUDE_DIR})
+message(${Vulkan_LIBRARY})
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wextra -D_DEBUG")
 

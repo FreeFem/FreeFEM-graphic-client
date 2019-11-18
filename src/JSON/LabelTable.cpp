@@ -37,7 +37,7 @@ Color NewColor(float H, float V, float Opacity) {
         G = 0.f;
         B = X;
     }
-    return {fabsf32((R + m)), fabsf32((G + m)), fabsf32((B + m)), Opacity};
+    return {fabsf((R + m)), fabsf((G + m)), fabsf((B + m)), Opacity};
 }
 
 void AddLabelToTable(LabelTable& Table, Label l) {

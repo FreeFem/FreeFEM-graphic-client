@@ -3,35 +3,35 @@ name: C/C++ CI
 on: [push]
 
 jobs:
-  # ubuntu-build:
+  ubuntu-build:
 
-  #   runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
-  #   steps:
-  #   - uses: actions/checkout@v1
-  #     with:
-  #       submodules: recursive
-  #   - name: Install
-  #     run: sudo apt update && sudo apt install xorg-dev libglu1-mesa-dev -y
-  #   - name: Get Vulkan
-  #     run: wget --output-document=vulkan-sdk.tar.gz "https://sdk.lunarg.com/sdk/download/latest/linux/vulkan-sdk.tar.gz?Human=true" && mkdir vulkan-sdk && tar xf vulkan-sdk.tar.gz -C vulkan-sdk
-  #   - name: Build
-  #     run: source vulkan-sdk/1.1.126.0/setup-env.sh && mkdir build && cd build && cmake .. && make
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        submodules: recursive
+    - name: Install
+      run: sudo apt update && sudo apt install xorg-dev libglu1-mesa-dev -y
+    - name: Get Vulkan
+      run: wget --output-document=vulkan-sdk.tar.gz "https://sdk.lunarg.com/sdk/download/latest/linux/vulkan-sdk.tar.gz?Human=true" && mkdir vulkan-sdk && tar xf vulkan-sdk.tar.gz -C vulkan-sdk
+    - name: Build
+      run: source vulkan-sdk/1.1.126.0/setup-env.sh && mkdir build && cd build && cmake .. && make
 
-  # macos-build:
+  macos-build:
 
-  #   runs-on: macos-latest
+    runs-on: macos-latest
 
-  #   steps:
-  #   - uses: actions/checkout@v1
-  #     with:
-  #       submodules: recursive
-  #   - name: Install
-  #     run: brew install boost
-  #   - name: Get Vulkan
-  #     run: wget --output-document=vulkan-sdk.tar.gz "https://sdk.lunarg.com/sdk/download/latest/mac/vulkan-sdk.tar.gz?Human=true" && mkdir vulkan-sdk && tar xf vulkan-sdk.tar.gz -C vulkan-sdk
-  #   - name: Build
-  #     run: cd vulkan-sdk/vulkansdk-macos-1.1.126.0 && python install_vulkan.py && export VULKAN_SDK=`pwd`/macos && cd ../.. && mkdir build && cd build && cmake .. && make
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        submodules: recursive
+    - name: Install
+      run: brew install boost
+    - name: Get Vulkan
+      run: wget --output-document=vulkan-sdk.tar.gz "https://sdk.lunarg.com/sdk/download/latest/mac/vulkan-sdk.tar.gz?Human=true" && mkdir vulkan-sdk && tar xf vulkan-sdk.tar.gz -C vulkan-sdk
+    - name: Build
+      run: cd vulkan-sdk/vulkansdk-macos-1.1.126.0 && python install_vulkan.py && export VULKAN_SDK=`pwd`/macos && cd ../.. && mkdir build && cd build && cmake .. && make
 
   windows-build:
 
@@ -46,8 +46,6 @@ jobs:
     - name: GetVulkan
       run: wget --output-document=VulkanSDK-1.1.126.0-Installer.exe "https://sdk.lunarg.com/sdk/download/1.1.126.0/windows/VulkanSDK-1.1.126.0-Installer.exe?Human=true"
     - name: Install Vulkan
-      run: ./VulkanSDK-1.1.126.0-Installer.exe /S
-    - name: Find Vulkan Install Path
-      run: ls C:\VulkanSDK\1.1.126.0
-    # - name: Build
-    #   run: $Env:VULKAN_SDK = "C:\VulkanSDK\1.1.126.0" ; md -Name build ; cd build ; cmake .. ; make
+      run: Start-Process .\VulkanSDK-1.1.126.0-Installer.exe /S -Wait
+    - name: Build
+      run: $Env:VULKAN_SDK = "C:\VulkanSDK\1.1.126.0" ; md -Name build ; cd build ; cmake .. ; make

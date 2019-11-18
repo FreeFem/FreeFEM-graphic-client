@@ -64,7 +64,7 @@ file(COPY "${CMAKE_SOURCE_DIR}/shaders/grid.json" DESTINATION "${CMAKE_BINARY_DI
 # Done compiling shaders
 
 if (WIN32)
-    target_link_libraries(ffGraph_NET wsock32)
+    target_link_libraries(ffGraph_NET wsock32 ws2_32)
 endif (WIN32)
 
 # Using C++11 standard

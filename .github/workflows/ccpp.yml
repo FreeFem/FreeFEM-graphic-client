@@ -48,4 +48,4 @@ jobs:
     - name: Install Vulkan
       run: Start-Process .\VulkanSDK-1.1.126.0-Installer.exe /S -Wait
     - name: Build
-      run: $Env:VULKAN_SDK = "C:\VulkanSDK\1.1.126.0" ; md -Name build ; cd build ; cmake .. -G "MSYS Makefiles" ; ls
+      run: $Env:VULKAN_SDK = "C:\VulkanSDK\1.1.126.0" ; md -Name build ; cd build ; cmake .. -G "MSYS Makefiles" ; make

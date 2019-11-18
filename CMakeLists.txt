@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.0)
 project(ffGraph VERSION 0.1.0 LANGUAGES CXX)
 
+message(STATUS "VULKAN_SDK : $ENV{VULKAN_SDK}")
+
 find_package(Threads REQUIRED)
 find_package(Vulkan REQUIRED)
 

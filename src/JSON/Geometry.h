@@ -29,7 +29,7 @@ enum GeometryPolygonMode : uint8_t {
 };
 
 struct GeometryDescriptor {
-    uint LineWith = 2;
+    unsigned int LineWith = 2;
     uint16_t PrimitiveTopology = GEO_PRIMITIVE_TOPOLOGY_COUNT;
     uint8_t PolygonMode = GEO_POLYGON_MODE_COUNT;
     uint16_t PipelineID;

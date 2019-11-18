@@ -71,7 +71,7 @@ void BuildRenderBuffer(Root& r)
     VkDeviceSize offset = 0;
     for (size_t i = 0; i < r.RenderedGeometries.size(); ++i) {
         r.RenderedGeometries[i]->BufferOffset = offset;
-        memcpy(r.RenderBuffer.Infos.pMappedData + offset, r.RenderedGeometries[i]->Data.Data, r.RenderedGeometries[i]->size());
+        memcpy(((char *)r.RenderBuffer.Infos.pMappedData) + offset, r.RenderedGeometries[i]->Data.Data, r.RenderedGeometries[i]->size());
         offset += r.RenderedGeometries[i]->size();
     }
 }

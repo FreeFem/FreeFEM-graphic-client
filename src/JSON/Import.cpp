@@ -61,6 +61,39 @@ glm::vec2 IsoValue(glm::vec2 T[3], glm::vec2 BarycentricPoint)
     return mat * BarycentricPoint * T[0];
 }
 
+Geometry ConstructIsoMeshVector(std::vector<float>& Vertices, std::vector<uint32_t>& Indices, std::vector<float>& Values, float min, float max)
+{
+    Geometry n;
+
+    n.Data = ffNewArray(Indices.size(), sizeof(Vertex));
+
+    size_t size = Indices.size();
+    Vertex *ptr = (Vertex *)n.Data.Data;
+    std::vector<float> tmp(Indices.size());
+
+    for (size_t i = 0; i < Indices.size(); ++i) {
+        tmp[i] = sqrt(Values[Indices[i] * 2] * Values[Indices[i] * 2] + Values[Indices[i] * 2 + 1] * Values[Indices[i] * 2 + 1]);
+    }
+    for (size_t i = 0; i < tmp.size(); ++i) {
+        min = std::min(min, tmp[i]);
+        max = std::max(max, tmp[i]);
+    }
+    std::cout << "MIN " << min << ", MAX " << max << "\n";
+    for (size_t i = 0; i < size; ++i) {
+
+        ptr[i].x = Vertices[Indices[i] * 3 + 0];
+        ptr[i].y = Vertices[Indices[i] * 3 + 1];
+        ptr[i].z = Vertices[Indices[i] * 3 + 2];
+        float H = 359.f * (tmp[i] - min) / (max - min);
+        const Color& c = NewColor(H, 1.f, 1.f);
+        ptr[i].r = c.r;
+        ptr[i].g = c.g;
+        ptr[i].b = c.b;
+        ptr[i].a = c.a;
+    }
+    return n;
+}
+
 Geometry ConstructIsoMesh(std::vector<float>& Vertices, std::vector<uint32_t>& Indices, std::vector<float>& Values, float min, float max)
 {
     Geometry n;
@@ -69,18 +102,14 @@ Geometry ConstructIsoMesh(std::vector<float>& Vertices, std::vector<uint32_t>& I
 
     size_t size = Indices.size();
     Vertex *ptr = (Vertex *)n.Data.Data;
-    std::cout << "Sizes : " << Values.size() << " " << Vertices.size() << "\n";
-    if (Values.size() > Vertices.size()) {
-        std::vector<float> tmp(Vertices.size());
-        for (size_t i = 0; i < tmp.size(); ++i) {
-            tmp[i] = sqrt(Values[i * 2] * Values[i * 2] + Values[i * 2 + 1] * Values[i * 2 + 1]);
-        }
-        Values.clear();
-        Values.insert(Values.begin(), tmp.begin(), tmp.end());
+    std::vector<float> tmp(Indices.size());
+
+    for (size_t i = 0; i < tmp.size(); ++i) {
+        tmp[i] = Values[Indices[i]];
     }
-    for (size_t i = 0; i < Values.size(); ++i) {
-        min = std::min(min, Values[i]);
-        max = std::max(max, Values[i]);
+    for (size_t i = 0; i < tmp.size(); ++i) {
+        min = std::min(min, tmp[i]);
+        max = std::max(max, tmp[i]);
     }
     std::cout << "MIN " << min << ", MAX " << max << "\n";
     for (size_t i = 0; i < size; ++i) {
@@ -88,7 +117,7 @@ Geometry ConstructIsoMesh(std::vector<float>& Vertices, std::vector<uint32_t>& I
         ptr[i].x = Vertices[Indices[i] * 3 + 0];
         ptr[i].y = Vertices[Indices[i] * 3 + 1];
         ptr[i].z = Vertices[Indices[i] * 3 + 2];
-        float H = 359.f * (Values[i] - min) / (max - min);
+        float H = 359.f * tmp[i] / (max - min);
         const Color& c = NewColor(H, 1.f, 1.f);
         ptr[i].r = c.r;
         ptr[i].g = c.g;
@@ -126,7 +155,13 @@ void ImportGeometry(json GeoJSON, ThreadSafeQueue *Queue, uint16_t PlotID)
 
         std::vector<float> values = GeoJSON["IsoV1"].get<std::vector<float>>();
         std::vector<float> referencetriangle = GeoJSON["IsoPSub"].get<std::vector<float>>();
-        IsoValues.Geo = ConstructIsoMesh(Vertices, Indices, values, GeoJSON["IsoMin"].get<float>(), GeoJSON["IsoMax"].get<float>());
+        bool IsoAsVector = GeoJSON["IsoVector"].get<bool>();
+        std::cout << "Vectors : " << IsoAsVector << "\n";
+        if (IsoAsVector) {
+            IsoValues.Geo = ConstructIsoMeshVector(Vertices, Indices, values, GeoJSON["IsoMin"].get<float>(), GeoJSON["IsoMax"].get<float>());
+        } else {
+            IsoValues.Geo = ConstructIsoMesh(Vertices, Indices, values, GeoJSON["IsoMin"].get<float>(), GeoJSON["IsoMax"].get<float>());
+        }
         IsoValues.Geo.Description.PrimitiveTopology = GeometryPrimitiveTopology::GEO_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         IsoValues.Geo.Description.PolygonMode = GEO_POLYGON_MODE_LINE;
         Queue->push(IsoValues);
@@ -163,8 +198,8 @@ void AsyncImport(std::string CompressedJSON, ThreadSafeQueue& Queue)
     uint16_t PlotID = j["Plot"].get<uint16_t>();
 
     for (auto & Geometry : j["Geometry"]) {
-        ImportGeometry(Geometry, &Queue, PlotID);
-        //std::async(std::launch::async, ImportGeometry, Geometry, &Queue, PlotID);
+        //ImportGeometry(Geometry, &Queue, PlotID);
+        std::async(std::launch::async, ImportGeometry, Geometry, &Queue, PlotID);
     }
 }
 

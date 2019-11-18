@@ -71,7 +71,7 @@ static void newGraphFrame(Root& r)
     static float ZoomLevel;
     ImGui::NewFrame( );
 
-    ImGui::ShowDemoWindow();
+    //ImGui::ShowDemoWindow();
 
     ImGui::Begin("Plot list");
 

@@ -170,7 +170,7 @@ void Instance::load(const std::string &AppName, unsigned int width, unsigned int
     ShadersData[0] = FindShader(Shaders, "UI.vert");
     ShadersData[1] = FindShader(Shaders, "UI.frag");
 
-    Ui = NewUiPipeline(ShadersData);
+    NewUiPipeline(Ui, ShadersData);
 }
 
 void Instance::destroy( ) {

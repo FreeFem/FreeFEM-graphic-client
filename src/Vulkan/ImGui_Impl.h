@@ -12,6 +12,7 @@ namespace Vulkan {
 
 struct UiPipeline {
 
+    UiPipeline() {};
     struct ImGuiPushConst {
         glm::vec2 Scale;
         glm::vec2 Translate;
@@ -37,7 +38,7 @@ struct UiPipeline {
 
 };
 
-UiPipeline NewUiPipeline(const VkShaderModule Shaders[2]);
+UiPipeline NewUiPipeline(UiPipeline& Node, const VkShaderModule Shaders[2]);
 void UpdateUiPipeline(UiPipeline& n);
 void DestroyUiPipeline(UiPipeline& n);
 

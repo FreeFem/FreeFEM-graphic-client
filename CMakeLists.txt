@@ -1,19 +1,18 @@
 cmake_minimum_required(VERSION 3.0)
 project(ffGraph VERSION 0.1.0 LANGUAGES CXX)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/CMake/Modules")
+message(STATUS "VULKAN_SDK : $ENV{VULKAN_SDK}")
 
 find_package(Threads REQUIRED)
-include(FindVulkan)
+find_package(Vulkan REQUIRED)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 # Compiling shaders
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator")
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
-    # TODO this is not an elegant way
     set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator")
-    # set(CMAKE_CXX_STANDARD 11)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++")
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator.exe")
 endif()
@@ -63,6 +62,10 @@ add_custom_command(TARGET ffGraph POST_BUILD
 file(COPY "${CMAKE_SOURCE_DIR}/shaders/grid.json" DESTINATION "${CMAKE_BINARY_DIR}/shaders")
 
 # Done compiling shaders
+
+if (WIN32)
+    target_link_libraries(ffGraph wsock32 ws2_32)
+endif (WIN32)
 
 # Using C++11 standard
 set_target_properties(ffGraph PROPERTIES CXX_STANDARD 11)

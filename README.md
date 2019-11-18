@@ -1,4 +1,4 @@
-[![](https://github.com/FreeFEM/FreeFEM-graphic-client/workflows/ccpp.yml/badge.svg?branch=master)](https://github.com/FreeFem/FreeFEM-graphic-client/actions)
+[![](https://github.com/FreeFEM/FreeFEM-graphic-client/workflows/.github/workflows/ccpp.yml/badge.svg)](https://github.com/FreeFem/FreeFEM-graphic-client/actions)
 
 # FreeFEM-graphic-client
 

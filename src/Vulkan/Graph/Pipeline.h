@@ -27,7 +27,7 @@ struct Pipeline {
     // Creation params
     PipelinePrimitiveTopology Topology;
     PipelinePolygonMode PolygonMode;
-    uint LineWidth;
+    unsigned int LineWidth;
 
     // Vulkan objects
     VkPipeline Handle;

@@ -50,4 +50,4 @@ jobs:
     - name: Find Vulkan Install Path
       run: ls C:\VulkanSDK
     - name: Build
-      run: md -Name build ; cd build ; cmake .. ; make
+      run: $Env:path += ";C:\VulkanSDK\1.1.126.0" ; md -Name build ; cd build ; cmake .. ; make

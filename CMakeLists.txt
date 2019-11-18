@@ -6,12 +6,13 @@ message(STATUS "VULKAN_SDK : $ENV{VULKAN_SDK}")
 find_package(Threads REQUIRED)
 find_package(Vulkan REQUIRED)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
 # Compiling shaders
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator")
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++")
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/bin/glslangValidator.exe")
 endif()

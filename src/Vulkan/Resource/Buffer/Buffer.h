@@ -25,12 +25,15 @@ struct BufferCreateInfo {
 };
 
 struct Buffer {
+
+    Buffer() {};
+
     VkBuffer Handle = VK_NULL_HANDLE;
-    VmaAllocation Memory;
+    VmaAllocation Memory = VK_NULL_HANDLE;
     VmaAllocationInfo Infos;
 
-    Buffer(Buffer& c) { Handle = c.Handle; Memory = c.Memory; Infos = c.Infos; };
-    Buffer operator=(Buffer& c) { Handle = c.Handle; Memory = c.Memory; Infos = c.Infos; return *this; }
+    Buffer(const Buffer& c) { Handle = c.Handle; Memory = c.Memory; Infos = c.Infos; };
+    Buffer operator=(Buffer c) { Handle = c.Handle; Memory = c.Memory; Infos = c.Infos; return *this; }
 };
 
 Buffer CreateBuffer(VmaAllocator Allocator, BufferCreateInfo pCreateInfo);

@@ -263,8 +263,7 @@ static bool CreateDescriptorSetLayout(UiPipeline& Node) {
     return true;
 }
 
-UiPipeline NewUiPipeline(const VkShaderModule Shaders[2]) {
-    UiPipeline Node;
+UiPipeline NewUiPipeline(UiPipeline& Node, const VkShaderModule Shaders[2]) {
     InitImGuiResource(Node);
     if (Node.FontImage.View == VK_NULL_HANDLE)
         LogError("", "\n\n View is Null \n\n");

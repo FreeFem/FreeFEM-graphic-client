@@ -60,26 +60,29 @@ glm::vec2 IsoValue(glm::vec2 T[3], glm::vec2 BarycentricPoint)
     return mat * BarycentricPoint * T[0];
 }
 
-Geometry ConstructIsoMeshVector(std::vector<float>& Vertices, std::vector<uint32_t>& Indices, std::vector<float>& Values, float min, float max)
+Geometry ConstructIsoMeshVector(std::vector<float>& Vertices, std::vector<uint32_t>& Indices, std::vector<float>& Values)
 {
     Geometry n;
+    float min, max;
 
     n.Data = ffNewArray((Vertices.size() / 3LU) * 2LU, sizeof(Vertex));
 
     size_t size = Vertices.size() / 3LU;
     Vertex *ptr = (Vertex *)n.Data.Data;
-    std::vector<float> tmp(Values.size());
+    float *tmp = (float *)malloc(sizeof(float) * (Values.size() / 2LU));
 
-    for (size_t i = 0; i < Values.size(); ++i) {
-        std::cout << "Values[" << i << "] = " << Values[i] << "\n";
-        tmp[i] = sqrt(Values[i * 2] * Values[i * 2] + Values[i * 2 + 1] * Values[i * 2 + 1]);
+    if (tmp == 0) {
+        std::cout << "Failed to alloc temporary memory.\n";
+        assert(0);
     }
-    for (size_t i = 0; i < tmp.size(); ++i) {
-        std::cout << tmp[i] << "\n";
+    for (size_t i = 0; i < (Values.size() / 2LU); ++i) {
+        tmp[i] = sqrtf(Values[i * 2] * Values[i * 2] + Values[i * 2 + 1] * Values[i * 2 + 1]);
+    }
+    min = max = tmp[0];
+    for (size_t i = 0; i < Values.size() / 2LU; ++i) {
         min = std::min(min, tmp[i]);
         max = std::max(max, tmp[i]);
     }
-    std::cout << "MIN " << min << " MAX " << max << "\n";
     for (size_t i = 0; i < size; ++i) {
 
         ptr[i * 2].x = Vertices[i * 3 + 0];
@@ -92,8 +95,9 @@ Geometry ConstructIsoMeshVector(std::vector<float>& Vertices, std::vector<uint32
         ptr[i * 2].b = c.b;
         ptr[i * 2].a = c.a;
 
-        ptr[i * 2 + 1].x = Vertices[i * 3 + 0] + Values[i * 2] / max;
-        ptr[i * 2 + 1].y = Vertices[i * 3 + 1] + Values[i * 2 + 1] / max;
+        float scale = 0.09f;
+        ptr[i * 2 + 1].x = Vertices[i * 3 + 0] + (Values[i * 2] / max) * scale;
+        ptr[i * 2 + 1].y = Vertices[i * 3 + 1] + (Values[i * 2 + 1] / max) * scale;
         ptr[i * 2 + 1].z = Vertices[i * 3 + 2];
 
         ptr[i * 2 + 1].r = c.r;
@@ -101,12 +105,14 @@ Geometry ConstructIsoMeshVector(std::vector<float>& Vertices, std::vector<uint32
         ptr[i * 2 + 1].b = c.b;
         ptr[i * 2 + 1].a = c.a;
     }
+    free(tmp);
     return n;
 }
 
-Geometry ConstructIsoMesh(std::vector<float>& Vertices, std::vector<uint32_t>& Indices, std::vector<float>& Values, float min, float max)
+Geometry ConstructIsoMesh(std::vector<float>& Vertices, std::vector<uint32_t>& Indices, std::vector<float>& Values)
 {
     Geometry n;
+    float min, max = 0;
 
     n.Data = ffNewArray(Indices.size(), sizeof(Vertex));
 
@@ -159,21 +165,27 @@ void ImportGeometry(json GeoJSON, ThreadSafeQueue *Queue, uint16_t PlotID)
 
     bool AsIsoValues = GeoJSON["IsoValues"].get<bool>();
     if (AsIsoValues) {
-        std::cout << "Importing isovalues.\n";
-        ConstructedGeometry IsoValues(PlotID, MeshID);
+        std::cout << "Importing " << GeoJSON["IsoArray"].size() << " iso values.\n";
+        for (auto& Isos : GeoJSON["IsoArray"]) {
+            ConstructedGeometry IsoValues(PlotID, MeshID);
 
-        std::vector<float> values = GeoJSON["IsoV1"].get<std::vector<float>>();
-        std::vector<float> referencetriangle = GeoJSON["IsoPSub"].get<std::vector<float>>();
-        bool IsoAsVector = GeoJSON["IsoVector"].get<bool>();
-        if (IsoAsVector) {
-            IsoValues.Geo = ConstructIsoMeshVector(Vertices, Indices, values, GeoJSON["IsoMin"].get<float>(), GeoJSON["IsoMax"].get<float>());
-            IsoValues.Geo.Description.PrimitiveTopology = GeometryPrimitiveTopology::GEO_PRIMITIVE_TOPOLOGY_LINE_LIST;
-        } else {
-            IsoValues.Geo = ConstructIsoMesh(Vertices, Indices, values, GeoJSON["IsoMin"].get<float>(), GeoJSON["IsoMax"].get<float>());
-            IsoValues.Geo.Description.PrimitiveTopology = GeometryPrimitiveTopology::GEO_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+            std::vector<float> values = Isos["IsoV1"].get<std::vector<float>>();
+            std::vector<float> referencetriangle = Isos["IsoPSub"].get<std::vector<float>>();
+            bool IsoAsVector = Isos["IsoVector"].get<bool>();
+
+            if (IsoAsVector) {
+                std::cout << "\tVectors.\n";
+                IsoValues.Geo = ConstructIsoMeshVector(Vertices, Indices, values);
+                IsoValues.Geo.Description.PrimitiveTopology = GeometryPrimitiveTopology::GEO_PRIMITIVE_TOPOLOGY_LINE_LIST;
+            } else {
+                std::cout << "\tScalars.\n";
+                IsoValues.Geo = ConstructIsoMesh(Vertices, Indices, values);
+                IsoValues.Geo.Description.PrimitiveTopology = GeometryPrimitiveTopology::GEO_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+            }
+            IsoValues.Geo.Description.PolygonMode = GEO_POLYGON_MODE_LINE;
+            Queue->push(IsoValues);
+            values.clear();
         }
-        IsoValues.Geo.Description.PolygonMode = GEO_POLYGON_MODE_LINE;
-        Queue->push(IsoValues);
     }
 
     bool AsBorder = GeoJSON["Borders"].get<bool>();

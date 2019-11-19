@@ -104,24 +104,24 @@ static void newGraphFrame(Root& r)
     }
     ImGui::Separator();
     if (ImGui::Button("X +"))
-        r.Cam.Translate(glm::vec3(0.25f * std::max(r.Cam.ZoomLevel, 1.f), 0.f, 0.f));
+        r.Cam.Translate(glm::vec3(0.25f * std::min(r.Cam.ZoomLevel, 1.f), 0.f, 0.f));
     ImGui::SameLine();
     if (ImGui::Button("X -"))
-        r.Cam.Translate(glm::vec3(-0.25f * std::max(r.Cam.ZoomLevel, 1.f), 0.f, 0.f));
+        r.Cam.Translate(glm::vec3(-0.25f * std::min(r.Cam.ZoomLevel, 1.f), 0.f, 0.f));
 
     ImGui::Separator();
     if (ImGui::Button("Y +"))
-        r.Cam.Translate(glm::vec3(0.f, 0.25f * std::max(r.Cam.ZoomLevel, 1.f), 0.f));
+        r.Cam.Translate(glm::vec3(0.f, 0.25f * std::min(r.Cam.ZoomLevel, 1.f), 0.f));
     ImGui::SameLine();
     if (ImGui::Button("Y -"))
-        r.Cam.Translate(glm::vec3(0.f, -0.25f * std::max(r.Cam.ZoomLevel, 1.f), 0.f));
+        r.Cam.Translate(glm::vec3(0.f, -0.25f * std::min(r.Cam.ZoomLevel, 1.f), 0.f));
 
     ImGui::Separator();
     if (ImGui::Button("Z +"))
-        r.Cam.Translate(glm::vec3(0.f, 0.f, 0.25f * std::max(r.Cam.ZoomLevel, 1.f)));
+        r.Cam.Translate(glm::vec3(0.f, 0.f, 0.25f * std::min(r.Cam.ZoomLevel, 1.f)));
     ImGui::SameLine();
     if (ImGui::Button("Z -"))
-        r.Cam.Translate(glm::vec3(0.f, 0.f, -0.25f * std::max(r.Cam.ZoomLevel, 1.f)));
+        r.Cam.Translate(glm::vec3(0.f, 0.f, -0.25f * std::min(r.Cam.ZoomLevel, 1.f)));
     ImGui::End();
 
     ImGui::Render();

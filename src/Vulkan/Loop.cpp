@@ -157,12 +157,5 @@ void Instance::run(std::shared_ptr<std::deque<std::string>> SharedQueue, JSON::T
     }
 }
 
-glm::vec2 IsoValue(glm::vec2 T[3], glm::vec2 BarycentricPoint)
-{
-    glm::mat2 mat(glm::vec2(T[1].x - T[0].x, T[1].y - T[0].y), glm::vec2(T[2].x - T[0].x, T[2].y - T[0].y));
-
-    return mat * BarycentricPoint * T[0];
-}
-
 }
 } // namespace ffGraph

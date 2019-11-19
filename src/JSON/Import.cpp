@@ -57,7 +57,110 @@ glm::vec2 IsoValue(glm::vec2 T[3], glm::vec2 BarycentricPoint)
 {
     glm::mat2 mat(glm::vec2(T[1].x - T[0].x, T[1].y - T[0].y), glm::vec2(T[2].x - T[0].x, T[2].y - T[0].y));
 
-    return mat * BarycentricPoint * T[0];
+    return mat * BarycentricPoint + T[0];
+}
+
+static uint8_t SubPx[13] = {
+    0, 4, 3,
+    4, 1, 5,
+    4, 5, 3,
+    3, 5, 2
+};
+
+size_t GetPx(size_t RefTrianglePointCount)
+{
+    if (RefTrianglePointCount == 3)
+        return 3;
+    else if (RefTrianglePointCount == 6)
+        return 12;
+    return 3;
+}
+
+Geometry ConstructIsoMeshPX(std::vector<float>& Vertices, std::vector<uint32_t>& Indices, std::vector<float> Values, std::vector<float>& RefTriangle)
+{
+    size_t P = GetPx(RefTriangle.size() / 2LU);
+    size_t Size = P * (Indices.size() / 3LU);
+    float min, max;
+
+    Geometry n;
+
+    n.Data = ffNewArray(Size, sizeof(Vertex));
+
+    glm::vec2 Triangle[3];
+    std::vector<float> Position(RefTriangle.size());
+    Vertex *ptr = (Vertex *)n.Data.Data;
+
+    //std::vector<float> V(Size);
+    min = max = Values[0];
+    // for (size_t i = 0; Indices.size(); ++i) {
+
+    // }
+    std::cout << Size / 2LU << "\n";
+    for (size_t i = 0; i < Values.size(); ++i) {
+        std::cout << "Value[" << i << "] = " << Values[i] << "\n";
+        min = std::min(min, Values[i]);
+        max = std::max(max, Values[i]);
+    }
+    for (size_t i = 0; i < Indices.size() / 3LU; ++i) {
+        std::vector<float> tmpVal(P / 2LU);
+        Triangle[0].x = Vertices[Indices[i * 3] * 3];
+        Triangle[0].y = Vertices[Indices[i * 3] * 3 + 1];
+        for (size_t j = 0; j < P / 2LU; ++j)
+            tmpVal[j] = Values[Indices[i * 3] + j];
+
+        Triangle[1].x = Vertices[Indices[i * 3 + 1] * 3];
+        Triangle[1].y = Vertices[Indices[i * 3 + 1] * 3 + 1];
+
+        Triangle[2].x = Vertices[Indices[i * 3 + 2] * 3];
+        Triangle[2].y = Vertices[Indices[i * 3 + 2] * 3 + 1];
+
+        for (size_t j = 0; j < RefTriangle.size() / 2LU; ++j) {
+            glm::vec2 res = IsoValue(Triangle, glm::vec2(RefTriangle[j * 2], RefTriangle[j * 2 + 1]));
+
+            Position[j * 2] = res.x;
+            Position[j * 2 + 1] = res.y;
+        }
+        Color c;
+        float H = 0;
+        for (size_t j = 0; j < P / 3; ++j) {
+            int count = 0;
+            ptr[i * P + j * 3].x = Position[SubPx[j * 3] * 2];
+            ptr[i * P + j * 3].y = Position[SubPx[j * 3] * 2 + 1];
+            ptr[i * P + j * 3].z = 0.f;
+            H = 330.f * (tmpVal[count] - min) / (max - min);
+            ++count;
+            c = NewColor(H, 1.f, 1.f);
+            ptr[i * P + j * 3].r = c.r;
+            ptr[i * P + j * 3].g = c.g;
+            ptr[i * P + j * 3].b = c.b;
+            ptr[i * P + j * 3].a = c.a;
+
+            // --------------------------------------------------------------
+            ptr[i * P + j * 3 + 1].x = Position[SubPx[j * 3 + 1] * 2];
+            ptr[i * P + j * 3 + 1].y = Position[SubPx[j * 3 + 1] * 2 + 1];
+            ptr[i * P + j * 3 + 1].z = 0.f;
+            H = 330.f * (tmpVal[count] - min) / (max - min);
+            ++count;
+            c = NewColor(H, 1.f, 1.f);
+            ptr[i * P + j * 3 + 1].r = c.r;
+            ptr[i * P + j * 3 + 1].g = c.g;
+            ptr[i * P + j * 3 + 1].b = c.b;
+            ptr[i * P + j * 3 + 1].a = c.a;
+
+            // --------------------------------------------------------------
+            ptr[i * P + j * 3 + 2].x = Position[SubPx[j * 3 + 2] * 2];
+            ptr[i * P + j * 3 + 2].y = Position[SubPx[j * 3 + 2] * 2 + 1];
+            ptr[i * P + j * 3 + 2].z = 0.f;
+            H = 330.f * (tmpVal[count] - min) / (max - min);
+            ++count;
+            c = NewColor(H, 1.f, 1.f);
+            ptr[i * P + j * 3 + 2].r = c.r;
+            ptr[i * P + j * 3 + 2].g = c.g;
+            ptr[i * P + j * 3 + 2].b = c.b;
+            ptr[i * P + j * 3 + 2].a = c.a;
+        }
+    }
+    return n;
 }
 
 Geometry ConstructIsoMeshVector(std::vector<float>& Vertices, std::vector<uint32_t>& Indices, std::vector<float>& Values)
@@ -179,7 +282,12 @@ void ImportGeometry(json GeoJSON, ThreadSafeQueue *Queue, uint16_t PlotID)
                 IsoValues.Geo.Description.PrimitiveTopology = GeometryPrimitiveTopology::GEO_PRIMITIVE_TOPOLOGY_LINE_LIST;
             } else {
                 std::cout << "\tScalars.\n";
-                IsoValues.Geo = ConstructIsoMesh(Vertices, Indices, values);
+                if (referencetriangle.size() == 6) {
+                    IsoValues.Geo = ConstructIsoMesh(Vertices, Indices, values);
+                } else {
+                    IsoValues.Geo = ConstructIsoMeshPX(Vertices, Indices, values, referencetriangle);
+                }
+                //IsoValues.Geo = ConstructIsoMesh(Vertices, Indices, values);
                 IsoValues.Geo.Description.PrimitiveTopology = GeometryPrimitiveTopology::GEO_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
             }
             IsoValues.Geo.Description.PolygonMode = GEO_POLYGON_MODE_LINE;

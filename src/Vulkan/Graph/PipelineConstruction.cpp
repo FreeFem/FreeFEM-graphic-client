@@ -89,6 +89,8 @@ void ConstructCurrentGraphPipelines(Root& r, VkShaderModule Shaders[2])
             DestroyPipeline(P);
         r.Pipelines.clear();
     }
+    if (r.RenderedGeometries.empty() || UniqueDescriptor.empty())
+        return;
     r.Pipelines.resize(UniqueDescriptor.size());
 
     for (size_t i = 0; i < UniqueDescriptor.size(); ++i) {

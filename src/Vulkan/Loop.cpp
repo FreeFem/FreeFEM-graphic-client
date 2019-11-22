@@ -24,11 +24,9 @@ static void GeoParamPanel(Root& r, Plot& p, Mesh& m, Geometry& g, GeoUiData& UiD
         name.append(std::to_string(g.refID));
         ImGui::Begin(name.c_str());
 
-        bool tmp;
-        if (ImGui::Checkbox("Fill geometry", &tmp)) {
-            g.Description.PolygonMode = GeometryPolygonMode::GEO_POLYGON_MODE_FILL;
-        } else {
-            g.Description.PolygonMode = GeometryPolygonMode::GEO_POLYGON_MODE_LINE;
+        if (ImGui::Checkbox("Fill geometry", &UiData.PolygonModeState)) {
+            g.Description.PolygonMode = !g.Description.PolygonMode;
+            r.Update = true;
         }
         ImGui::Text("Primitive : %s.", table[g.Description.PrimitiveTopology]);
         ImGui::End();

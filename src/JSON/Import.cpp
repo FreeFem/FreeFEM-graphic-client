@@ -61,10 +61,10 @@ glm::vec2 IsoValue(glm::vec2 T[3], glm::vec2 BarycentricPoint)
 }
 
 static uint8_t SubPx[13] = {
-    0, 4, 3,
-    4, 1, 5,
-    4, 5, 3,
-    3, 5, 2
+    0, 5, 4,
+    5, 1, 3,
+    3, 4, 2,
+    3, 4, 5
 };
 
 size_t GetPx(size_t RefTrianglePointCount)
@@ -96,6 +96,10 @@ Geometry ConstructIsoMeshPX(std::vector<float>& Vertices, std::vector<uint32_t>&
 
     // }
     std::cout << Size / 2LU << "\n";
+    for (size_t i = 0; i < Indices.size(); ++i) {
+        std::cout << "Indices[" << i << "] = " << Indices[i] << "\n";
+        std::cout << "\tVertices[" << Indices[i] << "] = " << Vertices[Indices[i] * 3] << " " << Vertices[Indices[i] * 3 + 1] << "\n";
+    }
     for (size_t i = 0; i < Values.size(); ++i) {
         std::cout << "Value[" << i << "] = " << Values[i] << "\n";
         min = std::min(min, Values[i]);
@@ -224,6 +228,7 @@ Geometry ConstructIsoMesh(std::vector<float>& Vertices, std::vector<uint32_t>& I
     std::vector<float> tmp(Indices.size());
 
     for (size_t i = 0; i < tmp.size(); ++i) {
+        std::cout << Indices[i] << " " << Values[Indices[i]] << "\n";
         tmp[i] = Values[Indices[i]];
     }
     for (size_t i = 0; i < tmp.size(); ++i) {

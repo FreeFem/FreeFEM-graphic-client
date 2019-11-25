@@ -24,11 +24,9 @@ static void GeoParamPanel(Root& r, Plot& p, Mesh& m, Geometry& g, GeoUiData& UiD
         name.append(std::to_string(g.refID));
         ImGui::Begin(name.c_str());
 
-        bool tmp;
-        if (ImGui::Checkbox("Fill geometry", &tmp)) {
-            g.Description.PolygonMode = GeometryPolygonMode::GEO_POLYGON_MODE_FILL;
-        } else {
-            g.Description.PolygonMode = GeometryPolygonMode::GEO_POLYGON_MODE_LINE;
+        if (ImGui::Checkbox("Fill geometry", &UiData.PolygonModeState)) {
+            g.Description.PolygonMode = !g.Description.PolygonMode;
+            r.Update = true;
         }
         ImGui::Text("Primitive : %s.", table[g.Description.PrimitiveTopology]);
         ImGui::End();
@@ -47,7 +45,9 @@ static void ListGeometry(Root& r, Plot& p, size_t index)
 
                 if (ImGui::TreeNode((void *)(intptr_t)t1, "Geometry %u", p.Meshes[i].Geometries[j].refID)) {
                     ImGui::Checkbox("Select Geometry", &p.Meshes[i].UiInfos[j].Selected);
-                    ImGui::Checkbox("Display Geometry", &p.Meshes[i].UiInfos[j].Render);
+                    if (ImGui::Checkbox("Display Geometry", &p.Meshes[i].UiInfos[j].Render)) {
+                        r.Update = true;
+                    }
                     if (ImGui::Button("Show parameters")) {
                         p.Meshes[i].UiInfos[j].ShowParameterWindow = !p.Meshes[i].UiInfos[j].ShowParameterWindow;
                     }
@@ -153,6 +153,9 @@ void Instance::run(std::shared_ptr<std::deque<std::string>> SharedQueue, JSON::T
         newGraphFrame(RenderGraph);
         UpdateUiPipeline(Ui);
         render( );
+        if (RenderGraph.Update) {
+            ConstructCurrentGraphPipelines(RenderGraph, Modules);
+        }
         //RenderGraph.CamUniform.Model = glm::rotate(RenderGraph.CamUniform.Model, 0.0001f, glm::vec3(0, 1, 0));
     }
 }

@@ -292,7 +292,6 @@ void ImportGeometry(json GeoJSON, ThreadSafeQueue *Queue, uint16_t PlotID)
                 } else {
                     IsoValues.Geo = ConstructIsoMeshPX(Vertices, Indices, values, referencetriangle);
                 }
-                //IsoValues.Geo = ConstructIsoMesh(Vertices, Indices, values);
                 IsoValues.Geo.Description.PrimitiveTopology = GeometryPrimitiveTopology::GEO_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
             }
             IsoValues.Geo.Description.PolygonMode = GEO_POLYGON_MODE_LINE;
@@ -319,7 +318,7 @@ void ImportGeometry(json GeoJSON, ThreadSafeQueue *Queue, uint16_t PlotID)
         } else {
             Border.Geo.Description.PrimitiveTopology = GetBorderPrimitiveTopology(GeoType);
             Border.Geo.Description.PolygonMode = GEO_POLYGON_MODE_LINE;
-            //Queue->push(Border);
+            Queue->push(Border);
         }
     }
     std::cout << "Finished importing data.\n";

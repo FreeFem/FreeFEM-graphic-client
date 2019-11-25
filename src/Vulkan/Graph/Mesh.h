@@ -12,7 +12,9 @@ struct GeoUiData {
     bool Selected = false;
     bool Render = true;
     bool ShowParameterWindow = false;
+    bool PolygonModeState = false;
 };
+
 struct Mesh {
     uint16_t MeshID;
     glm::mat4 Tranform;

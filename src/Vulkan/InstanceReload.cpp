@@ -84,7 +84,7 @@ void Instance::render( ) {
 
     if (!RenderGraph.Pipelines.empty()) {
         for (size_t i = 0; i < RenderGraph.RenderedGeometries.size(); ++i) {
-            const Pipeline p = RenderGraph.Pipelines[RenderGraph.RenderedGeometries[i]->Description.PipelineID];
+            const Pipeline p = RenderGraph.Pipelines[RenderGraph.Geometries[RenderGraph.RenderedGeometries[i]].Geo.Description.PipelineID];
             vkCmdBindPipeline(CurrentFrame.CmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, p.Handle);
 
             VkViewport viewport = {};
@@ -109,9 +109,10 @@ void Instance::render( ) {
             scissor.extent.height = m_Window.WindowSize.height;
             vkCmdSetScissor(CurrentFrame.CmdBuffer, 0, 1, &scissor);
 
-            vkCmdBindVertexBuffers(CurrentFrame.CmdBuffer, 0, 1, &RenderGraph.RenderBuffer.Handle, &RenderGraph.RenderedGeometries[i]->BufferOffset);
+            vkCmdBindVertexBuffers(CurrentFrame.CmdBuffer, 0, 1, &RenderGraph.RenderBuffer.Handle,
+                    &RenderGraph.Geometries[RenderGraph.RenderedGeometries[i]].Geo.BufferOffset);
 
-            vkCmdDraw(CurrentFrame.CmdBuffer, RenderGraph.RenderedGeometries[i]->count(), 1, 0, 0);
+            vkCmdDraw(CurrentFrame.CmdBuffer, RenderGraph.Geometries[RenderGraph.RenderedGeometries[i]].Geo.count(), 1, 0, 0);
         }
     }
 
@@ -165,6 +166,8 @@ void Instance::renderUI( ) {
     int32_t vertexOffset = 0;
     uint32_t indexOffset = 0;
 
+    if (imDraw == 0)
+        return;
     if (imDraw->CmdListsCount > 0) {
         VkDeviceSize offset = {0};
 

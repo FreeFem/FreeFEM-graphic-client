@@ -5,6 +5,7 @@
 #include <vulkan/vulkan.h>
 #include <string>
 #include "Array.h"
+#include "../ffTypes.h"
 
 namespace ffGraph
 {
@@ -36,7 +37,7 @@ struct GeometryDescriptor {
 };
 
 struct Geometry {
-    uint16_t refID;
+    ffTypes Type;
     Array Data;
 
     GeometryDescriptor Description;

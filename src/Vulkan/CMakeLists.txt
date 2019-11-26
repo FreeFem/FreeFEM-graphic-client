@@ -25,7 +25,8 @@ add_library(ffGraph_Vulkan
 
     ${CMAKE_SOURCE_DIR}/src/Vulkan/Graph/Graph.cpp
     ${CMAKE_SOURCE_DIR}/src/Vulkan/Graph/Pipeline.cpp
-    ${CMAKE_SOURCE_DIR}/src/Vulkan/Graph/PipelineConstruction.cpp
+    ${CMAKE_SOURCE_DIR}/src/Vulkan/Graph/Descriptor.cpp
+    ${CMAKE_SOURCE_DIR}/src/Vulkan/Graph/BasePipelineCreateInfos.cpp
 
 )
 
@@ -38,6 +39,7 @@ target_include_directories(ffGraph_Vulkan PRIVATE ${CMAKE_SOURCE_DIR}/extern/glm
 target_include_directories(ffGraph_Vulkan PRIVATE ${CMAKE_SOURCE_DIR}/src/util)
 target_include_directories(ffGraph_Vulkan PRIVATE ${CMAKE_SOURCE_DIR}/src/JSON)
 target_include_directories(ffGraph_Vulkan PRIVATE ${CMAKE_SOURCE_DIR}/src/Vulkan)
+target_include_directories(ffGraph_Vulkan PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(ffGraph_Vulkan ${Vulkan_LIBRARY})
 target_link_libraries(ffGraph_Vulkan ffGraph_Window)
 target_link_libraries(ffGraph_Vulkan ffGraph_JSON)

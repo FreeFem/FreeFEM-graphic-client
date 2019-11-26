@@ -1,70 +1,75 @@
-#include "GlobalEnvironment.h"
+#include <iostream>
 #include "Pipeline.h"
-#include "Resource/Camera/CameraController.h"
-#include "Logger.h"
+#include "GlobalEnvironment.h"
 
 namespace ffGraph {
 namespace Vulkan {
 
-bool CreatePipeline(GeometryDescriptor CreationInfos, Pipeline& P, VkShaderModule Shaders[2])
+bool ConstructPipeline(Pipeline& P, PipelineCreateInfos& CreateInfo)
 {
+    if (P.Handle != VK_NULL_HANDLE) {
+        vkDestroyPipelineLayout(GetLogicalDevice( ), P.Layout, 0);
+        vkDestroyPipeline(GetLogicalDevice( ), P.Handle, 0);
+    }
+
+    VkPipelineLayoutCreateInfo LayoutCreateInfo = {};
+    LayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+
+    if (!CreateInfo.DescriptorListHandle.List.empty()) {
+        ConstructDescriptorPool(P.DescriptorPool, CreateInfo.DescriptorListHandle.List);
+        ConstructDescriptorSets(P.DescriptorPool, P.DescriptorLayout, P.DescriptorSet, CreateInfo.DescriptorListHandle.List);
+
+        LayoutCreateInfo.setLayoutCount = 1;
+        LayoutCreateInfo.pSetLayouts = &P.DescriptorLayout;
+    }
+
     VkPushConstantRange PushConstantRange = {};
-    PushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    PushConstantRange.offset = 0;
-    PushConstantRange.size = sizeof(CameraUniform);
+    if (CreateInfo.PushConstantHandle.pData != NULL) {
+        PushConstantRange.offset = 0;
+        PushConstantRange.stageFlags = CreateInfo.PushConstantHandle.Stage;
+        PushConstantRange.size = CreateInfo.PushConstantHandle.Size;
 
-    VkPipelineLayoutCreateInfo PipelineLayoutInfo = {};
-    PipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    PipelineLayoutInfo.pushConstantRangeCount = 1;
-    PipelineLayoutInfo.pPushConstantRanges = &PushConstantRange;
+        LayoutCreateInfo.pushConstantRangeCount = 1;
+        LayoutCreateInfo.pPushConstantRanges = &PushConstantRange;
+    }
 
-    if (vkCreatePipelineLayout(GetLogicalDevice( ), &PipelineLayoutInfo, 0, &P.Layout))
-        return false;
+    vkCreatePipelineLayout(GetLogicalDevice( ), &LayoutCreateInfo, 0, &P.Layout);
 
-    VkPipelineShaderStageCreateInfo ShaderStageInfo[2] = {};
-    ShaderStageInfo[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    ShaderStageInfo[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-    ShaderStageInfo[0].module = Shaders[Pipeline::ShaderVertexStage];
-    ShaderStageInfo[0].pName = "main";
+    std::vector<VkPipelineShaderStageCreateInfo> ShaderStageCreateInfo;
+    ShaderStageCreateInfo.resize(CreateInfo.ShaderInfos.size());
+    for (size_t i = 0; i < CreateInfo.ShaderInfos.size(); ++i) {
+        ShaderStageCreateInfo[i].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        ShaderStageCreateInfo[i].stage = CreateInfo.ShaderInfos[i].Stage;
+        ShaderStageCreateInfo[i].module = CreateInfo.ShaderInfos[i].Module;
+        ShaderStageCreateInfo[i].pName = "main";
+    }
 
+    VkVertexInputBindingDescription inputBindingDescription = {};
+    inputBindingDescription.binding = 0;
+    inputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    inputBindingDescription.stride = CreateInfo.VertexSize;
 
-    ShaderStageInfo[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    ShaderStageInfo[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    ShaderStageInfo[1].module = Shaders[Pipeline::ShaderFragmentStage];
-    ShaderStageInfo[1].pName = "main";
+    std::vector<VkVertexInputAttributeDescription> inputAttributeDescriptions;
 
-    memcpy(P.ShaderModule, Shaders, sizeof(VkShaderModule) * 2);
-
-    VkVertexInputBindingDescription BindingDescription = {};
-    VkVertexInputAttributeDescription AttributeDescription[2] = {};
-
-    BindingDescription.binding = 0;
-    BindingDescription.stride = sizeof(float) * 7;
-    BindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-    AttributeDescription[0].binding = 0;
-    AttributeDescription[0].location = 0;
-    AttributeDescription[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-    AttributeDescription[0].offset = sizeof(float) * 0;
-
-    AttributeDescription[1].binding = 0;
-    AttributeDescription[1].location = 1;
-    AttributeDescription[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-    AttributeDescription[1].offset = sizeof(float) * 3;
+    inputAttributeDescriptions.resize(CreateInfo.VertexFormat.size());
+    for (size_t i = 0; i < CreateInfo.VertexFormat.size(); ++i) {
+        inputAttributeDescriptions[i].binding = 0;
+        inputAttributeDescriptions[i].format = CreateInfo.VertexFormat[i].Format;
+        inputAttributeDescriptions[i].location = i;
+        inputAttributeDescriptions[i].offset = CreateInfo.VertexFormat[i].Offset;
+    }
 
     VkPipelineVertexInputStateCreateInfo VertexInputStateInfo = {};
+
     VertexInputStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-
     VertexInputStateInfo.vertexBindingDescriptionCount = 1;
-    VertexInputStateInfo.pVertexBindingDescriptions = &BindingDescription;
-
-    VertexInputStateInfo.vertexAttributeDescriptionCount = 2;
-    VertexInputStateInfo.pVertexAttributeDescriptions = AttributeDescription;
+    VertexInputStateInfo.pVertexBindingDescriptions = &inputBindingDescription;
+    VertexInputStateInfo.vertexAttributeDescriptionCount = (uint32_t)inputAttributeDescriptions.size();
+    VertexInputStateInfo.pVertexAttributeDescriptions = inputAttributeDescriptions.data();
 
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo = {};
     inputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-    inputAssemblyStateCreateInfo.topology = (VkPrimitiveTopology)CreationInfos.PrimitiveTopology;
-    P.Topology = (PipelinePrimitiveTopology)CreationInfos.PrimitiveTopology;
+    inputAssemblyStateCreateInfo.topology = CreateInfo.Topology;
     inputAssemblyStateCreateInfo.primitiveRestartEnable = VK_FALSE;
 
     VkDynamicState dynamicStateEnables[2] = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
@@ -83,19 +88,18 @@ bool CreatePipeline(GeometryDescriptor CreationInfos, Pipeline& P, VkShaderModul
     rasterizationStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     rasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
     rasterizationStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
-    rasterizationStateCreateInfo.polygonMode = (VkPolygonMode)CreationInfos.PolygonMode;
-    P.PolygonMode = (PipelinePolygonMode)CreationInfos.PolygonMode;
+    rasterizationStateCreateInfo.polygonMode = CreateInfo.PolygonMode;
     rasterizationStateCreateInfo.cullMode = VK_CULL_MODE_NONE;
-    rasterizationStateCreateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+    rasterizationStateCreateInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
-    rasterizationStateCreateInfo.lineWidth = CreationInfos.LineWith;
+    rasterizationStateCreateInfo.lineWidth = CreateInfo.LineWidth;
 
     VkPipelineColorBlendAttachmentState colorBlendAttachementState = {};
     colorBlendAttachementState.blendEnable = VK_FALSE;
-    colorBlendAttachementState.srcColorBlendFactor = VK_BLEND_FACTOR_ZERO;
-    colorBlendAttachementState.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+    colorBlendAttachementState.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+    colorBlendAttachementState.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
     colorBlendAttachementState.colorBlendOp = VK_BLEND_OP_ADD;
-    colorBlendAttachementState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+    colorBlendAttachementState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
     colorBlendAttachementState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
     colorBlendAttachementState.alphaBlendOp = VK_BLEND_OP_ADD;
     colorBlendAttachementState.colorWriteMask =
@@ -111,8 +115,8 @@ bool CreatePipeline(GeometryDescriptor CreationInfos, Pipeline& P, VkShaderModul
 
     VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo = {};
     depthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-    depthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
-    depthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
+    depthStencilStateCreateInfo.depthTestEnable = VK_FALSE;
+    depthStencilStateCreateInfo.depthWriteEnable = VK_FALSE;
     depthStencilStateCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
     depthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
     depthStencilStateCreateInfo.stencilTestEnable = VK_FALSE;
@@ -131,8 +135,8 @@ bool CreatePipeline(GeometryDescriptor CreationInfos, Pipeline& P, VkShaderModul
 
     VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = {};
     graphicsPipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    graphicsPipelineCreateInfo.stageCount = 2;
-    graphicsPipelineCreateInfo.pStages = ShaderStageInfo;
+    graphicsPipelineCreateInfo.stageCount = ShaderStageCreateInfo.size();
+    graphicsPipelineCreateInfo.pStages = ShaderStageCreateInfo.data();
     graphicsPipelineCreateInfo.pVertexInputState = &VertexInputStateInfo;
     graphicsPipelineCreateInfo.pInputAssemblyState = &inputAssemblyStateCreateInfo;
     graphicsPipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
@@ -148,20 +152,18 @@ bool CreatePipeline(GeometryDescriptor CreationInfos, Pipeline& P, VkShaderModul
 
     if (vkCreateGraphicsPipelines(GetLogicalDevice( ), 0, 1, &graphicsPipelineCreateInfo, 0, &P.Handle))
         return false;
+    //P.CreationData = CreateInfo;
     return true;
 }
 
-void DestroyPipeline(Pipeline& P)
+void DestroyPipeline(Pipeline& p)
 {
-    vkDestroyPipelineLayout(GetLogicalDevice( ), P.Layout, 0);
-    vkDestroyPipeline(GetLogicalDevice( ), P.Handle, 0);
+    vkDestroyDescriptorSetLayout(GetLogicalDevice( ), p.DescriptorLayout, 0);
+    vkDestroyDescriptorPool(GetLogicalDevice( ), p.DescriptorPool, 0);
+
+    vkDestroyPipeline(GetLogicalDevice( ), p.Handle, 0);
+    vkDestroyPipelineLayout(GetLogicalDevice( ), p.Layout, 0);
 }
 
-void DisplayPipelineType(Pipeline p)
-{
-    std::cout << "Pipeline info :\n\t" << ((p.PolygonMode == PIPELINE_POLYGON_MODE_FILL) ? "PIPELINE_POLYGON_MODE_FILL\n" : "PIPELINE_POLYGON_MODE_LINE\n");
-    std::cout << "\t" << ((p.Topology == PIPELINE_PRIMITIVE_TOPOLOGY_POINT_LIST) ? "PIPELINE_PRIMITIVE_TOPOLOGY_POINT_LIST\n" : "PIPELINE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST\n");
-}
-
-}
+} // namespace Vulkan
 } // namespace ffGraph

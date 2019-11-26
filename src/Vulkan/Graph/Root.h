@@ -19,17 +19,17 @@ struct Root {
 
     bool UpdateExecutionData = false;
     std::vector<Pipeline> Pipelines;
-    std::vector<Plot> Plots;
-    std::vector<Geometry *> Geometries;
-    std::vector<Geometry *> RenderedGeometries;
+    // std::vector<Plot> Plots;
+    std::vector<ConstructedGeometry> Geometries;
+    std::vector<size_t> RenderedGeometries;
     Buffer RenderBuffer;
     CameraController Cam;
     CameraUniform CamUniform;
 };
 
-void AddToGraph(Root& r, ConstructedGeometry& g);
-void GraphTraversal(Root r);
-void ConstructCurrentGraphPipelines(Root& r, VkShaderModule Shaders[2]);
+void AddToGraph(Root& r, ConstructedGeometry& g, ShaderLibrary& ShaderLib);
+// void GraphTraversal(Root r);
+// void ConstructCurrentGraphPipelines(Root& r, VkShaderModule Shaders[2]);
 void DestroyGraph(Root& r);
 
 }

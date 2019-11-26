@@ -1,8 +1,6 @@
 #include <cstring>
 #include "App.h"
-#include "JSON/Import.h"
-#include "Vulkan/Graph/Root.h"
-//#include "Vulkan/Instance.h"
+#include "LinearAlloc.h"
 
 ffGraph::ffAppCreateInfos ffGraph::ffGetAppCreateInfos(int ac, char** av) {
     ffAppCreateInfos Infos = {"localhost", "12345", 1280, 768};
@@ -40,6 +38,8 @@ void ffAppRun(ffApp& App) { App.vkInstance.run(App.SharedQueue, App.GeometryQueu
 }    // namespace ffGraph
 
 int main(int ac, char** av) {
+    ffGraph::MemoryManagement::LinearAllocator Allocator(500000000);
+    ffGraph::MemoryManagement::GAlloc = &Allocator;
     ffGraph::ffAppCreateInfos AppCreateInfos = ffGraph::ffGetAppCreateInfos(ac, av);
     ffGraph::ffApp App;
     std::shared_ptr<std::deque<std::string>> SharedQueue = std::make_shared<std::deque<std::string>>( );
@@ -47,7 +47,6 @@ int main(int ac, char** av) {
     ffGraph::ffClient Client(AppCreateInfos.Host, AppCreateInfos.Port, App.SharedQueue);
 
     App.ClientThread = std::thread([&Client]( ) { Client.Start( ); });
-    int count = 0;
     ffGraph::ffAppRun(App);
 
     Client.Stop( );
@@ -55,3 +54,5 @@ int main(int ac, char** av) {
     App.ClientThread.join( );
     return 0;
 }
+
+ffGraph::MemoryManagement::LinearAllocator *ffGraph::MemoryManagement::GAlloc = nullptr;

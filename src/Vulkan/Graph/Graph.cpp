@@ -1,104 +1,104 @@
-#include "Root.h"
 #include <iostream>
+#include "GlobalEnvironment.h"
+#include "Root.h"
 
 namespace ffGraph {
 namespace Vulkan {
 
-static int SearchForPlot(Root r, uint16_t PlotID)
+void BuildRenderBuffer(Root& r)
 {
-    for (size_t i = 0; i < r.Plots.size(); ++i) {
-        if (r.Plots[i].PlotID == PlotID)
-            return i;
+    if (r.RenderBuffer.Handle != VK_NULL_HANDLE) {
+        DestroyBuffer(GetAllocator( ), r.RenderBuffer);
     }
-    return -1;
-}
+    VkDeviceSize BufferSize = 0;
 
-static int SearchForMesh(Plot p, uint16_t MeshID)
-{
-    for (size_t i = 0; i < p.Meshes.size(); ++i) {
-        if (p.Meshes[i].MeshID == MeshID)
-            return i;
+    for (size_t i = 0; i < r.RenderedGeometries.size(); ++i) {
+        BufferSize += r.Geometries[r.RenderedGeometries[i]].Geo.size();
     }
-    return -1;
-}
 
-static void CreateMesh(Root& r, Plot& p, ConstructedGeometry& g)
-{
-    Mesh n;
 
-    n.MeshID = g.MeshID;
-    n.Geometries.push_back(g.Geo);
-    GeoUiData tmp;
-    n.UiInfos.push_back(tmp);
-    n.Tranform = glm::mat4(1.0f);
+    BufferCreateInfo CreateInfo = {};
 
-    p.Meshes.push_back(n);
-    r.Geometries.push_back(&n.Geometries[n.Geometries.size() - 1]);
-}
+    CreateInfo.vkData.SharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    CreateInfo.vkData.Size = BufferSize;
+    CreateInfo.vkData.Usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 
-static void CreatePlot(Root& r, ConstructedGeometry& g)
-{
-    Plot n;
+    CreateInfo.vmaData.Usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+    CreateInfo.vmaData.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+    r.RenderBuffer = CreateBuffer(GetAllocator( ), CreateInfo);
 
-    n.PlotID = g.PlotID;
-    n.Transform = glm::mat4(1.0f);
-
-    CreateMesh(r, n, g);
-
-    r.Plots.push_back(n);
-}
-
-static void AddToMesh(Root& r, Mesh& m, ConstructedGeometry& g)
-{
-    m.Geometries.push_back(g.Geo);
-    GeoUiData tmp;
-    m.UiInfos.push_back(tmp);
-    r.Geometries.push_back(&m.Geometries[m.Geometries.size() - 1]);
-}
-
-static void AddToPlot(Root& r, Plot& p, ConstructedGeometry& g)
-{
-    int MeshIndex = SearchForMesh(p, g.MeshID);
-
-    if (MeshIndex == -1) {
-        CreateMesh(r, p, g);
-    } else {
-        AddToMesh(r, p.Meshes[MeshIndex], g);
+    VkDeviceSize offset = 0;
+    std::cout << "BufferSize : " << BufferSize << "\n";
+    for (size_t i = 0; i < r.RenderedGeometries.size(); ++i) {
+        r.Geometries[r.RenderedGeometries[i]].Geo.BufferOffset = offset;
+        memcpy(((char *)r.RenderBuffer.Infos.pMappedData) + offset,
+                    r.Geometries[r.RenderedGeometries[i]].Geo.Data.Data,
+                    r.Geometries[r.RenderedGeometries[i]].Geo.size());
+        std::cout << "offset : " << offset << "\n";
+        offset += r.Geometries[r.RenderedGeometries[i]].Geo.size();
     }
 }
 
-void AddToGraph(Root& r, ConstructedGeometry& g)
+void AddToGraph(Root& r, ConstructedGeometry& g, ShaderLibrary& ShaderLib)
 {
-    int PlotIndex = SearchForPlot(r, g.PlotID);
     r.Update = true;
 
-    if (PlotIndex == -1) {
-        CreatePlot(r, g);
+    r.Geometries.push_back(g);
+    Geometry *p = &r.Geometries[r.Geometries.size() - 1].Geo;
+    r.RenderedGeometries.push_back(r.Geometries.size() - 1);
+
+    if (!r.Pipelines.empty()) {
+        bool add = true;
+        for (size_t i = 0; i < r.Pipelines.size(); ++i) {
+            if (r.Pipelines[i].CreationData.DescriptorListHandle.ffType == p->Type) {
+                p->Description.PipelineID = i;
+                add = false;
+            }
+        }
+        if (add) {
+            auto tmp = GetPipelineCreateInfos(g.Geo.Type, ShaderLib, (void *)&r.CamUniform, sizeof(CameraUniform), VK_SHADER_STAGE_VERTEX_BIT);
+            r.Pipelines.resize(r.Pipelines.size() + 1);
+            ConstructPipeline(r.Pipelines[r.Pipelines.size() - 1], tmp);
+            p->Description.PipelineID = r.Pipelines.size() - 1;
+        }
     } else {
-        AddToPlot(r, r.Plots[PlotIndex], g);
+        auto tmp = GetPipelineCreateInfos(g.Geo.Type, ShaderLib, (void *)&r.CamUniform, sizeof(CameraUniform), VK_SHADER_STAGE_VERTEX_BIT);
+        r.Pipelines.resize(1);
+        ConstructPipeline(r.Pipelines[0], tmp);
+        p->Description.PipelineID = 0;
     }
+    vkDeviceWaitIdle(GetLogicalDevice());
+    BuildRenderBuffer(r);
 }
 
-static void MeshTraversal(Mesh m)
+void DestroyGraph(Root& r)
 {
-    std::cout << "\t\t- Mesh " << m.MeshID << " containing " << m.Geometries.size() << " unique geometries.\n";
+    for (size_t i = 0; i < r.Pipelines.size(); ++i) {
+        DestroyPipeline(r.Pipelines[i]);
+    }
+    DestroyBuffer(GetAllocator( ), r.RenderBuffer);
 }
 
-static void PlotTraversal(Plot p)
-{
-    std::cout << "\tPlot " << p.PlotID << " containing " << p.Meshes.size() << " object(s).\n";
-    for (size_t i = 0; i < p.Meshes.size(); ++i) {
-        MeshTraversal(p.Meshes[i]);
-    }
-}
+// static void MeshTraversal(Mesh m)
+// {
+//     std::cout << "\t\t- Mesh " << m.MeshID << " containing " << m.Geometries.size() << " unique geometries.\n";
+// }
 
-void GraphTraversal(Root r)
-{
-    std::cout << "Traversing Graph :\n";
-    for (size_t i = 0; i < r.Plots.size(); ++i) {
-        PlotTraversal(r.Plots[i]);
-    }
-}
+// static void PlotTraversal(Plot p)
+// {
+//     std::cout << "\tPlot " << p.PlotID << " containing " << p.Meshes.size() << " object(s).\n";
+//     for (size_t i = 0; i < p.Meshes.size(); ++i) {
+//         MeshTraversal(p.Meshes[i]);
+//     }
+// }
+
+// void GraphTraversal(Root r)
+// {
+//     std::cout << "Traversing Graph :\n";
+//     for (size_t i = 0; i < r.Plots.size(); ++i) {
+//         PlotTraversal(r.Plots[i]);
+//     }
+// }
 
 }
 }

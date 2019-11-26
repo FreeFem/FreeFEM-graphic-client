@@ -1,4 +1,5 @@
 #include <imgui.h>
+#include <assert.h>
 #include "Instance.h"
 #include "Logger.h"
 #include "utils.h"
@@ -40,7 +41,7 @@ static bool ImportShaders(ShaderLibrary &Shaders, const VkDevice &Device) {
 
 static void InitImGui(int width, int height) {
     IMGUI_CHECKVERSION( );
-    ImGui::CreateContext( );
+    assert(ImGui::CreateContext( ) != 0);
 
     ImGuiStyle &style = ImGui::GetStyle( );
     style.Colors[ImGuiCol_TitleBg] = ImVec4(1.0f, 0.0f, 0.0f, 0.6f);

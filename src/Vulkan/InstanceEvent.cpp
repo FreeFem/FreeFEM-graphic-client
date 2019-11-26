@@ -21,7 +21,7 @@ static void FramebufferResizeCallback(GLFWwindow *Window, int width, int height)
     Handle->reload( );
 }
 
-static void Imgui_Key(int key, int action, GLFWwindow *Window) {
+static void Imgui_Key(int key, int action) {
     ImGuiIO &io = ImGui::GetIO( );
 
     if (action == GLFW_PRESS) io.KeysDown[key] = true;
@@ -33,10 +33,10 @@ static void Imgui_Key(int key, int action, GLFWwindow *Window) {
     io.KeySuper = io.KeysDown[GLFW_KEY_LEFT_SUPER] || io.KeysDown[GLFW_KEY_RIGHT_SUPER];
 }
 
-static void KeyCallback(GLFWwindow *Window, int key, UNUSED_PARAM(int scancode), int action, UNUSED_PARAM(int mods)) {
-    Instance *Handle = static_cast<Instance *>(glfwGetWindowUserPointer(Window));
+static void KeyCallback(UNUSED_PARAM(GLFWwindow *Window), int key, UNUSED_PARAM(int scancode), int action, UNUSED_PARAM(int mods)) {
+    //Instance *Handle = static_cast<Instance *>(glfwGetWindowUserPointer(Window));
 
-    Imgui_Key(key, action, Window);
+    Imgui_Key(key, action);
     // if (key == GLFW_KEY_KP_4) {
     //     Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model = glm::rotate(
     //         Handle->Graphs[Handle->CurrentRenderGraph].PushCamera.Model, glm::radians(2.f), glm::vec3(0.f, 1.f, 0.f));
@@ -100,7 +100,7 @@ static void KeyCallback(GLFWwindow *Window, int key, UNUSED_PARAM(int scancode),
     //     Handle->Graphs[Handle->CurrentRenderGraph].Cam.Handle.ViewProjMatrix;
 }
 
-static void MouseScroolCallback(GLFWwindow *Window, double xOffset, double yOffset) {
+static void MouseScroolCallback(UNUSED_PARAM(GLFWwindow *Window), double xOffset, double yOffset) {
     // Instance *Handle = static_cast<Instance *>(glfwGetWindowUserPointer(Window));
 
     // CameraScroolEvents(Handle->Graphs[Handle->CurrentRenderGraph].Cam, yOffset);
@@ -136,7 +136,7 @@ void Instance::initGFLWCallbacks( ) {
     glfwSetFramebufferSizeCallback(m_Window.Handle, &FramebufferResizeCallback);
 }
 
-void Instance::Events(bool render) {
+void Instance::Events(UNUSED_PARAM(bool render)) {
     // for (size_t i = 0; i < Graphs[CurrentRenderGraph].Nodes.size( ); ++i) {
     //     Graphs[CurrentRenderGraph].Nodes[i].to_render = render;
     // }

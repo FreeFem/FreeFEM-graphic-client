@@ -1,48 +1,79 @@
-#ifndef PIPELINE_H_
-#define PIPELINE_H_
+#ifndef N_PIPELINE_H_
+#define N_PIPELINE_H_
 
-#include <vulkan/vulkan.h>
-#include <vector>
-#include "Geometry.h"
+#include <cstring>
+#include "Resource/Shader.h"
+#include "../../ffTypes.h"
+#include "Descriptor.h"
 
 namespace ffGraph {
 namespace Vulkan {
 
-enum PipelinePrimitiveTopology : uint16_t {
-    PIPELINE_PRIMITIVE_TOPOLOGY_POINT_LIST = VK_PRIMITIVE_TOPOLOGY_POINT_LIST,
-    PIPELINE_PRIMITIVE_TOPOLOGY_LINE_LIST = VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
-    PIPELINE_PRIMITIVE_TOPOLOGY_LINE_STRIP = VK_PRIMITIVE_TOPOLOGY_LINE_STRIP,
-    PIPELINE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-    PIPELINE_PRIMITIVE_TOPOLOGY_COUNT
+struct PushConstant {
+    VkDeviceSize Size = 0;
+    VkShaderStageFlags Stage;
+    void *pData = NULL;
 };
 
-enum PipelinePolygonMode : uint8_t {
-    PIPELINE_POLYGON_MODE_FILL = VK_POLYGON_MODE_FILL,
-    PIPELINE_POLYGON_MODE_LINE = VK_POLYGON_MODE_LINE,
-    PIPELINE_POLYGON_MODE_COUNT
+struct PipelineShaderInfo {
+    VkShaderStageFlagBits Stage;
+    VkShaderModule Module;
+};
+
+struct PipelineDataFormat {
+    VkFormat Format;
+    VkDeviceSize Offset;
+};
+
+struct PipelineCreateInfos {
+    PushConstant PushConstantHandle;
+    DescriptorHandle DescriptorListHandle;
+    std::vector<PipelineShaderInfo> ShaderInfos;
+    VkDeviceSize VertexSize;
+    std::vector<PipelineDataFormat> VertexFormat;
+
+    VkPrimitiveTopology Topology;
+    VkPolygonMode PolygonMode;
+    uint32_t LineWidth;
+
+    PipelineCreateInfos operator=(PipelineCreateInfos& copy) {
+        memcpy(&PushConstantHandle, &copy.PushConstantHandle, sizeof(PushConstant));
+
+        DescriptorListHandle.ffType = copy.DescriptorListHandle.ffType;
+        DescriptorListHandle.List.reserve(copy.DescriptorListHandle.List.size());
+        DescriptorListHandle.List.insert(copy.DescriptorListHandle.List.begin(), copy.DescriptorListHandle.List.begin(), copy.DescriptorListHandle.List.end());
+
+        ShaderInfos.reserve(copy.ShaderInfos.size());
+        ShaderInfos.insert(copy.ShaderInfos.begin(), copy.ShaderInfos.begin(), copy.ShaderInfos.end());
+
+        VertexSize = copy.VertexSize;
+        VertexFormat.reserve(copy.VertexFormat.size());
+        VertexFormat.insert(copy.VertexFormat.begin(), copy.VertexFormat.begin(), copy.VertexFormat.end());
+
+        Topology = copy.Topology;
+        PolygonMode = copy.PolygonMode;
+        LineWidth = copy.LineWidth;
+
+        return *this;
+    };
 };
 
 struct Pipeline {
+    PipelineCreateInfos CreationData;
 
-    // Creation params
-    PipelinePrimitiveTopology Topology;
-    PipelinePolygonMode PolygonMode;
-    unsigned int LineWidth;
-
-    // Vulkan objects
     VkPipeline Handle;
     VkPipelineLayout Layout;
-    static constexpr int ShaderVertexStage = 0;
-    static constexpr int ShaderFragmentStage = 1;
-    VkShaderModule ShaderModule[2];
+
+    VkDescriptorPool DescriptorPool;
+    VkDescriptorSetLayout DescriptorLayout;
+    VkDescriptorSet DescriptorSet;
 };
 
-bool CreatePipeline(GeometryDescriptor CreationInfos, Pipeline& P, VkShaderModule Shaders[2]);
-void DestroyPipeline(Pipeline& P);
-void DisplayPipelineType(Pipeline p);
+PipelineCreateInfos GetPipelineCreateInfos(ffTypes type, ShaderLibrary& ShaderLib, void *pPushConstantData, size_t PushConstantSize, VkShaderStageFlags PushConstantStage);
+bool ConstructPipeline(Pipeline& P, PipelineCreateInfos& CreateInfo);
+void DestroyPipeline(Pipeline& p);
 
+} // namespace Vulkan
+} // namespace ffGraph
 
-}
-}
-
-#endif // PIPELINE_H_
+#endif // N_PIPELINE_H_

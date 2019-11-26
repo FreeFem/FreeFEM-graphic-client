@@ -7,6 +7,7 @@
 
 #include <cstdlib>
 #include <cstring>
+#include "LinearAlloc.h"
 
 namespace ffGraph {
 
@@ -40,18 +41,8 @@ inline bool isArrayReady(Array a) { return (a.Data) ? true : false; }
  * @return ffGraph::Array - Allocate a new ffGraph::Array (use ffGraph::isArrayReady to check return value).
  */
 inline Array ffNewArray(size_t ElementCount, size_t ElementSize) {
-    return {ElementCount, ElementSize, malloc(ElementSize * ElementCount)};
+    return {ElementCount, ElementSize, MemoryManagement::GAlloc->Allocate(ElementCount * ElementSize)};
 };
-
-/**
- * @brief Release Array memory and reset it.
- *
- * @param a [in] - ffGraph::Array to destroy.
- */
-inline void DestroyArray(Array a) {
-    free(a.Data);
-    memset(&a, 0, sizeof(Array));
-}
 
 /**
  * @brief Copy size bytes to a array memory from a src opaque pointer

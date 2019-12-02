@@ -229,9 +229,8 @@ Geometry ConstructIsoMeshVector(std::vector<float>& Vertices, std::vector<uint32
         ptr[i * 2].b = c.b;
         ptr[i * 2].a = c.a;
 
-        float scale = 0.09f;
-        ptr[i * 2 + 1].x = Vertices[i * 3 + 0] + (Values[i * 2] / max) * scale;
-        ptr[i * 2 + 1].y = Vertices[i * 3 + 1] + (Values[i * 2 + 1] / max) * scale;
+        ptr[i * 2 + 1].x = Vertices[i * 3 + 0] + (Values[i * 2] / max) * 0.09f;
+        ptr[i * 2 + 1].y = Vertices[i * 3 + 1] + (Values[i * 2 + 1] / max) * 0.09f;
         ptr[i * 2 + 1].z = Vertices[i * 3 + 2];
 
         ptr[i * 2 + 1].r = c.r;
@@ -277,6 +276,113 @@ Geometry ConstructIsoMesh(std::vector<float>& Vertices, std::vector<uint32_t>& I
     return n;
 }
 
+Geometry ConstructIsoScalar(std::vector<float>& Vertices, std::vector<uint32_t>& Indices, std::vector<float> Values, std::vector<float>& RefTriangle, std::vector<float>& KSub, float min, float max) {
+    size_t nsubT = KSub.size() / 3;
+    size_t nsubV = RefTriangle.size() / 2;
+    std::cout << "nsubV : " << nsubV << "\n";
+    size_t nK = Values.size() / (Indices.size() / 3);
+    std::vector<glm::vec2> Pn(nsubV);
+    size_t count = 0;
+    int o = 0;
+
+    Geometry n;
+    n.Data = ffNewArray((Indices.size() / 3) * nsubT * 3, sizeof(Vertex));
+    std::cout << "nsubT : " << nsubT << "\n";
+
+    Vertex *ptr = (Vertex *)n.Data.Data;
+
+    for (size_t i = 0; i < (Indices.size() / 3); ++i) {
+        glm::vec2 triangle[3] = {
+            glm::vec2(Vertices[Indices[i * 3] * 3 + 0], Vertices[Indices[i * 3] * 3 + 1]),
+            glm::vec2(Vertices[Indices[i * 3 + 1] * 3 + 0], Vertices[Indices[i * 3 + 1] * 3 + 1]),
+            glm::vec2(Vertices[Indices[i * 3 + 2] * 3 + 0], Vertices[Indices[i * 3 + 2] * 3 + 1])
+        };
+        for (size_t j = 0; j < nsubV; ++j) {
+            Pn[j] = IsoValue(triangle, glm::vec2(RefTriangle[j * 2], RefTriangle[j * 2 + 1]));
+        }
+        for (size_t sk = 0; sk < nsubT; ++sk) {
+            int i0 = KSub[sk * 3 + 0];
+            int i1 = KSub[sk * 3 + 1];
+            int i2 = KSub[sk * 3 + 2];
+
+            glm::vec3 ff = glm::vec3(Values[o + i0], Values[o + i1], Values[o + i2]);
+            glm::vec2 Pt[3] = {
+                Pn[i0], Pn[i1], Pn[i2]
+            };
+
+            for (size_t k = 0; k < 3; ++k) {
+                ptr[count].x = Pt[k].x;
+                ptr[count].y = Pt[k].y;
+                ptr[count].z = 0.f;
+                ptr[count].r = 0.f;
+                ptr[count].g = (ff[k] - min) / (max - min);
+                ptr[count].b = 0.f;
+                ptr[count].a = 1.0f;
+                count += 1;
+            }
+        }
+        o += nK;
+    }
+    return n;
+}
+
+Geometry ConstructIsoVector(std::vector<float>& Vertices, std::vector<uint32_t>& Indices, std::vector<float> Values, std::vector<float>& RefTriangle, std::vector<float>& KSub, float min, float max) {
+    size_t nsubT = KSub.size() / 3;
+    size_t nsubV = RefTriangle.size() / 2;
+    size_t nK = Values.size() / (Indices.size() / 3);
+    std::vector<glm::vec2> Pn(nsubV);
+    size_t count = 0;
+    int o = 0;
+
+    Geometry n;
+    n.Data = ffNewArray(Vertices.size() * nsubT * 2, sizeof(Vertex));
+
+    for (size_t i = 0; i < Values.size() / 2; ++i) {
+        min = std::min(min, sqrtf(Values[i * 2] * Values[i * 2] + Values[i * 2 + 1] * Values[i * 2 + 1]));
+        max = std::max(max, sqrtf(Values[i * 2] * Values[i * 2] + Values[i * 2 + 1] * Values[i * 2 + 1]));
+    }
+
+    Vertex *ptr = (Vertex *)n.Data.Data;
+    for (size_t i = 0; i < (Indices.size() / 3); ++i) {
+        std::cout << "Triangle N" << i << "\n";
+        for (size_t j = 0; j < nsubV; ++j) {
+            glm::vec2 triangle[3] = {
+                glm::vec2(Vertices[Indices[i * 3] * 3 + 0], Vertices[Indices[i * 3] * 3 + 1]),
+                glm::vec2(Vertices[Indices[i * 3 + 1] * 3 + 0], Vertices[Indices[i * 3 + 1] * 3 + 1]),
+                glm::vec2(Vertices[Indices[i * 3 + 2] * 3 + 0], Vertices[Indices[i * 3 + 2] * 3 + 1])
+            };
+            Pn[j] = IsoValue(triangle, glm::vec2(RefTriangle[j * 2], RefTriangle[j * 2 + 1]));
+        }
+        for (size_t k = 0, l = 0; k < nsubV; ++k) {
+            glm::vec2 P = Pn[k];
+            glm::vec2 uv(Values[o + l], Values[o + l + 1]);
+            l += 2;
+
+            ptr[count].x = P.x;
+            ptr[count].y = P.y;
+            ptr[count].z = 0.f;
+            ptr[count].r = 1.f;
+            ptr[count].g = 0.f;
+            ptr[count].b = 0.f;
+            ptr[count].a = 0.f;
+            count += 1;
+
+            std::cout << (sqrtf(uv.x * uv.x + uv.y * uv.y) / max) << "\n";
+            ptr[count].x = P.x + (uv.x / max) * 0.09f;
+            ptr[count].y = P.y + (uv.y / max) * 0.09f;
+            ptr[count].z = 0.f;
+            ptr[count].r = 1.f;
+            ptr[count].g = 0.f;
+            ptr[count].b = 0.f;
+            ptr[count].a = 0.f;
+            count += 1;
+        }
+        o += nK;
+    }
+    std::cout << "Count = " << count << "\n";
+    return n;
+}
+
 void ImportGeometry(json GeoJSON, ThreadSafeQueue *Queue, uint16_t PlotID)
 {
     LabelTable Table;
@@ -306,23 +412,20 @@ void ImportGeometry(json GeoJSON, ThreadSafeQueue *Queue, uint16_t PlotID)
             ConstructedGeometry IsoValues(PlotID, MeshID);
 
             std::vector<float> values = Isos["IsoV1"].get<std::vector<float>>();
+            std::vector<float> ksub = Isos["IsoKSub"].get<std::vector<float>>();
             std::vector<float> referencetriangle = Isos["IsoPSub"].get<std::vector<float>>();
             bool IsoAsVector = Isos["IsoVector"].get<bool>();
 
             if (IsoAsVector) {
                 std::cout << "\tVectors.\n";
-                IsoValues.Geo = ConstructIsoMeshVector(Vertices, Indices, values);
-                Data.Geo.Type = GetTypeValue("Vector2D");
+                IsoValues.Geo = ConstructIsoVector(Vertices, Indices, values, referencetriangle, ksub, Isos["IsoMin"].get<float>(), Isos["IsoMax"].get<float>());
+                IsoValues.Geo.Type = GetTypeValue("Vector2D");
                 IsoValues.Geo.Description.PrimitiveTopology = GeometryPrimitiveTopology::GEO_PRIMITIVE_TOPOLOGY_LINE_LIST;
             } else {
                 std::cout << "\tScalars.\n";
-                if (referencetriangle.size() == 6) {
-                    IsoValues.Geo = ConstructIsoMesh(Vertices, Indices, values);
-                } else {
-                    IsoValues.Geo = ConstructIsoMeshPX(Vertices, Indices, values, referencetriangle);
-                }
+                IsoValues.Geo = ConstructIsoScalar(Vertices, Indices, values, referencetriangle, ksub, Isos["IsoMin"].get<float>(), Isos["IsoMax"].get<float>());
                 IsoValues.Geo.Description.PrimitiveTopology = GeometryPrimitiveTopology::GEO_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-                Data.Geo.Type = GetTypeValue("Mesh2D");
+                IsoValues.Geo.Type = GetTypeValue("Mesh2D");
             }
             IsoValues.Geo.Description.PolygonMode = GEO_POLYGON_MODE_LINE;
             Queue->push(IsoValues);
@@ -349,7 +452,7 @@ void ImportGeometry(json GeoJSON, ThreadSafeQueue *Queue, uint16_t PlotID)
             Border.Geo.Description.PrimitiveTopology = GetBorderPrimitiveTopology(GeoType);
             Border.Geo.Description.PolygonMode = GEO_POLYGON_MODE_LINE;
             Border.Geo.Type = GetTypeValue(((Border.Geo.Description.PrimitiveTopology == GEO_PRIMITIVE_TOPOLOGY_LINE_LIST) ? "Curve2D" : "Mesh3D"));
-            Queue->push(Border);
+            //Queue->push(Border);
         }
     }
     std::cout << "Finished importing data.\n";
@@ -362,8 +465,8 @@ void AsyncImport(std::string CompressedJSON, ThreadSafeQueue& Queue)
     uint16_t PlotID = j["Plot"].get<uint16_t>();
 
     for (auto & Geometry : j["Geometry"]) {
-        //ImportGeometry(Geometry, &Queue, PlotID);
-        std::async(std::launch::async, ImportGeometry, Geometry, &Queue, PlotID);
+        ImportGeometry(Geometry, &Queue, PlotID);
+        //std::async(std::launch::async, ImportGeometry, Geometry, &Queue, PlotID);
     }
 }
 

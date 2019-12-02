@@ -65,79 +65,58 @@ static const char table[GeometryPrimitiveTopology::GEO_PRIMITIVE_TOPOLOGY_COUNT]
 //     }
 // }
 
-// static void newGraphFrame(Root& r)
-// {
-//     static glm::vec3 Rotation;
-//     static float ZoomLevel;
-//     ImGui::NewFrame( );
-
-//     //ImGui::ShowDemoWindow();
-
-//     ImGui::Begin("Plot list");
-
-//     for (size_t i = 0; i < r.Plots.size(); ++i) {
-//         std::string name("Plot ");
-//         name.append(std::to_string(i));
-//         if (ImGui::CollapsingHeader(name.c_str(), ImGuiTreeNodeFlags_None)) {
-//             ListGeometry(r, r.Plots[i], i);
-//         }
-//     }
-//     if (ImGui::SliderFloat("X", &Rotation.x, 0.f, 360.f)) {
-//         r.Cam.SetRotation(Rotation);
-//     }
-//     if (ImGui::SliderFloat("Y", &Rotation.y, 0.f, 360.f)) {
-//         r.Cam.SetRotation(Rotation);
-//     }
-//     if (ImGui::SliderFloat("Z", &Rotation.z, 0.f, 360.f)) {
-//         r.Cam.SetRotation(Rotation);
-//     }
-//     if (ImGui::Button("Reset rotation")) {
-//         Rotation.x = Rotation.y = Rotation.z = 0.f;
-//         r.Cam.SetRotation(Rotation);
-//     }
-//     if (ImGui::Button("Zoom +")) {
-//         CameraScroolEvents(r.Cam, 1.f);
-//     }
-//     ImGui::SameLine();
-//     if (ImGui::Button("Zoom -")) {
-//         CameraScroolEvents(r.Cam, -1.f);
-//     }
-//     ImGui::Separator();
-//     if (ImGui::Button("X +"))
-//         r.Cam.Translate(glm::vec3(0.25f * std::min(r.Cam.ZoomLevel, 1.f), 0.f, 0.f));
-//     ImGui::SameLine();
-//     if (ImGui::Button("X -"))
-//         r.Cam.Translate(glm::vec3(-0.25f * std::min(r.Cam.ZoomLevel, 1.f), 0.f, 0.f));
-
-//     ImGui::Separator();
-//     if (ImGui::Button("Y +"))
-//         r.Cam.Translate(glm::vec3(0.f, 0.25f * std::min(r.Cam.ZoomLevel, 1.f), 0.f));
-//     ImGui::SameLine();
-//     if (ImGui::Button("Y -"))
-//         r.Cam.Translate(glm::vec3(0.f, -0.25f * std::min(r.Cam.ZoomLevel, 1.f), 0.f));
-
-//     ImGui::Separator();
-//     if (ImGui::Button("Z +"))
-//         r.Cam.Translate(glm::vec3(0.f, 0.f, 0.25f * std::min(r.Cam.ZoomLevel, 1.f)));
-//     ImGui::SameLine();
-//     if (ImGui::Button("Z -"))
-//         r.Cam.Translate(glm::vec3(0.f, 0.f, -0.25f * std::min(r.Cam.ZoomLevel, 1.f)));
-//     ImGui::End();
-
-//     ImGui::Render();
-// }
-
-void UiFrame(Root& r)
+static void newGraphFrame(Root& r)
 {
-    ImGui::NewFrame();
+    static glm::vec3 Rotation;
+    static float ZoomLevel;
+    ImGui::NewFrame( );
 
-    ImGui::Begin("Some Window");
+    //ImGui::ShowDemoWindow();
 
-    for (size_t i = 0; i < r.RenderedGeometries.size(); ++i) {
-        ImGui::Text("%lu", r.RenderedGeometries[i]);
+    ImGui::Begin("Plot list");
+
+    if (ImGui::SliderFloat("X", &Rotation.x, 0.f, 360.f)) {
+        r.Cam.SetRotation(Rotation);
     }
+    if (ImGui::SliderFloat("Y", &Rotation.y, 0.f, 360.f)) {
+        r.Cam.SetRotation(Rotation);
+    }
+    if (ImGui::SliderFloat("Z", &Rotation.z, 0.f, 360.f)) {
+        r.Cam.SetRotation(Rotation);
+    }
+    if (ImGui::Button("Reset rotation")) {
+        Rotation.x = Rotation.y = Rotation.z = 0.f;
+        r.Cam.SetRotation(Rotation);
+    }
+    if (ImGui::Button("Zoom +")) {
+        CameraScroolEvents(r.Cam, 1.f);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Zoom -")) {
+        CameraScroolEvents(r.Cam, -1.f);
+    }
+    ImGui::Separator();
+    if (ImGui::Button("X +"))
+        r.Cam.Translate(glm::vec3(0.25f * std::min(r.Cam.ZoomLevel, 1.f), 0.f, 0.f));
+    ImGui::SameLine();
+    if (ImGui::Button("X -"))
+        r.Cam.Translate(glm::vec3(-0.25f * std::min(r.Cam.ZoomLevel, 1.f), 0.f, 0.f));
 
+    ImGui::Separator();
+    if (ImGui::Button("Y +"))
+        r.Cam.Translate(glm::vec3(0.f, 0.25f * std::min(r.Cam.ZoomLevel, 1.f), 0.f));
+    ImGui::SameLine();
+    if (ImGui::Button("Y -"))
+        r.Cam.Translate(glm::vec3(0.f, -0.25f * std::min(r.Cam.ZoomLevel, 1.f), 0.f));
+
+    ImGui::Separator();
+    if (ImGui::Button("Z +"))
+        r.Cam.Translate(glm::vec3(0.f, 0.f, 0.25f * std::min(r.Cam.ZoomLevel, 1.f)));
+    ImGui::SameLine();
+    if (ImGui::Button("Z -"))
+        r.Cam.Translate(glm::vec3(0.f, 0.f, -0.25f * std::min(r.Cam.ZoomLevel, 1.f)));
     ImGui::End();
+
     ImGui::Render();
 }
 
@@ -145,6 +124,7 @@ void Instance::run(std::shared_ptr<std::deque<std::string>> SharedQueue, JSON::T
     InitCameraController(RenderGraph.Cam, 1280.f / 768.f, 90.f, CameraType::_3D);
     RenderGraph.Cam.Translate(glm::vec3(0.5, -0.5, 0));
     RenderGraph.CamUniform.Model = glm::mat4(1.0f);
+
     while (!ffWindowShouldClose(m_Window)) {
         UpdateImGuiButton( );
         if (!SharedQueue->empty( )) {
@@ -156,7 +136,7 @@ void Instance::run(std::shared_ptr<std::deque<std::string>> SharedQueue, JSON::T
             AddToGraph(RenderGraph, g, Shaders);
             //ConstructCurrentGraphPipelines(RenderGraph, Modules);
         }
-        UiFrame(RenderGraph);
+        newGraphFrame(RenderGraph);
         UpdateUiPipeline(Ui);
         render( );
     }

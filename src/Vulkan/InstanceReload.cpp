@@ -98,8 +98,8 @@ void Instance::render( ) {
             vkCmdSetViewport(CurrentFrame.CmdBuffer, 0, 1, &viewport);
 
             RenderGraph.CamUniform.ViewProj = RenderGraph.Cam.Handle.ViewProjMatrix;
-            vkCmdPushConstants(CurrentFrame.CmdBuffer, p.Layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(CameraUniform),
-                           &RenderGraph.CamUniform);
+            vkCmdPushConstants(CurrentFrame.CmdBuffer, p.Layout, VK_SHADER_STAGE_VERTEX_BIT, 0, p.CreationData.PushConstantHandle.Size,
+                           p.CreationData.PushConstantHandle.pData);
 
             VkRect2D scissor = {};
 

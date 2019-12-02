@@ -28,13 +28,11 @@ void BuildRenderBuffer(Root& r)
     r.RenderBuffer = CreateBuffer(GetAllocator( ), CreateInfo);
 
     VkDeviceSize offset = 0;
-    std::cout << "BufferSize : " << BufferSize << "\n";
     for (size_t i = 0; i < r.RenderedGeometries.size(); ++i) {
         r.Geometries[r.RenderedGeometries[i]].Geo.BufferOffset = offset;
         memcpy(((char *)r.RenderBuffer.Infos.pMappedData) + offset,
                     r.Geometries[r.RenderedGeometries[i]].Geo.Data.Data,
                     r.Geometries[r.RenderedGeometries[i]].Geo.size());
-        std::cout << "offset : " << offset << "\n";
         offset += r.Geometries[r.RenderedGeometries[i]].Geo.size();
     }
 }
@@ -46,7 +44,10 @@ void AddToGraph(Root& r, ConstructedGeometry& g, ShaderLibrary& ShaderLib)
     r.Geometries.push_back(g);
     Geometry *p = &r.Geometries[r.Geometries.size() - 1].Geo;
     r.RenderedGeometries.push_back(r.Geometries.size() - 1);
+    void *PushConstantPTR = (void *)&r.CamUniform;
+    size_t PushConstantSize = sizeof(CameraUniform);
 
+    std::cout << "Type : " << g.Geo.Type << "\n";
     if (!r.Pipelines.empty()) {
         bool add = true;
         for (size_t i = 0; i < r.Pipelines.size(); ++i) {
@@ -56,13 +57,13 @@ void AddToGraph(Root& r, ConstructedGeometry& g, ShaderLibrary& ShaderLib)
             }
         }
         if (add) {
-            auto tmp = GetPipelineCreateInfos(g.Geo.Type, ShaderLib, (void *)&r.CamUniform, sizeof(CameraUniform), VK_SHADER_STAGE_VERTEX_BIT);
+            auto tmp = GetPipelineCreateInfos(g.Geo.Type, ShaderLib, PushConstantPTR, PushConstantSize, VK_SHADER_STAGE_VERTEX_BIT);
             r.Pipelines.resize(r.Pipelines.size() + 1);
             ConstructPipeline(r.Pipelines[r.Pipelines.size() - 1], tmp);
             p->Description.PipelineID = r.Pipelines.size() - 1;
         }
     } else {
-        auto tmp = GetPipelineCreateInfos(g.Geo.Type, ShaderLib, (void *)&r.CamUniform, sizeof(CameraUniform), VK_SHADER_STAGE_VERTEX_BIT);
+        auto tmp = GetPipelineCreateInfos(g.Geo.Type, ShaderLib, PushConstantPTR, PushConstantSize, VK_SHADER_STAGE_VERTEX_BIT);
         r.Pipelines.resize(1);
         ConstructPipeline(r.Pipelines[0], tmp);
         p->Description.PipelineID = 0;

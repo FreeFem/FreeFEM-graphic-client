@@ -40,15 +40,21 @@ struct PipelineCreateInfos {
         memcpy(&PushConstantHandle, &copy.PushConstantHandle, sizeof(PushConstant));
 
         DescriptorListHandle.ffType = copy.DescriptorListHandle.ffType;
-        DescriptorListHandle.List.reserve(copy.DescriptorListHandle.List.size());
+        DescriptorListHandle.List.resize(copy.DescriptorListHandle.List.size());
         DescriptorListHandle.List.insert(copy.DescriptorListHandle.List.begin(), copy.DescriptorListHandle.List.begin(), copy.DescriptorListHandle.List.end());
 
-        ShaderInfos.reserve(copy.ShaderInfos.size());
-        ShaderInfos.insert(copy.ShaderInfos.begin(), copy.ShaderInfos.begin(), copy.ShaderInfos.end());
+        ShaderInfos.resize(copy.ShaderInfos.size());
+        for (size_t i = 0; i < copy.ShaderInfos.size(); ++i) {
+            ShaderInfos[i].Stage = copy.ShaderInfos[i].Stage;
+            ShaderInfos[i].Module = copy.ShaderInfos[i].Module;
+        }
 
         VertexSize = copy.VertexSize;
-        VertexFormat.reserve(copy.VertexFormat.size());
-        VertexFormat.insert(copy.VertexFormat.begin(), copy.VertexFormat.begin(), copy.VertexFormat.end());
+        VertexFormat.resize(copy.VertexFormat.size());
+        for (size_t i = 0; i < copy.VertexFormat.size(); ++i) {
+            VertexFormat[i].Format = copy.VertexFormat[i].Format;
+            VertexFormat[i].Offset = copy.VertexFormat[i].Offset;
+        }
 
         Topology = copy.Topology;
         PolygonMode = copy.PolygonMode;

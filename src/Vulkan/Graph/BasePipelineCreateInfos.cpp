@@ -146,7 +146,7 @@ static PipelineCreateInfos NewVectorField2DPipeline(ShaderLibrary& ShaderLib, vo
 
     n.ShaderInfos.resize(2);
     n.ShaderInfos[0].Stage = VK_SHADER_STAGE_VERTEX_BIT;
-    n.ShaderInfos[0].Module = FindShader(ShaderLib, "Geo3D.vert");
+    n.ShaderInfos[0].Module = FindShader(ShaderLib, "Vector.vert");
 
     n.ShaderInfos[1].Stage = VK_SHADER_STAGE_FRAGMENT_BIT;
     n.ShaderInfos[1].Module = FindShader(ShaderLib, "Color.frag");

@@ -29,13 +29,14 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugMessengerCallback(VkDebugUtilsMessage
 }
 
 static bool ImportShaders(ShaderLibrary &Shaders, const VkDevice &Device) {
-    Shaders.resize(5);
+    Shaders.resize(6);
     Shaders[0] = ImportShader("./shaders/Color.frag.spirv", Device, VK_SHADER_STAGE_FRAGMENT_BIT);
     Shaders[1] = ImportShader("./shaders/Geo2D.vert.spirv", Device, VK_SHADER_STAGE_VERTEX_BIT);
     Shaders[2] = ImportShader("./shaders/Geo3D.vert.spirv", Device, VK_SHADER_STAGE_VERTEX_BIT);
+    Shaders[3] = ImportShader("./shaders/Vector.vert.spirv", Device, VK_SHADER_STAGE_VERTEX_BIT);
 
-    Shaders[3] = ImportShader("./shaders/UI.vert.spirv", Device, VK_SHADER_STAGE_VERTEX_BIT);
-    Shaders[4] = ImportShader("./shaders/UI.frag.spirv", Device, VK_SHADER_STAGE_FRAGMENT_BIT);
+    Shaders[4] = ImportShader("./shaders/UI.vert.spirv", Device, VK_SHADER_STAGE_VERTEX_BIT);
+    Shaders[5] = ImportShader("./shaders/UI.frag.spirv", Device, VK_SHADER_STAGE_FRAGMENT_BIT);
     return true;
 }
 

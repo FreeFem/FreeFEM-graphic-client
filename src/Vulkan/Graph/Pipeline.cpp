@@ -152,7 +152,7 @@ bool ConstructPipeline(Pipeline& P, PipelineCreateInfos& CreateInfo)
 
     if (vkCreateGraphicsPipelines(GetLogicalDevice( ), 0, 1, &graphicsPipelineCreateInfo, 0, &P.Handle))
         return false;
-    //P.CreationData = CreateInfo;
+    P.CreationData = CreateInfo;
     return true;
 }
 

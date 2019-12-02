@@ -12,7 +12,6 @@
 
 namespace ffGraph {
 namespace Vulkan {
-
 struct Root {
     glm::mat4 Transform;
     bool Update = true;

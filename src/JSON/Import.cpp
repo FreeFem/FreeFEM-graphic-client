@@ -80,7 +80,7 @@ Geometry ConstructBorder(std::vector<float> Vertices, std::vector<uint32_t> Indi
     return n;
 }
 
-glm::vec2 IsoValue(glm::vec2 T[3], glm::vec2 BarycentricPoint)
+static glm::vec2 IsoValue(glm::vec2 T[3], glm::vec2 BarycentricPoint)
 {
     glm::mat2 mat(glm::vec2(T[1].x - T[0].x, T[1].y - T[0].y), glm::vec2(T[2].x - T[0].x, T[2].y - T[0].y));
 
@@ -164,24 +164,25 @@ Geometry ConstructIsoVector(std::vector<float>& Vertices, std::vector<uint32_t>&
         for (size_t k = 0, l = 0; k < nsubV; ++k) {
             glm::vec2 P = Pn[k];
             glm::vec2 uv(Values[o + l], Values[o + l + 1]);
+            float tmp = (sqrtf(uv.x * uv.x + uv.y * uv.y) - min) / (max - min);
             l += 2;
 
             ptr[count].x = P.x;
             ptr[count].y = P.y;
             ptr[count].z = 0.f;
-            ptr[count].r = 0.5f;
-            ptr[count].g = (sqrtf(uv.x * uv.x + uv.y * uv.y) - min) / (max - min);
+            ptr[count].r = 1.0f;
+            ptr[count].g = tmp;
             ptr[count].b = 0.5f;
-            ptr[count].a = 1.f;
+            ptr[count].a = 0.5f;
             count += 1;
 
-            ptr[count].x = P.x + (uv.x / max);
-            ptr[count].y = P.y + (uv.y / max);
+            ptr[count].x = P.x + (uv.x / max) * (max - min);
+            ptr[count].y = P.y + (uv.y / max) * (max - min);
             ptr[count].z = 0.f;
-            ptr[count].r = 0.5f;
-            ptr[count].g = (sqrtf(uv.x * uv.x + uv.y * uv.y) - min) / (max - min);
+            ptr[count].r = 1.0f;
+            ptr[count].g = tmp;
             ptr[count].b = 0.5f;
-            ptr[count].a = 1.f;
+            ptr[count].a = 0.5f;
             count += 1;
         }
         o += nK;
@@ -208,7 +209,7 @@ void ImportGeometry(json GeoJSON, ThreadSafeQueue *Queue, uint16_t PlotID)
         Data.Geo.Description.PrimitiveTopology = GetMainPrimitiveTopology(GeoType);
         Data.Geo.Description.PolygonMode = GEO_POLYGON_MODE_LINE;
         Data.Geo.Type = GetTypeValue(GeoType.c_str());
-        Queue->push(Data);
+        //Queue->push(Data);
     }
 
     bool AsIsoValues = GeoJSON["IsoValues"].get<bool>();
@@ -229,9 +230,10 @@ void ImportGeometry(json GeoJSON, ThreadSafeQueue *Queue, uint16_t PlotID)
                 IsoValues.Geo.Description.PrimitiveTopology = GeometryPrimitiveTopology::GEO_PRIMITIVE_TOPOLOGY_LINE_LIST;
             } else {
                 std::cout << "\tScalars.\n";
-                IsoValues.Geo = ConstructIsoScalar(Vertices, Indices, values, referencetriangle, ksub, Isos["IsoMin"].get<float>(), Isos["IsoMax"].get<float>());
-                IsoValues.Geo.Description.PrimitiveTopology = GeometryPrimitiveTopology::GEO_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-                IsoValues.Geo.Type = GetTypeValue("Mesh2D");
+                //IsoValues.Geo = ConstructIsoScalar(Vertices, Indices, values, referencetriangle, ksub, Isos["IsoMin"].get<float>(), Isos["IsoMax"].get<float>());
+                IsoValues.Geo = ConstructIsoLines(Vertices, Indices, values, referencetriangle, ksub, Isos["IsoMin"].get<float>(), Isos["IsoMax"].get<float>());
+                IsoValues.Geo.Description.PrimitiveTopology = GeometryPrimitiveTopology::GEO_PRIMITIVE_TOPOLOGY_LINE_LIST;
+                IsoValues.Geo.Type = GetTypeValue("Curve2D");
             }
             IsoValues.Geo.Description.PolygonMode = GEO_POLYGON_MODE_LINE;
             Queue->push(IsoValues);
@@ -239,29 +241,29 @@ void ImportGeometry(json GeoJSON, ThreadSafeQueue *Queue, uint16_t PlotID)
         }
     }
 
-    bool AsBorder = GeoJSON["Borders"].get<bool>();
-    if (AsBorder) {
-        std::cout << "Import border.\n";
-        ConstructedGeometry Border(PlotID, MeshID);
+    // bool AsBorder = GeoJSON["Borders"].get<bool>();
+    // if (AsBorder) {
+    //     std::cout << "Import border.\n";
+    //     ConstructedGeometry Border(PlotID, MeshID);
 
-        Indices.clear();
-        Labels.clear();
+    //     Indices.clear();
+    //     Labels.clear();
 
-        std::vector<uint32_t> Indices = GeoJSON["BorderIndices"].get<std::vector<uint32_t>>();
-        std::vector<int> Labels = GeoJSON["BorderLabels"].get<std::vector<int>>();
+    //     std::vector<uint32_t> Indices = GeoJSON["BorderIndices"].get<std::vector<uint32_t>>();
+    //     std::vector<int> Labels = GeoJSON["BorderLabels"].get<std::vector<int>>();
 
-        Border.Geo = ConstructBorder(Vertices, Indices, Labels, Table);
+    //     Border.Geo = ConstructBorder(Vertices, Indices, Labels, Table);
 
-        if (Border.Geo.Data.Data == 0) {
-            LogWarning("AsyncImport", "Failed to import border.");
-        } else {
-            Border.Geo.Description.PrimitiveTopology = GetBorderPrimitiveTopology(GeoType);
-            Border.Geo.Description.PolygonMode = GEO_POLYGON_MODE_LINE;
-            Border.Geo.Type = GetTypeValue(((Border.Geo.Description.PrimitiveTopology == GEO_PRIMITIVE_TOPOLOGY_LINE_LIST) ? "Curve2D" : "Mesh3D"));
-            //Queue->push(Border);
-        }
-    }
-    std::cout << "Finished importing data.\n";
+    //     if (Border.Geo.Data.Data == 0) {
+    //         LogWarning("AsyncImport", "Failed to import border.");
+    //     } else {
+    //         Border.Geo.Description.PrimitiveTopology = GetBorderPrimitiveTopology(GeoType);
+    //         Border.Geo.Description.PolygonMode = GEO_POLYGON_MODE_LINE;
+    //         Border.Geo.Type = GetTypeValue(((Border.Geo.Description.PrimitiveTopology == GEO_PRIMITIVE_TOPOLOGY_LINE_LIST) ? "Curve2D" : "Mesh3D"));
+    //         Queue->push(Border);
+    //     }
+    // }
+    // std::cout << "Finished importing data.\n";
 }
 
 void AsyncImport(std::string CompressedJSON, ThreadSafeQueue& Queue)
@@ -269,6 +271,8 @@ void AsyncImport(std::string CompressedJSON, ThreadSafeQueue& Queue)
     json j = json::from_cbor(CompressedJSON);
 
     uint16_t PlotID = j["Plot"].get<uint16_t>();
+    std::cout << "iso-value " << j["iso-value"].dump() << "\n";
+    std::cout << "nb_iso " << j["nb-iso"].dump() << "\n";
 
     for (auto & Geometry : j["Geometry"]) {
         ImportGeometry(Geometry, &Queue, PlotID);

@@ -16,6 +16,8 @@ using json = nlohmann::json;
 //void ImportGeometry(json GeoJSON, ThreadSafeQueue& Queue, uint16_t PlotID);
 void AsyncImport(std::string CompressedJSON, ThreadSafeQueue& Queue);
 
+Geometry ConstructIsoLines(std::vector<float>& Vertices, std::vector<uint32_t>& Indices, std::vector<float> Values, std::vector<float>& RefTriangle, std::vector<float>& KSub, float min, float max);
+
 }    // namespace JSON
 }    // namespace ffGraph
 

@@ -47,7 +47,6 @@ void AddToGraph(Root& r, ConstructedGeometry& g, ShaderLibrary& ShaderLib)
     void *PushConstantPTR = (void *)&r.CamUniform;
     size_t PushConstantSize = sizeof(CameraUniform);
 
-    std::cout << "Type : " << g.Geo.Type << "\n";
     if (!r.Pipelines.empty()) {
         bool add = true;
         for (size_t i = 0; i < r.Pipelines.size(); ++i) {

@@ -95,7 +95,7 @@ bool ConstructPipeline(Pipeline& P, PipelineCreateInfos& CreateInfo)
     rasterizationStateCreateInfo.lineWidth = CreateInfo.LineWidth;
 
     VkPipelineColorBlendAttachmentState colorBlendAttachementState = {};
-    colorBlendAttachementState.blendEnable = VK_FALSE;
+    colorBlendAttachementState.blendEnable = VK_TRUE;
     colorBlendAttachementState.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
     colorBlendAttachementState.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
     colorBlendAttachementState.colorBlendOp = VK_BLEND_OP_ADD;

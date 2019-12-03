@@ -44,3 +44,9 @@ Doxyfile.bak
 
 # MacOS
 .DS_Store
+
+# SourceTrail
+*.srctrlbm
+*.srctrldb
+*.srctrlprj
+fontconfig

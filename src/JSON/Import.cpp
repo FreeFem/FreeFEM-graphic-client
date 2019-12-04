@@ -272,15 +272,9 @@ void AsyncImport(std::string CompressedJSON, ThreadSafeQueue& Queue)
     json j = json::from_cbor(CompressedJSON);
     uint16_t PlotID = j["Plot"].get<uint16_t>();
 
-    std::cout << IO::GetTmpFile(PlotID) << "\n";
-    std::fstream f(IO::GetTmpFile(PlotID), std::ios::out);
-    f << CompressedJSON;
-    //std::cout << j.dump() << "\n";
-    return;
-
     for (auto & Geometry : j["Geometry"]) {
-        ImportGeometry(Geometry, &Queue, PlotID);
-        //std::async(std::launch::async, ImportGeometry, Geometry, &Queue, PlotID);
+        //ImportGeometry(Geometry, &Queue, PlotID);
+        std::async(std::launch::async, ImportGeometry, Geometry, &Queue, PlotID);
     }
 }
 

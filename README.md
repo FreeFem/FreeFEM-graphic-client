@@ -1,3 +1,5 @@
+[![](https://github.com/FreeFEM/FreeFEM-graphic-client/workflows/.github/workflows/ccpp.yml/badge.svg)](https://github.com/FreeFem/FreeFEM-graphic-client/actions)
+
 # FreeFEM-graphic-client
 
 How to build :

@@ -2,6 +2,7 @@
 #define APP_H_
 
 #include <thread>
+#include <list>
 #include "ffClient.h"
 #include "Vulkan/Instance.h"
 #include "JSON/ThreadQueue.h"

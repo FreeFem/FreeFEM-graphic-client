@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include "Logger.h"
 #include "Import.h"
+#include "IO.h"
 
 namespace ffGraph {
 namespace JSON {
@@ -209,7 +210,7 @@ void ImportGeometry(json GeoJSON, ThreadSafeQueue *Queue, uint16_t PlotID)
         Data.Geo.Description.PrimitiveTopology = GetMainPrimitiveTopology(GeoType);
         Data.Geo.Description.PolygonMode = GEO_POLYGON_MODE_LINE;
         Data.Geo.Type = GetTypeValue(GeoType.c_str());
-        //Queue->push(Data);
+        Queue->push(Data);
     }
 
     bool AsIsoValues = GeoJSON["IsoValues"].get<bool>();
@@ -241,38 +242,41 @@ void ImportGeometry(json GeoJSON, ThreadSafeQueue *Queue, uint16_t PlotID)
         }
     }
 
-    // bool AsBorder = GeoJSON["Borders"].get<bool>();
-    // if (AsBorder) {
-    //     std::cout << "Import border.\n";
-    //     ConstructedGeometry Border(PlotID, MeshID);
+    bool AsBorder = GeoJSON["Borders"].get<bool>();
+    if (AsBorder) {
+        std::cout << "Import border.\n";
+        ConstructedGeometry Border(PlotID, MeshID);
 
-    //     Indices.clear();
-    //     Labels.clear();
+        Indices.clear();
+        Labels.clear();
 
-    //     std::vector<uint32_t> Indices = GeoJSON["BorderIndices"].get<std::vector<uint32_t>>();
-    //     std::vector<int> Labels = GeoJSON["BorderLabels"].get<std::vector<int>>();
+        std::vector<uint32_t> Indices = GeoJSON["BorderIndices"].get<std::vector<uint32_t>>();
+        std::vector<int> Labels = GeoJSON["BorderLabels"].get<std::vector<int>>();
 
-    //     Border.Geo = ConstructBorder(Vertices, Indices, Labels, Table);
+        Border.Geo = ConstructBorder(Vertices, Indices, Labels, Table);
 
-    //     if (Border.Geo.Data.Data == 0) {
-    //         LogWarning("AsyncImport", "Failed to import border.");
-    //     } else {
-    //         Border.Geo.Description.PrimitiveTopology = GetBorderPrimitiveTopology(GeoType);
-    //         Border.Geo.Description.PolygonMode = GEO_POLYGON_MODE_LINE;
-    //         Border.Geo.Type = GetTypeValue(((Border.Geo.Description.PrimitiveTopology == GEO_PRIMITIVE_TOPOLOGY_LINE_LIST) ? "Curve2D" : "Mesh3D"));
-    //         Queue->push(Border);
-    //     }
-    // }
-    // std::cout << "Finished importing data.\n";
+        if (Border.Geo.Data.Data == 0) {
+            LogWarning("AsyncImport", "Failed to import border.");
+        } else {
+            Border.Geo.Description.PrimitiveTopology = GetBorderPrimitiveTopology(GeoType);
+            Border.Geo.Description.PolygonMode = GEO_POLYGON_MODE_LINE;
+            Border.Geo.Type = GetTypeValue(((Border.Geo.Description.PrimitiveTopology == GEO_PRIMITIVE_TOPOLOGY_LINE_LIST) ? "Curve2D" : "Mesh3D"));
+            Queue->push(Border);
+        }
+    }
+    std::cout << "Finished importing data.\n";
 }
 
 void AsyncImport(std::string CompressedJSON, ThreadSafeQueue& Queue)
 {
     json j = json::from_cbor(CompressedJSON);
-
     uint16_t PlotID = j["Plot"].get<uint16_t>();
-    std::cout << "iso-value " << j["iso-value"].dump() << "\n";
-    std::cout << "nb_iso " << j["nb-iso"].dump() << "\n";
+
+    std::cout << IO::GetTmpFile(PlotID) << "\n";
+    std::fstream f(IO::GetTmpFile(PlotID), std::ios::out);
+    f << CompressedJSON;
+    //std::cout << j.dump() << "\n";
+    return;
 
     for (auto & Geometry : j["Geometry"]) {
         ImportGeometry(Geometry, &Queue, PlotID);

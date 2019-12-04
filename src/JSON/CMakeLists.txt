@@ -2,6 +2,7 @@ add_library(ffGraph_JSON
     ${CMAKE_SOURCE_DIR}/src/JSON/ThreadQueue.cpp
     ${CMAKE_SOURCE_DIR}/src/JSON/Import.cpp
     ${CMAKE_SOURCE_DIR}/src/JSON/ImportIso.cpp
+    ${CMAKE_SOURCE_DIR}/src/JSON/IO.cpp
     ${CMAKE_SOURCE_DIR}/src/JSON/LabelTable.cpp
 )
 

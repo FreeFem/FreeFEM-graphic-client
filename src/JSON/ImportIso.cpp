@@ -39,12 +39,10 @@ Geometry ConstructIsoLines(std::vector<float>& Vertices, std::vector<uint32_t>& 
 
     for (size_t i = 0; i < ISOLINE_NBR; ++i) {
         Viso[i] = ((max - min) / (float)ISOLINE_NBR) * (float)i + min;
-        std::cout << "Viso[" << i << "] = " << Viso[i] << "\n";
 
     }
 
     for (size_t i = 0; i < (Indices.size() / 3); ++i) {
-        std::cout << "Triangle N" << i << "\n";
         glm::vec2 triangle[3] = {
             glm::vec2(Vertices[Indices[i * 3] * 3 + 0], Vertices[Indices[i * 3] * 3 + 1]),
             glm::vec2(Vertices[Indices[i * 3 + 1] * 3 + 0], Vertices[Indices[i * 3 + 1] * 3 + 1]),
@@ -54,7 +52,6 @@ Geometry ConstructIsoLines(std::vector<float>& Vertices, std::vector<uint32_t>& 
             Pn[j] = IsoValue(triangle, glm::vec2(RefTriangle[j * 2], RefTriangle[j * 2 + 1]));
         }
         for (size_t sk = 0; sk < nsubT; ++sk) {
-            std::cout << "\tSubTriangle N" << sk << " / " << nsubT << "\n";
             int i0 = KSub[sk * 3 + 0];
             int i1 = KSub[sk * 3 + 1];
             int i2 = KSub[sk * 3 + 2];
@@ -69,7 +66,6 @@ Geometry ConstructIsoLines(std::vector<float>& Vertices, std::vector<uint32_t>& 
             for (size_t l = 0; l < ISOLINE_NBR; ++l) {
                 float xf = Viso[l];
                 int im = 0;
-                std::cout << "Iteration " << l << "\n";
                 for (size_t m = 0; m < 3; ++m) {
                     int a = (m + 1) % 3;
                     float fi = ff[m];
@@ -77,7 +73,6 @@ Geometry ConstructIsoLines(std::vector<float>& Vertices, std::vector<uint32_t>& 
 
                     if ((fi <= xf && fj >= xf) || (fi >= xf && fj <= xf)) {
                         if (std::abs(fi - fj) <= 0.1e-10) {
-                            std::cout << "Placing point from the loop.\n";
                             ptr[count].x = Pt[m].x;
                             ptr[count].y = Pt[m].y;
                             ptr[count].z = 0.f;
@@ -107,9 +102,6 @@ Geometry ConstructIsoLines(std::vector<float>& Vertices, std::vector<uint32_t>& 
                 }
                 if (im >= 2) {
                     if (norme2(PQ[0], PQ[1]) > eps2) {
-                            std::cout << "\tPlacing point from outside the loop.\n";
-                            std::cout << "\t\tPQ[0] : { " << PQ[0].x << ", " << PQ[0].y << " }\n";
-                            std::cout << "\t\tPQ[1] : { " << PQ[1].x << ", " << PQ[1].y << " }\n";
                             ptr[count].x = PQ[0].x;
                             ptr[count].y = PQ[0].y;
                             ptr[count].z = 0.f;
@@ -133,7 +125,6 @@ Geometry ConstructIsoLines(std::vector<float>& Vertices, std::vector<uint32_t>& 
         }
         o += nK;
     }
-    std::cout << "Count : " << count << "\n";
     return n;
 }
 

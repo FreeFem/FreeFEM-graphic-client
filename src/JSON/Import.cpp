@@ -215,7 +215,6 @@ void ImportGeometry(json GeoJSON, ThreadSafeQueue *Queue, uint16_t PlotID)
 
     bool AsIsoValues = GeoJSON["IsoValues"].get<bool>();
     if (AsIsoValues) {
-        std::cout << "Importing " << GeoJSON["IsoArray"].size() << " iso values.\n";
         for (auto& Isos : GeoJSON["IsoArray"]) {
             ConstructedGeometry IsoValues(PlotID, MeshID);
 
@@ -231,7 +230,6 @@ void ImportGeometry(json GeoJSON, ThreadSafeQueue *Queue, uint16_t PlotID)
                 IsoValues.Geo.Description.PrimitiveTopology = GeometryPrimitiveTopology::GEO_PRIMITIVE_TOPOLOGY_LINE_LIST;
             } else {
                 std::cout << "\tScalars.\n";
-                //IsoValues.Geo = ConstructIsoScalar(Vertices, Indices, values, referencetriangle, ksub, Isos["IsoMin"].get<float>(), Isos["IsoMax"].get<float>());
                 IsoValues.Geo = ConstructIsoLines(Vertices, Indices, values, referencetriangle, ksub, Isos["IsoMin"].get<float>(), Isos["IsoMax"].get<float>());
                 IsoValues.Geo.Description.PrimitiveTopology = GeometryPrimitiveTopology::GEO_PRIMITIVE_TOPOLOGY_LINE_LIST;
                 IsoValues.Geo.Type = GetTypeValue("Curve2D");
@@ -272,9 +270,10 @@ void AsyncImport(std::string CompressedJSON, ThreadSafeQueue& Queue)
     json j = json::from_cbor(CompressedJSON);
     uint16_t PlotID = j["Plot"].get<uint16_t>();
 
+    std::cout << "Importing data from " << PlotID << "\n";
     for (auto & Geometry : j["Geometry"]) {
-        //ImportGeometry(Geometry, &Queue, PlotID);
-        std::async(std::launch::async, ImportGeometry, Geometry, &Queue, PlotID);
+        ImportGeometry(Geometry, &Queue, PlotID);
+        //std::async(std::launch::async, ImportGeometry, Geometry, &Queue, PlotID);
     }
 }
 
